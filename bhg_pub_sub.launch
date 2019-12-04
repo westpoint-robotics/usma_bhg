@@ -1,0 +1,6 @@
+<launch>
+
+  <node pkg="beginner_tutorials" name="FLIR" type="camera_subscriber" output="screen"/>
+  <node pkg="beginner_tutorials" name="publish_image_record" type="bool_pub" output="screen"/>
+  
+</launch>
