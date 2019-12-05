@@ -24,3 +24,18 @@ b. Connecting from the Ground Station
    - Now run, "roslaunch beginner_tutorials bhg_pub_sub.launch"; you should be able to tab complete the package and launch        file.  If successful, you should see output about the names of the nodes you lauched, and ROS_INFO messages about            "Starting Publisher", and then "Number of cameras detected: 1" (if you see 0 instead of 1 here, you may have to restart      the launch).  You will then see streaming by, "recordData: 0", which is a message from the subscriber indicating that        the topic, "record" has the value "0" right now.  This means no images are being recorded.  
   
   NOTE: before recording images, or flying, you will want to ensure removal of the FLIR lens cap!
+
+3. Starting and Stopping Image Recording
+   - To start recording images, make sure the terminal in which you did the roslaunch in 2. is active.  Press the "SPACE"                          
+     bar.  You should see the message scrolling by change to "recordData: 1".
+   - To stop recording, press "Q".  The message in the terminal will return to "recordData: 0".  You can toggle back and            
+     forth using these two buttons as much as you want.
+   - To end the nodes that have been launched, you can use Control-C.
+   
+ 4. Mounting the FLIR
+   - Locate the mounting bracket [INSERT], screws, and nuts for mounting.
+   - Insert the FLIR upsidedown into the bracket and screw into place as shown [INSERT].
+   - Place the bracket between the rails on the battery cage at the bottom of the UAV.  Position the bracket such that the  
+     center of the FLIR's lens is as close to centered as possible.  The camera should point 45 degrees downward and toward 
+     the front of the craft (blue motors).
+   - Screw the bracket into place on the rails.
