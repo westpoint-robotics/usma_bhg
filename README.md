@@ -49,9 +49,30 @@ This document will show you how to
    - To end the nodes that have been launched, you can use Control-C.
    
  4. Mounting the FLIR
-   - Locate the mounting bracket [INSERT], screws, and nuts for mounting.
-   - Insert the FLIR upsidedown into the bracket and screw into place as shown [INSERT].
+   - Locate the mounting bracket, screws, and washers for mounting.
+     
+     <img src="Bracket_to_Battery-Cage.jpg"
+     alt="screws and washers"
+     style="float: left; margin-right: 10px;" />
+     <img src="FLIR_in_Bracket.jpg"
+     alt="bracket"
+     style="float: left; margin-right: 10px;" />
+     
+   - Insert the FLIR upsidedown into the bracket and screw into place as shown.
+     
+     <img src="FLIR_in_Bracket2.jpg"
+     alt="bracket insall"
+     style="float: left; margin-right: 10px;" />
+     
+   - Plug in USB3 cable into the back of the FLIR, and plug the other end into a spare port (not a hub!) on the companion          computer.  
    - Place the bracket between the rails on the battery cage at the bottom of the UAV.  Position the bracket such that the  
      center of the FLIR's lens is as close to centered as possible.  The camera should point 45 degrees downward and toward 
      the front of the craft (blue motors).
    - Screw the bracket into place on the rails.
+     
+     <img src="FLIR_Screws_Washers.jpg"
+     alt="screws and washers install"
+     style="float: left; margin-right: 10px;" />
+     <img src="FLIR_Installed.jpg"
+     alt="fully installed"
+     style="float: left; margin-right: 10px;" />
