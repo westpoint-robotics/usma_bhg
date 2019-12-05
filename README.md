@@ -23,7 +23,7 @@ a. Ascertaining the Brix IP Address
      front of the UAV (blue motors).  Log in using standard RRC credentials.
    - Open a terminal and use the command:  
    
-   `"ip a"`  
+      `ip a`  
    
      You should see a line similar to, "link/ether 00:c0:ca:97:df:c1 brd
      ff:ff:ff:ff:ff:ff".  Below that, should read "inet" and then a number, for example starting with 10, or 198, or 
@@ -33,20 +33,22 @@ b. Connecting from the Ground Station
    
    - Your ground station computer should be a laptop or desktop running Ubuntu 16.04, or 18.04.  Turn on and log into this machine, and open a terminal.  Enter:  
    
-   `ssh [UAV IP]`  
+     `ssh [UAV IP]`  
    
-    where [UAV IP] will be the address from 1a.  You will be prompted for a password, which will be the RRC standard.  Once logged in, your terminal prompt should read, "user1@brix012", or similar (whatever the name of your companion computer is to the right of the "@".
+     where [UAV IP] will be the address from 1a.  You will be prompted for a password, which will be the RRC standard.  Once 
+    logged in, your terminal prompt should read, "user1@brix012", or similar (whatever the name of your companion computer is 
+    to the right of the "@".
    
 #2. Launching image capture nodes
    - On your ground station computer, in the terminal from 1b., run the command:  
                             
      `roslaunch beginner_tutorials bhg_pub_sub.launch`   
      
-     you should be able to tab complete the package and launch
-     file.  If successful, you should see output about the names of the nodes you lauched, and ROS_INFO messages about 
-     "Starting Publisher", and then "Number of cameras detected: 1" (if you see 0 instead of 1 here, you may have to restart 
-     the launch).  You will then see streaming by, "recordData: 0", which is a message from the subscriber indicating that
-     the topic, "record" has the value "0" right now.  This means no images are being recorded.
+     you should be able to tab complete the package and launch file.  If successful, you should see output about the names of 
+     the nodes you lauched, and ROS_INFO messages about "Starting Publisher", and then "Number of cameras detected: 1" (if 
+     you see 0 instead of 1 here, you may have to restart the launch).  You will then see streaming by, "recordData: 0", 
+     which is a message from the subscriber indicating that the topic, "record" has the value "0" right now.  This means no 
+     images are being recorded.
   
 NOTE: before recording images, or flying, you will want to ensure removal of the FLIR lens cap!
 
@@ -76,11 +78,13 @@ NOTE: before recording images, or flying, you will want to ensure removal of the
      class="center"
      width="300px"/>
      
-   - Plug in USB3 cable into the back of the FLIR, and plug the other end into a spare port (not a hub!) on the companion computer. 
+   - Plug in USB3 cable into the back of the FLIR, and plug the other end into a spare port (not a hub!) on the companion 
+   computer. 
    - Place the bracket between the rails on the battery cage at the bottom of the UAV.  Position the bracket such that the 
      center of the FLIR's lens is as close to centered as possible.  The camera should point 45 degrees downward and toward 
      the front of the craft (blue motors).
-   - Screw the bracket into place on the rails.  Beware that the nuts in the top of the bracket may fall out if too much force is applied during installation.
+   - Screw the bracket into place on the rails.  Beware that the nuts in the top of the bracket may fall out if too much 
+   force is applied during installation.
      
      <img src="FLIR_Screws_Washers.jpg"
      alt="screws and washers install"
@@ -88,10 +92,5 @@ NOTE: before recording images, or flying, you will want to ensure removal of the
      width="300px"/>
      <img src="FLIR_Installed.jpg"
      alt="fully installed"
-     .center {
-       display: block;
-       margin-left: auto;
-       margin-right: auto;
-       width: 50%;
-     }
+     class = "center"
      width="600px"/>
