@@ -1,0 +1,15 @@
+<launch>
+
+  <arg name="px4_namespace" default="px4" />
+
+  <include file="$(find usma_mavros)/launch/px4.launch">
+    <arg name="fcu_url" default="/dev/ttyUSB0:921600" />
+	<arg name="gcs_url" default="udp://:14555@192.168.27.74:14550" /> 
+	<!-- <arg name="gcs_url" default="1" /> -->
+	<!-- for gcs_url, enter in IP address for GCS laptop -->
+  </include>
+
+  <include file="$(find usma_spinnaker)/launch/acquisition.launch">
+  </include>
+  
+</launch>
