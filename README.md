@@ -62,18 +62,18 @@ NOTE: before recording images, or flying, you will want to ensure removal of the
 #4. Mounting the FLIR
    - Locate the mounting bracket, screws, and washers for mounting.
      
-     <img src="Bracket_to_Battery-Cage.jpg"
+     <img src="pictures/Bracket_to_Battery-Cage.jpg"
      alt="screws and washers"
      class="center"
      width="300px"/>
-     <img src="FLIR_in_Bracket.jpg"
+     <img src="pictures/FLIR_in_Bracket.jpg"
      alt="bracket"
      class="center"
      width="300px"/>
      
    - Insert the camera into the bracket with the "FLIR" logo on the side upsidedown, and screw into place as shown.
      
-     <img src="FLIR_in_Bracket2.jpg"
+     <img src="pictures/FLIR_in_Bracket2.jpg"
      alt="bracket insall"
      class="center"
      width="300px"/>
@@ -86,11 +86,11 @@ NOTE: before recording images, or flying, you will want to ensure removal of the
    - Screw the bracket into place on the rails.  Beware that the nuts in the top of the bracket may fall out if too much 
    force is applied during installation.
      
-     <img src="FLIR_Screws_Washers.jpg"
+     <img src="pictures/FLIR_Screws_Washers.jpg"
      alt="screws and washers install"
      class="center"
      width="300px"/>
-     <img src="FLIR_Installed.jpg"
+     <img src="pictures/FLIR_Installed.jpg"
      alt="fully installed"
      class = "center"
      width="600px"/>
