@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find usma_spinnaker)/launch/acquisition.launch"/>
+  
+   <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen"/> 
+   <node pkg="beginner_tutorials" name="Xenics" type="gobi_subscriber" output="screen"/>
+  
+</launch>
