@@ -115,10 +115,22 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-)
+#include_directories(include 
+#    ${catkin_INCLUDE_DIRS}
+#    /usr/include/spinnaker    
+#    )
+#add_executable(bool_pub src/bool_pub.cpp)
+#target_link_libraries(bool_pub ${catkin_LIBRARIES})
+#add_dependencies(bool_pub beginner_tutorials_generate_messages_cpp)
+
+#add_executable(bool_sub src/bool_sub.cpp)
+#target_link_libraries(bool_sub ${catkin_LIBRARIES} -lSpinnaker -lswscale -lswresample -lavcodec -lavutil -lavformat)
+
+#add_dependencies(bool_sub beginner_tutorials_generate_messages_cpp)
+
+#add_executable(camera_subscriber src/camera_subscriber.cpp)
+#target_link_libraries(camera_subscriber ${catkin_LIBRARIES} -lSpinnaker -lswscale -lswresample -lavcodec -lavutil -lavformat)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -150,57 +162,3 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-#############
-## Install ##
-#############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark executables for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-# install(TARGETS ${PROJECT_NAME}_node
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark libraries for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME}
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-# )
-
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_usma_bhg.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)

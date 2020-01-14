@@ -125,7 +125,7 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
     //ROS_INFO("%s", msg.data.c_str());
-    //std::cout << "publishing... " << std::boolalpha << msg.data << std::endl;
+    //std::cout << "publishing... " << std::Stringalpha << msg.data << std::endl;
     /**
      * The publish() function is how you send messages. The parameter
      * is the message object. The type of this object must agree with the type
