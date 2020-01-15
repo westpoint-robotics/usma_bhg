@@ -32,7 +32,7 @@ def main():
     #global timestamp
     pub = rospy.Publisher(directory_topic, String, queue_size=10)
     #pub = rospy.Publisher(timestamp_topic, String, queue_size=10)
-    rospy.init_node('rosbag_recorder')
+    rospy.init_node('directory_setup')
     directory_setup()
     r = rospy.Rate(3) # 3hz
     while not rospy.is_shutdown():
