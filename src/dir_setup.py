@@ -38,7 +38,7 @@ def main():
     while not rospy.is_shutdown():
         now = datetime.now() # current date and time
         #timestamp = now.strftime("%Y%m%d_%H%M%S_%f")[:-3]
-        print('publishing, missionName: {}'.format(missionName))
+        #print('publishing, missionName: {}'.format(missionName))
         #print('publishing, timestamp: {}'.format(timestamp))
         pub.publish(missionName)
         #pub.publish(timestamp)
