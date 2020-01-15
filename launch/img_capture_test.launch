@@ -1,6 +1,6 @@
 <launch>
 
-  <include file="$(find usma_spinnaker)/launch/acquisition.launch"/>
+  <include file="$(find usma_bhg)/launch/acquisition.launch"/>
   
    <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen"/> 
   <!--
