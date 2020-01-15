@@ -10,7 +10,7 @@
   </include>
 
   <node pkg="rosbag" type="record" name="rosbag_record_all"
-       args="record -x '(.*)camera(.*)'"/>
+       args="record -x '(.*)camera(.*)' -o /home/user1/Data/"/>
   <include file="$(find usma_spinnaker)/launch/acquisition.launch"/>
   <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen"/>
   
