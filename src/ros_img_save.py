@@ -22,6 +22,14 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from datetime import datetime
 from std_msgs.msg import String
+from mavros_msgs.msg import Altitude
+from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import MagneticField
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import TwistStamped
+from sensor_msgs.msg import Temperature
+from std_msgs.msg import Float64
+
 
 # Instantiate CvBridge
 bridge = CvBridge()
@@ -37,7 +45,61 @@ csvFilename = ""
 timestamp_data = ""
 is_recording = False
 directorySet = False
+rel_alt = Altitude()
+gps_fix = NavSatFix()
+imu_mag = MagneticField()
+imu_fcu = Imu()
+vel_fcu = TwistStamped()
+temp_fcu = Temperature()
 
+
+def make_header():
+    header = "rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
+    header += "gps_fix.status.status,gps_fix.status.service,gps_fix.latitude,gps_fix.longitude,gps_fix.altitude,"
+    header += "imu_fcu.magnetic_field.x,imu_fcu.magnetic_field.y,imu_fcu.magnetic_field.z,"
+    header += "imu_mag.orientation.x,imu_mag.orientation.y,imu_mag.orientation.z,imu_mag.orientation.w, imu_mag.angular_velocity.x,imu_mag.angular_velocity.y,imu_mag.angular_velocity.z,"
+    header += "imu_mag.linear_acceleration:.x,imu_mag.linear_acceleration:.y,imu_mag.linear_acceleration:.z,"
+    header += "vel_fcu.twist.linear.x,vel_fcu.twist.linear.y,vel_fcu.twist.linear.z,"
+    header += "vel_fcu.twist.angular.x,vel_fcu.twist.angular.y,vel_fcu.twist.angular.z,"
+    header += "temp_fcu.temperature"
+    return header
+
+def make_logentry():
+    alt_str = str(rel_alt.monotonic) + "," + str(rel_alt.amsl) + "," + str(rel_alt.local) + "," + str(rel_alt.relative) 
+    gps_str = str(gps_fix.status.status) + "," + str(gps_fix.status.service) + "," + str(gps_fix.latitude) + "," + str(gps_fix.longitude) + "," + str(gps_fix.altitude) 
+    mag_str = str(imu_mag.magnetic_field.x) + "," + str(imu_mag.magnetic_field.y) + "," + str(imu_mag.magnetic_field.z)
+    imu_str = str(imu_fcu.orientation.x) + "," + str(imu_fcu.orientation.y) + "," + str(imu_fcu.orientation.z) + "," + str(imu_fcu.orientation.w) + ","
+    imu_str += str(imu_fcu.angular_velocity.x) + "," + str(imu_fcu.angular_velocity.y) + "," + str(imu_fcu.angular_velocity.z) + ","
+    imu_str += str(imu_fcu.linear_acceleration.x) + "," + str(imu_fcu.linear_acceleration.y) + "," + str(imu_fcu.linear_acceleration.z)    
+    vel_str = str(vel_fcu.twist.linear.x) + "," + str(vel_fcu.twist.linear.y) + "," + str(vel_fcu.twist.linear.z) + ","
+    vel_str += str(vel_fcu.twist.angular.x) + "," + str(vel_fcu.twist.angular.y) + "," + str(vel_fcu.twist.angular.z)  
+    temp_str = str(temp_fcu.temperature)    
+    output = str(rospy.Time.now()) + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str
+    return output
+
+def alt_cb(msg):
+    global rel_alt
+    rel_alt = msg
+        
+def gps_cb(msg):
+    global gps_fix
+    gps_fix = msg
+    
+def mag_cb(msg):
+    global imu_mag
+    imu_mag = msg
+    
+def imu_fcu(msg):
+    global imu_fcu
+    imu_fcu = msg
+    
+def vel_cb(msg):
+    global vel_fcu
+    vel_fcu = msg
+    
+def temp_cb(msg):
+    global temp_fcu
+    temp_fcu = msg
 
 def directory_setup(directory):
     if not os.path.exists(flirDirectory):
@@ -65,17 +127,16 @@ def directory_callback(msg):#directory, timestamp):
         csvFilename      = missionDirectory + "/" + missionName + ".csv"
         #directory_setup(csvFilename)
         #directory_setup(flirDirectory)
-        
+        print("====== Filename for csv is: ", csvFilename )        
+        with open(csvFilename, 'a+') as csvFile:
+            #csvFileWriter = csv.writer(csvFile)
+            #csvFileWriter.writerow([timestamp_data, flirFilename, gobiFilename])
+            #csvFileWriter.writerow(make_header() + "\n")      
+            csvFile.write(make_header() + "\n")
     else:
         pass
-        #print('directorySet (should be False) = {}'.format(directorySet))
-'''
-def timestamp_callback(msg):
-    global timestamp_data
-    timestamp_data = msg.data
-    print('timestamp_callback: {}'.format(timestamp_data))
-    print('sleep(3)\nspin()')
-'''    
+        #print('directorySet (should be False) = {}'.format(directorySet))     
+          
 def record_callback(msg):
     global is_recording
     is_recording = msg.data
@@ -83,6 +144,7 @@ def record_callback(msg):
 def image_callback(msg):  
     global flirDirectory
     global csvFileName
+
     if (is_recording):
         try:
             # Convert your ROS Image message to OpenCV2
@@ -103,10 +165,13 @@ def image_callback(msg):
             
             # Update CSV file with the names of the images recorded at this date and time
             with open(csvFilename, 'a+') as csvFile:
-                csvFileWriter = csv.writer(csvFile)
+                #csvFileWriter = csv.writer(csvFile)
                 #csvFileWriter.writerow([timestamp_data, flirFilename, gobiFilename])
-                csvFileWriter.writerow([timestamp_data, flirFilename])
- 
+                output_str = flirFilename + "," + make_logentry()
+                #csvFileWriter.writerow(output_str + "\n")
+                csvFile.write(output_str + "\n")
+                        
+
 def main():
     
     rospy.init_node('image_listener')

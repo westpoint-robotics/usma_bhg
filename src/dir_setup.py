@@ -34,7 +34,7 @@ def main():
     #pub = rospy.Publisher(timestamp_topic, String, queue_size=10)
     rospy.init_node('directory_setup')
     directory_setup()
-    r = rospy.Rate(3) # 3hz
+    r = rospy.Rate(1) # 3hz
     while not rospy.is_shutdown():
         now = datetime.now() # current date and time
         #timestamp = now.strftime("%Y%m%d_%H%M%S_%f")[:-3]
