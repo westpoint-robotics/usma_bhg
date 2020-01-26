@@ -23,8 +23,6 @@ import cv2
 from datetime import datetime
 from std_msgs.msg import String
 
-
-
 # Instantiate CvBridge
 bridge = CvBridge()
 dataDirectory = "/home/user1/Data/"; 
@@ -84,7 +82,6 @@ def record_callback(msg):
 def image_callback(msg):  
     global flirDirectory
     global csvFileName
-
     if (is_recording):
         try:
             # Convert your ROS Image message to OpenCV2
@@ -108,8 +105,7 @@ def image_callback(msg):
                 csvFileWriter = csv.writer(csvFile)
                 #csvFileWriter.writerow([timestamp_data, flirFilename, gobiFilename])
                 csvFileWriter.writerow([timestamp_data, flirFilename])
-             
-
+ 
 def main():
     
     rospy.init_node('image_listener')

@@ -1,7 +1,9 @@
 //NBL: ROS Compliance
 #include "ros/ros.h"
+#include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 
+#include <sys/stat.h> // mkdir command
 #include "stdio.h" // C Standard Input/Output library.
 #include "XCamera.h" // Xeneth SDK main header.
 #include <iostream>   // std::cout
@@ -22,18 +24,33 @@ char timestamp_modifier_c;
 
 
 //NBL: ROS Compliance
-std_msgs::String record;
-string recordData = "1";
+std_msgs::Bool record;
+string img_dir;
+//string recordData = "1";
 bool camerasInitialized;
 
 unsigned int imageCnt;
 
 //NBL: ROS Compliance
-void chatterCallback(const std_msgs::String::ConstPtr& msg)
+void chatterCallback(const std_msgs::Bool::ConstPtr& msg)
 {
     record = *msg;
  
     //ROS_INFO("I heard: [%s]", msg->data.c_str());
+}
+
+void dirCallback(const std_msgs::String::ConstPtr& msg)
+{
+    img_dir = msg->data.c_str(); 
+    string imgtmp = "/home/user1/Data/"+img_dir+ "/GOBI_000088/";
+    ROS_INFO("******* Image directory is : [%s] *******", imgtmp.c_str());
+    if (mkdir(imgtmp.c_str(), 0777) == -1) 
+        cerr << "Error :  " << strerror(errno) << endl; 
+  
+    else
+        ROS_INFO("******* Image directory created *******"); 
+
+
 }
 
 /*
@@ -58,6 +75,7 @@ int main(int argc, char **argv)
 
     ros::NodeHandle n;
     ros::Subscriber sub = n.subscribe("record", 1000, chatterCallback);
+    ros::Subscriber dir_sub = n.subscribe("directory", 1000, dirCallback);
     imageCnt = 0;
     ros::Rate loop_rate(10);
 
@@ -73,10 +91,10 @@ int main(int argc, char **argv)
     {
         //Can be stopped with a Ctrl-C, but otherwise, loop forever.
         //Check record subscription.
-        recordData = record.data.c_str();
+        //recordData = record.data;
         
         //NBL: record = 1      
-        if(recordData == "1")
+        if(record.data)
         {
             //NBL: Loop until connection is initialised?
             // When the connection is initialised, ...
@@ -105,13 +123,13 @@ int main(int argc, char **argv)
             else if (XC_IsCapturing(handle)) // When the camera is capturing ...
             {
                 // Load the color profile delivered with this sample.
-                if ((errorCode = XC_LoadColourProfile(handle, "/home/user1/Documents/Software/Xeneth_2.7/Colour_profiles/Thermal_Blue.png")) != I_OK)
+                if ((errorCode = XC_LoadColourProfile(handle, "/home/user1/catkin_ws/src/usma_bhg/resources/ThermalBlue.png")) != I_OK)
                 {
                    printf("Problem while loading the desired colorprofile, errorCode: %lu\n", errorCode);
                 }
                 else
                 {
-                    printf("handle = %d... color profile errorCode = %lu\n", handle, errorCode);
+                    printf("Successfully loaded color profile. Handle = %d... color profile errorCode = %lu\n", handle, errorCode);
                 }
 
                 // Set the colourmode so that the last loaded colorprofile is used.
@@ -166,9 +184,11 @@ int main(int argc, char **argv)
                     }
                     last_tm = local_tm;
                     
-                    string imageDirectory = "/home/user1/Data/"; 
-                    string imageFilename = imageDirectory + "Xenic-Gobi" + "_" + dateTime + ".xpng";
-                    
+                    //string imageDirectory = "/home/user1/Data/"; 
+                    string imageDirectory = "/home/user1/Data/"+img_dir+ "/GOBI_000088/"; 
+                    string imageFilename =  "/home/user1/Data/"+img_dir+ "/GOBI_000088/Xenic-Gobi" + "_" + dateTime + ".xpng";
+
+                    //ROS_INFO("=*=*=*=* Image directory is : [%s] =*=*=*=*", imageFilename.c_str());                    
                     if((errorCode = XC_SaveData(handle, imageFilename.c_str(), XSD_SaveThermalInfo | XSD_RFU_1)) != I_OK)
                     {
                         printf("Gobi: problem saving data, errorCode %lu\n", errorCode);
