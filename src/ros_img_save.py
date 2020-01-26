@@ -93,7 +93,7 @@ def image_callback(msg):
             now = datetime.now() # current date and time
             timestamp_data = now.strftime("%Y%m%d_%H%M%S_%f")[:-3]
             flirFilename = flirDirectory + "/" + flirSN + "_" + timestamp_data + ".ppm" #date_time + ".ppm"
-            #rospy.loginfo("Mission directory: " + missionDirectory)
+            rospy.loginfo("Mission directory: " + missionDirectory)
             rospy.loginfo("Saving image as: " + flirFilename)      
             #gobiFilename = gobiDirectory + "_" + timestamp_data + ".png"  
             # Save your OpenCV2 image as a jpeg 
