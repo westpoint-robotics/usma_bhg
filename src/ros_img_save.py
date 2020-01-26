@@ -54,7 +54,7 @@ def directory_callback(msg):#directory, timestamp):
     missionName = msg.data#directory_topic#.data
     #timestamp_data = timestamp#.data
 
-    print('receiving, missionName: {}'.format(missionName))
+    #print('receiving, missionName: {}'.format(missionName))
     #print('timestamp_callback: {}'.format(timestamp_data))
     
     if(missionName <> "" and directorySet == False):
@@ -67,7 +67,8 @@ def directory_callback(msg):#directory, timestamp):
         #directory_setup(flirDirectory)
         
     else:
-        print('directorySet (should be False) = {}'.format(directorySet))
+        pass
+        #print('directorySet (should be False) = {}'.format(directorySet))
 '''
 def timestamp_callback(msg):
     global timestamp_data
@@ -92,7 +93,7 @@ def image_callback(msg):
             now = datetime.now() # current date and time
             timestamp_data = now.strftime("%Y%m%d_%H%M%S_%f")[:-3]
             flirFilename = flirDirectory + "/" + flirSN + "_" + timestamp_data + ".ppm" #date_time + ".ppm"
-            rospy.loginfo("Mission directory: " + missionDirectory)
+            #rospy.loginfo("Mission directory: " + missionDirectory)
             rospy.loginfo("Saving image as: " + flirFilename)      
             #gobiFilename = gobiDirectory + "_" + timestamp_data + ".png"  
             # Save your OpenCV2 image as a jpeg 

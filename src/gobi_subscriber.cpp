@@ -43,12 +43,12 @@ void dirCallback(const std_msgs::String::ConstPtr& msg)
 {
     img_dir = msg->data.c_str(); 
     string imgtmp = "/home/user1/Data/"+img_dir+ "/GOBI_000088/";
-    ROS_INFO("******* Image directory is : [%s] *******", imgtmp.c_str());
+    //ROS_INFO("******* Image directory is : [%s] *******", imgtmp.c_str());
     if (mkdir(imgtmp.c_str(), 0777) == -1) 
         cerr << "Error :  " << strerror(errno) << endl; 
   
-    else
-        ROS_INFO("******* Image directory created *******"); 
+//    else
+//        ROS_INFO("******* Image directory created *******"); 
 
 
 }
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
             {
                 printf("Gobi: initialization failed\n");
             }
-            printf("Gobi: initialization succeeded\n");
+            //printf("Gobi: initialization succeeded\n");
             /*
             if(handle == 0)
             {
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
             printf("Initialization succeeded\n");
             */
             // ... start capturing
-            printf("Gobi: start capturing.\n");
+            //printf("Gobi: start capturing.\n");
             if ((errorCode = XC_StartCapture(handle)) != I_OK)
             {
                 printf("Could not start capturing, errorCode: %lu\n", errorCode);
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 //                frameBuffer = new word[frameSize / 2];
                 
                 // ... grab a frame from the camera.
-                printf("Grabbing a frame - FT_32_BPP_RGBA.\n");
+                //printf("Grabbing a frame - FT_32_BPP_RGBA.\n");
                 if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
                 {
                    printf("Gobi: problem while fetching frame, errorCode %lu\n", errorCode);
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
                     byte r = (pixel >> 16) & 0xff;
                     byte a = (pixel >> 24) & 0xff;
 
-                    printf("Pixel value: r = %u, g = %u, b = %u\n", r, g, b);
+                    //printf("Pixel value: r = %u, g = %u, b = %u\n", r, g, b);
                 
                     //NBL: Grab time and date information for creating a timestamp for the image filenames.        
                     now = system_clock::now();
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
         else
         {
 
-            printf("Clearing buffers.\n");
+            //printf("Clearing buffers.\n");
             if (frameBuffer != 0)
             {
                 delete [] frameBuffer;
