@@ -36,15 +36,12 @@ bridge = CvBridge()
 dataDirectory = "/home/user1/Data/"; 
 # Camera directories, csv file, and bag file all go here
 #now = datetime.now() # current date and time
-missionName = ""#now.strftime("%Y%m%d_%H%M%S_%f")[:-3] 
-missionDirectory = ""
 flirSN = "FLIR_18284612"
 flirDirectory = ""
 csvFilename = ""
 #gobiSN = "XEN_000088"
 timestamp_data = ""
 is_recording = False
-directorySet = False
 rel_alt = Altitude()
 gps_fix = NavSatFix()
 imu_mag = MagneticField()
@@ -89,7 +86,7 @@ def mag_cb(msg):
     global imu_mag
     imu_mag = msg
     
-def imu_fcu(msg):
+def imu_cb(msg):
     global imu_fcu
     imu_fcu = msg
     
@@ -99,53 +96,32 @@ def vel_cb(msg):
     
 def temp_cb(msg):
     global temp_fcu
-    temp_fcu = msg
+    temp_fcu = msg  
 
-def directory_setup(directory):
-    if not os.path.exists(flirDirectory):
-        print('Create flirDirectory: {}'.format(directory))
-        os.makedirs(directory)  
-
-def directory_callback(msg):#directory, timestamp):
-    global directorySet
+def directory_callback(msg):
     global flirDirectory
     global csvFilename
-    global missionName
-    global timestamp_data
+    missionName = msg.data
+    missionDirectory = dataDirectory + missionName 
+    flirDirectory    = missionDirectory + "/" + flirSN
+    csvFilename      = missionDirectory + "/" + missionName + "_flir.csv"
     
-    missionName = msg.data#directory_topic#.data
-    #timestamp_data = timestamp#.data
+    if(not (os.path.isdir(flirDirectory))):
+        os.mkdir(flirDirectory)
+        rospy.loginfo("FLIR Directory Created: " + flirDirectory)
 
-    #print('receiving, missionName: {}'.format(missionName))
-    #print('timestamp_callback: {}'.format(timestamp_data))
-    
-    if(missionName <> "" and directorySet == False):
-        directorySet     = True
-        #print('directorySet (should be True) = {}'.format(directorySet))
-        missionDirectory = dataDirectory + missionName 
-        flirDirectory    = missionDirectory + "/" + flirSN
-        csvFilename      = missionDirectory + "/" + missionName + ".csv"
-        #directory_setup(csvFilename)
-        #directory_setup(flirDirectory)
-        print("====== Filename for csv is: ", csvFilename )        
-        with open(csvFilename, 'a+') as csvFile:
-            #csvFileWriter = csv.writer(csvFile)
-            #csvFileWriter.writerow([timestamp_data, flirFilename, gobiFilename])
-            #csvFileWriter.writerow(make_header() + "\n")      
+    if(not (os.path.exists(csvFilename))):
+        rospy.loginfo("FLIR CSV File Created: " + csvFilename)
+        with open(csvFilename, 'a+') as csvFile:     
             csvFile.write(make_header() + "\n")
-    else:
-        pass
-        #print('directorySet (should be False) = {}'.format(directorySet))     
           
 def record_callback(msg):
     global is_recording
     is_recording = msg.data
 
 def image_callback(msg):  
-    global flirDirectory
-    global csvFileName
 
-    if (is_recording):
+    if (is_recording and os.path.exists(csvFilename) ):
         try:
             # Convert your ROS Image message to OpenCV2
             cv2_img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
@@ -155,9 +131,7 @@ def image_callback(msg):
             now = datetime.now() # current date and time
             timestamp_data = now.strftime("%Y%m%d_%H%M%S_%f")[:-3]
             flirFilename = flirDirectory + "/" + flirSN + "_" + timestamp_data + ".ppm" #date_time + ".ppm"
-            rospy.loginfo("Mission directory: " + missionDirectory)
-            rospy.loginfo("Saving image as: " + flirFilename)      
-            #gobiFilename = gobiDirectory + "_" + timestamp_data + ".png"  
+            #rospy.loginfo("Saving image as: " + flirFilename)       
             # Save your OpenCV2 image as a jpeg 
             cv2.imwrite(flirFilename, cv2_img)
             #cv2.imshow("FLIR", cv2_img)
@@ -165,10 +139,7 @@ def image_callback(msg):
             
             # Update CSV file with the names of the images recorded at this date and time
             with open(csvFilename, 'a+') as csvFile:
-                #csvFileWriter = csv.writer(csvFile)
-                #csvFileWriter.writerow([timestamp_data, flirFilename, gobiFilename])
                 output_str = flirFilename + "," + make_logentry()
-                #csvFileWriter.writerow(output_str + "\n")
                 csvFile.write(output_str + "\n")
                         
 
@@ -178,12 +149,17 @@ def main():
     
     # Define your image topic
     image_topic = "/camera_array/cam0/image_raw"
-    record_topic = "record"
-    directory_topic = 'directory'
     #timestamp_topic = 'timestamp'
-    rospy.Subscriber(record_topic, Bool, record_callback)
+    rospy.Subscriber('/directory', String, directory_callback)
+    rospy.Subscriber("/record", Bool, record_callback)
     rospy.Subscriber(image_topic, Image, image_callback)
-    rospy.Subscriber(directory_topic, String, directory_callback)
+    rospy.Subscriber("/mavros/altitude", Altitude, alt_cb)
+    rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_cb)
+    rospy.Subscriber("/mavros/imu/mag", MagneticField, mag_cb)
+    rospy.Subscriber("/mavros/imu/data", Imu, imu_cb)
+    rospy.Subscriber("/mavros/global_position/raw/gps_vel", TwistStamped, vel_cb)
+    rospy.Subscriber("/mavros/imu/temperature_imu", Temperature, temp_cb)
+
     '''
     #Getting errors: Examine this (http://wiki.ros.org/message_filters#Example_.28Python.29-1)
     directory_sub = message_filters.Subscriber(directory_topic, String)#, directory_callback)

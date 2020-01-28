@@ -44,13 +44,13 @@ void dirCallback(const std_msgs::String::ConstPtr& msg)
     img_dir = msg->data.c_str(); 
     string imgtmp = "/home/user1/Data/"+img_dir+ "/GOBI_000088/";
     //ROS_INFO("******* Image directory is : [%s] *******", imgtmp.c_str());
-    if (mkdir(imgtmp.c_str(), 0777) == -1) 
-        cerr << "Error :  " << strerror(errno) << endl; 
-  
-//    else
-//        ROS_INFO("******* Image directory created *******"); 
-
-
+    if (mkdir(imgtmp.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
+    {
+        if( errno == 0 ) { // TODO fix this to return accurate feedback
+            // does not exists
+            ROS_INFO("******* Image directory created: %i [%s] *******", errno, img_dir.c_str());  
+        }
+    }
 }
 
 /*
@@ -60,115 +60,87 @@ int AcquireImage()
 
 int main(int argc, char **argv)
 {
+    //NBL: ROS Compliance{
+    ros::init(argc, argv, "gobi_capture");
+    ros::NodeHandle n;
+    ros::Subscriber sub = n.subscribe("record", 1000, chatterCallback);
+    ros::Subscriber dir_sub = n.subscribe("directory", 1000, dirCallback);
+
     // Variables
     XCHANDLE handle = 0; // Handle to the camera
     ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
     dword *frameBuffer = 0; // 16-bit buffer to store the capture frame.
     dword frameSize = 0; // The size in bytes of the raw image.
+    imageCnt = 0;
 
     // Open a connection to the first detected camera by using connection string cam://0
-    printf("Gobi: opening connection to cam://0\n");
+    ROS_INFO("*** Gobi ***: opening connection to cam://0");
     handle = XC_OpenCamera("cam://0");
-    printf("Gobi: handle %d\n", handle);
-    //NBL: ROS Compliance
-    ros::init(argc, argv, "bool_sub");
+    if(XC_IsInitialised(handle))
+    {    
+      // ... start capturing
+      ROS_INFO("*** Gobi ***: Is initialized.");
+      if (errorCode = XC_StartCapture(handle) != I_OK)
+      {
+        ROS_ERROR("*** Gobi ***: Could not start capturing, errorCode: %lu\n", errorCode);
+        exit(1);
+      }
+      else if (XC_IsCapturing(handle)) // When the camera is capturing ...
+      {
+        ROS_INFO("*** Gobi ***: Successfully capturing.");
+        // Load the color profile delivered with this sample.
+        if (errorCode = XC_LoadColourProfile(handle, "/home/user1/catkin_ws/src/usma_bhg/resources/ThermalBlue.png") != I_OK)
+        {
+            ROS_ERROR("*** Gobi ***: Problem while loading the desired colorprofile, errorCode: %lu", errorCode);
+        }
+        else
+        {
+            ROS_INFO("*** Gobi ***: Successfully loaded the desired colorprofile.");
+        }
 
-    ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("record", 1000, chatterCallback);
-    ros::Subscriber dir_sub = n.subscribe("directory", 1000, dirCallback);
-    imageCnt = 0;
-    ros::Rate loop_rate(10);
+        // Set the colourmode so that the last loaded colorprofile is used.
+        XC_SetColourMode(handle, ColourMode_Profile);
 
-    //NBL: Loop until connection is initialised?
-    // When the connection is initialised, ...
-    while(!XC_IsInitialised(handle))
-    {
-        printf("Gobi: initialization failed\n");
+        // Determine framesize for a 32-bit buffer.
+        frameSize = XC_GetWidth(handle) * XC_GetHeight(handle);
+
+        // Initialize the 32-bit buffer.
+        frameBuffer = new dword[frameSize];
+        }
     }
-    printf("Gobi: initialization succeeded\n");
+    else
+    {
+        ROS_ERROR("*** Gobi ***: Failed to initialize. EXITING NOW!");
+        exit(1);   
+    }
 
+    ros::Rate loop_rate(20);
     while (ros::ok())
     {
         //Can be stopped with a Ctrl-C, but otherwise, loop forever.
-        //Check record subscription.
-        //recordData = record.data;
         
-        //NBL: record = 1      
+        //NBL: record = true      
         if(record.data)
         {
-            //NBL: Loop until connection is initialised?
-            // When the connection is initialised, ...
-            while(!XC_IsInitialised(handle))
-            {
-                printf("Gobi: initialization failed\n");
-            }
-            //printf("Gobi: initialization succeeded\n");
-            /*
-            if(handle == 0)
-            {
-                handle = XC_OpenCamera("cam://0");
-            }
-            if(!XC_IsInitialised(handle))
-            {
-                printf("Initialization failed\n");
-            }
-            printf("Initialization succeeded\n");
-            */
-            // ... start capturing
-            //printf("Gobi: start capturing.\n");
-            if ((errorCode = XC_StartCapture(handle)) != I_OK)
-            {
-                printf("Could not start capturing, errorCode: %lu\n", errorCode);
-            }
-            else if (XC_IsCapturing(handle)) // When the camera is capturing ...
-            {
-                // Load the color profile delivered with this sample.
-                if ((errorCode = XC_LoadColourProfile(handle, "/home/user1/catkin_ws/src/usma_bhg/resources/ThermalBlue.png")) != I_OK)
-                {
-                   printf("Problem while loading the desired colorprofile, errorCode: %lu\n", errorCode);
-                }
-                else
-                {
-                    printf("Successfully loaded color profile. Handle = %d... color profile errorCode = %lu\n", handle, errorCode);
-                }
-
-                // Set the colourmode so that the last loaded colorprofile is used.
-                XC_SetColourMode(handle, ColourMode_Profile);
-                
-                // Determine framesize for a 32-bit buffer.
-                frameSize = XC_GetWidth(handle) * XC_GetHeight(handle);
-
                 // Initialize the 32-bit buffer.
                 frameBuffer = new dword[frameSize];
-//                // Determine native framesize.
-//                frameSize = XC_GetFrameSize(handle);
-
-//                // Initialize the 16-bit buffer.
-//                frameBuffer = new word[frameSize / 2];
                 
                 // ... grab a frame from the camera.
-                //printf("Grabbing a frame - FT_32_BPP_RGBA.\n");
                 if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
                 {
-                   printf("Gobi: problem while fetching frame, errorCode %lu\n", errorCode);
+                    ROS_ERROR("*** Gobi ***: problem while fetching frame, errorCode %lu", errorCode);
                 }
                 else
-                {
-                    dword pixel = frameBuffer[0];
-                    byte b = (pixel >> 0)  & 0xff;
-                    byte g = (pixel >> 8)  & 0xff;
-                    byte r = (pixel >> 16) & 0xff;
-                    byte a = (pixel >> 24) & 0xff;
-
-                    //printf("Pixel value: r = %u, g = %u, b = %u\n", r, g, b);
-                
+                {         
+                    ROS_INFO("*** Gobi ***: Grabbed a frame - FT_32_BPP_RGBA.");       
                     //NBL: Grab time and date information for creating a timestamp for the image filenames.        
                     now = system_clock::now();
                     tt = system_clock::to_time_t(now);
                     utc_tm = *gmtime(&tt);
                     local_tm = *localtime(&tt);
-                    string dateTime = to_string(utc_tm.tm_year + 1900) + '-' + to_string(utc_tm.tm_mon + 1) + '-' + to_string(utc_tm.tm_mday) + '_' 
-                                    + to_string(utc_tm.tm_hour) + '-' + to_string(utc_tm.tm_min) + '-' + to_string(utc_tm.tm_sec);
+                    string dateTime = to_string(utc_tm.tm_year + 1900) + '-' + to_string(utc_tm.tm_mon + 1) + '-' 
+                                    + to_string(utc_tm.tm_mday) + '_' + to_string(utc_tm.tm_hour) + '-' 
+                                    + to_string(utc_tm.tm_min) + '-' + to_string(utc_tm.tm_sec);
                  
                     if((local_tm.tm_hour == last_tm.tm_hour) &&
                        (local_tm.tm_min == last_tm.tm_min) &&
@@ -191,12 +163,12 @@ int main(int argc, char **argv)
                     //ROS_INFO("=*=*=*=* Image directory is : [%s] =*=*=*=*", imageFilename.c_str());                    
                     if((errorCode = XC_SaveData(handle, imageFilename.c_str(), XSD_SaveThermalInfo | XSD_RFU_1)) != I_OK)
                     {
-                        printf("Gobi: problem saving data, errorCode %lu\n", errorCode);
+                        ROS_ERROR("*** Gobi ***: problem saving data, errorCode %lu\n", errorCode);
                     }else{
-                        printf("Gobi: saved successfully!\n");
+                        ROS_INFO("*** Gobi ***: saved successfully!\n");
                     }
                 }
-            }        
+           
         }//NBL: /record = 1
         //NBL: record = 0
         else
