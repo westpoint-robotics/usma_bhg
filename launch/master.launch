@@ -4,15 +4,16 @@
 
   <include file="$(find usma_mavros)/launch/px4.launch">
     <arg name="fcu_url" default="/dev/ttyUSB0:921600" />
-	<arg name="gcs_url" default="udp://:14555@192.168.27.74:14550" /> 
+	<arg name="gcs_url" default="udp://:14555@10.113.1.31:14550" /> 
 	<!-- <arg name="gcs_url" default="1" /> -->
 	<!-- for gcs_url, enter in IP address for GCS laptop -->
   </include>
-
+<!--     -->
+   
   <node pkg="rosbag" type="record" name="rosbag_record"
        args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/"/>
        
   <include file="$(find usma_bhg)/launch/img_capture.launch"/>
-  
-   
+
 </launch>
+

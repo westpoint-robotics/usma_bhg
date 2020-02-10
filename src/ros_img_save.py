@@ -9,10 +9,13 @@
 # http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_gui/py_image_display/py_image_display.html
 import message_filters
 import csv
-# os for changing directories for saving images, data, CSVs
+# os for changing directories for savidatetimeng images, data, CSVs
 import os
 # rospy for the subscriber
 import rospy
+# time for date and time
+#import time
+import datetime
 # ROS Image message
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool
@@ -20,7 +23,7 @@ from std_msgs.msg import Bool
 from cv_bridge import CvBridge, CvBridgeError
 # OpenCV2 for saving an image
 import cv2
-from datetime import datetime
+#from datetime import datetime
 from std_msgs.msg import String
 from mavros_msgs.msg import Altitude
 from sensor_msgs.msg import NavSatFix
@@ -48,6 +51,7 @@ imu_mag = MagneticField()
 imu_fcu = Imu()
 vel_fcu = TwistStamped()
 temp_fcu = Temperature()
+imageCount = 0
 
 
 def make_header():
@@ -120,28 +124,30 @@ def record_callback(msg):
     is_recording = msg.data
 
 def image_callback(msg):  
-
+    global imageCount
     if (is_recording and os.path.exists(csvFilename) ):
+        #Before taking a picture, grab timestamp to record to filename, and CSV
+        tNow = rospy.get_time() # current date and time
+        #rospy.loginfo("tNow = %.3f\n", tNow)
+        datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')  
+              
+        #Grab the image and convert it to OpenCV format        
         try:
             # Convert your ROS Image message to OpenCV2
             cv2_img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
         except CvBridgeError, e:
             print(e)
-        else:
-            now = datetime.now() # current date and time
-            timestamp_data = now.strftime("%Y%m%d_%H%M%S_%f")[:-3]
-            flirFilename = flirDirectory + "/" + flirSN + "_" + timestamp_data + ".ppm" #date_time + ".ppm"
-            #rospy.loginfo("Saving image as: " + flirFilename)       
-            # Save your OpenCV2 image as a jpeg 
-            cv2.imwrite(flirFilename, cv2_img)
-            #cv2.imshow("FLIR", cv2_img)
-            #cv2.waitKey(3)
-            
-            # Update CSV file with the names of the images recorded at this date and time
-            with open(csvFilename, 'a+') as csvFile:
-                output_str = flirFilename + "," + make_logentry()
-                csvFile.write(output_str + "\n")
-                        
+        
+        flirFilename = flirDirectory + "/" + flirSN + "_" + datetimeData + ".ppm" #date_time + ".ppm"
+        # Save your OpenCV2 image as a jpeg 
+        cv2.imwrite(flirFilename, cv2_img)
+        imageCount = imageCount + 1
+        rospy.loginfo("*** FLIR ***: %s | %d\n", datetimeData, imageCount)
+        # Update CSV file with the names of the images recorded at this date and time
+        with open(csvFilename, 'a+') as csvFile:
+            output_str = flirFilename + "," + make_logentry()
+            csvFile.write(output_str + "\n")
+                    
 
 def main():
     
@@ -154,7 +160,7 @@ def main():
     rospy.Subscriber("/record", Bool, record_callback)
     rospy.Subscriber(image_topic, Image, image_callback)
     rospy.Subscriber("/mavros/altitude", Altitude, alt_cb)
-    rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_cb)
+    rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, gps_cb)
     rospy.Subscriber("/mavros/imu/mag", MagneticField, mag_cb)
     rospy.Subscriber("/mavros/imu/data", Imu, imu_cb)
     rospy.Subscriber("/mavros/global_position/raw/gps_vel", TwistStamped, vel_cb)
@@ -169,6 +175,9 @@ def main():
     ts.registerCallback(directory_callback)
     '''
     # Spin until ctrl + c
+    #r = rospy.Rate(20) # 5hz
+    #while not rospy.is_shutdown():
+    #    r.sleep()    
     rospy.sleep(3)
     rospy.spin()
 
