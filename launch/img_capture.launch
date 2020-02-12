@@ -1,13 +1,13 @@
 <launch>
   
-    <!-- -->
-  <include file="$(find usma_bhg)/launch/acquisition.launch"/>
+
+  <include file="$(find spinnaker_camera_driver)/launch/camera.launch"/>
    
     
    <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen"/> 
-        
+           <!-- 
    <node pkg="usma_bhg" name="Xenics" type="gobi_subscriber" output="screen"/>
-
+ -->
    
    <node name="dir_setup" type="dir_setup.py" pkg="usma_bhg" output="screen"/>
    

@@ -154,7 +154,11 @@ def main():
     rospy.init_node('image_listener')
     
     # Define your image topic
-    image_topic = "/camera_array/cam0/image_raw"
+    #image_topic = "/camera_array/cam0/image_raw"
+    image_topic = "/camera/image_raw"
+    
+    
+    
     #timestamp_topic = 'timestamp'
     rospy.Subscriber('/directory', String, directory_callback)
     rospy.Subscriber("/record", Bool, record_callback)
