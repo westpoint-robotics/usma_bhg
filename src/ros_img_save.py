@@ -48,33 +48,33 @@ is_recording = False
 rel_alt = Altitude()
 gps_fix = NavSatFix()
 imu_mag = MagneticField()
-imu_fcu = Imu()
-vel_fcu = TwistStamped()
-temp_fcu = Temperature()
+imu_data = Imu()
+vel_gps = TwistStamped()
+temp_imu = Temperature()
 imageCount = 0
 
 
 def make_header():
     header = "rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
     header += "gps_fix.status.status,gps_fix.status.service,gps_fix.latitude,gps_fix.longitude,gps_fix.altitude,"
-    header += "imu_fcu.magnetic_field.x,imu_fcu.magnetic_field.y,imu_fcu.magnetic_field.z,"
+    header += "imu_data.magnetic_field.x,imu_data.magnetic_field.y,imu_data.magnetic_field.z,"
     header += "imu_mag.orientation.x,imu_mag.orientation.y,imu_mag.orientation.z,imu_mag.orientation.w, imu_mag.angular_velocity.x,imu_mag.angular_velocity.y,imu_mag.angular_velocity.z,"
     header += "imu_mag.linear_acceleration:.x,imu_mag.linear_acceleration:.y,imu_mag.linear_acceleration:.z,"
-    header += "vel_fcu.twist.linear.x,vel_fcu.twist.linear.y,vel_fcu.twist.linear.z,"
-    header += "vel_fcu.twist.angular.x,vel_fcu.twist.angular.y,vel_fcu.twist.angular.z,"
-    header += "temp_fcu.temperature"
+    header += "vel_gps.twist.linear.x,vel_gps.twist.linear.y,vel_gps.twist.linear.z,"
+    header += "vel_gps.twist.angular.x,vel_gps.twist.angular.y,vel_gps.twist.angular.z,"
+    header += "temp_imu.temperature"
     return header
 
 def make_logentry():
     alt_str = str(rel_alt.monotonic) + "," + str(rel_alt.amsl) + "," + str(rel_alt.local) + "," + str(rel_alt.relative) 
     gps_str = str(gps_fix.status.status) + "," + str(gps_fix.status.service) + "," + str(gps_fix.latitude) + "," + str(gps_fix.longitude) + "," + str(gps_fix.altitude) 
     mag_str = str(imu_mag.magnetic_field.x) + "," + str(imu_mag.magnetic_field.y) + "," + str(imu_mag.magnetic_field.z)
-    imu_str = str(imu_fcu.orientation.x) + "," + str(imu_fcu.orientation.y) + "," + str(imu_fcu.orientation.z) + "," + str(imu_fcu.orientation.w) + ","
-    imu_str += str(imu_fcu.angular_velocity.x) + "," + str(imu_fcu.angular_velocity.y) + "," + str(imu_fcu.angular_velocity.z) + ","
-    imu_str += str(imu_fcu.linear_acceleration.x) + "," + str(imu_fcu.linear_acceleration.y) + "," + str(imu_fcu.linear_acceleration.z)    
-    vel_str = str(vel_fcu.twist.linear.x) + "," + str(vel_fcu.twist.linear.y) + "," + str(vel_fcu.twist.linear.z) + ","
-    vel_str += str(vel_fcu.twist.angular.x) + "," + str(vel_fcu.twist.angular.y) + "," + str(vel_fcu.twist.angular.z)  
-    temp_str = str(temp_fcu.temperature)    
+    imu_str = str(imu_data.orientation.x) + "," + str(imu_data.orientation.y) + "," + str(imu_data.orientation.z) + "," + str(imu_data.orientation.w) + ","
+    imu_str += str(imu_data.angular_velocity.x) + "," + str(imu_data.angular_velocity.y) + "," + str(imu_data.angular_velocity.z) + ","
+    imu_str += str(imu_data.linear_acceleration.x) + "," + str(imu_data.linear_acceleration.y) + "," + str(imu_data.linear_acceleration.z)    
+    vel_str = str(vel_gps.twist.linear.x) + "," + str(vel_gps.twist.linear.y) + "," + str(vel_gps.twist.linear.z) + ","
+    vel_str += str(vel_gps.twist.angular.x) + "," + str(vel_gps.twist.angular.y) + "," + str(vel_gps.twist.angular.z)  
+    temp_str = str(temp_imu.temperature)    
     output = str(rospy.Time.now()) + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str
     return output
 
@@ -91,16 +91,16 @@ def mag_cb(msg):
     imu_mag = msg
     
 def imu_cb(msg):
-    global imu_fcu
-    imu_fcu = msg
+    global imu_data
+    imu_data = msg
     
 def vel_cb(msg):
-    global vel_fcu
-    vel_fcu = msg
+    global vel_gps
+    vel_gps = msg
     
 def temp_cb(msg):
-    global temp_fcu
-    temp_fcu = msg  
+    global temp_imu
+    temp_imu = msg  
 
 def directory_callback(msg):
     global flirDirectory
@@ -156,9 +156,7 @@ def main():
     # Define your image topic
     #image_topic = "/camera_array/cam0/image_raw"
     image_topic = "/camera/image_raw"
-    
-    
-    
+       
     #timestamp_topic = 'timestamp'
     rospy.Subscriber('/directory', String, directory_callback)
     rospy.Subscriber("/record", Bool, record_callback)
@@ -170,14 +168,6 @@ def main():
     rospy.Subscriber("/mavros/global_position/raw/gps_vel", TwistStamped, vel_cb)
     rospy.Subscriber("/mavros/imu/temperature_imu", Temperature, temp_cb)
 
-    '''
-    #Getting errors: Examine this (http://wiki.ros.org/message_filters#Example_.28Python.29-1)
-    directory_sub = message_filters.Subscriber(directory_topic, String)#, directory_callback)
-    timestamp_sub = message_filters.Subscriber(timestamp_topic, String)#, timestamp_callback)
-    
-    ts = message_filters.TimeSynchronizer([directory_sub, timestamp_sub], 10)
-    ts.registerCallback(directory_callback)
-    '''
     # Spin until ctrl + c
     #r = rospy.Rate(20) # 5hz
     #while not rospy.is_shutdown():
