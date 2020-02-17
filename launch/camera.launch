@@ -38,6 +38,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
       <param name="frame_id" value="camera" />
       <param name="serial" value="$(arg camera_serial)" />
+      <param name="acquisition_frame_rate" value="10" />
+      <param name="acquisition_frame_rate_enable" value="True" />
 
       <!-- When unspecified, the driver will use the default framerate as given by the
            camera itself. Use this parameter to override that value for cameras capable of

@@ -1,4 +1,10 @@
 # usma_bhg
+# TODOs
+- Migrate FLIR img_save to a nodelet.
+
+
+
+
 #ROS nodes, launch files, etc. for Bloodhound Gang project (USMA)
 
 This document will show you how to 
