@@ -7,7 +7,9 @@
 3. Did the Gobiu driver start correctly
 4. Are pictures being saved to the correct director
 5. Did we leave a lense cap on
-- Develop a script that makes the newest data folder to a folder called latest, much like ros logs. Done 17FEB
+6. Warn if disk drive is filling up
+- Develop a script that makes a symlink from the newest data folder to a folder called latest, much like ros logs. Done 17FEB
+- Develop CSV building capability for Gobi
 
 
 #ROS nodes, launch files, etc. for Bloodhound Gang project (USMA)

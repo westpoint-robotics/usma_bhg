@@ -14,6 +14,10 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <cv.h>
+#include <opencv2/opencv.hpp>
+#include <highgui.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace std;
 using namespace std::chrono;
@@ -38,7 +42,7 @@ void chatterCallback(const std_msgs::Bool::ConstPtr& msg)
 void dirCallback(const std_msgs::String::ConstPtr& msg)
 {
     img_dir = msg->data.c_str(); 
-    string imgtmp = "/home/user1/Data/"+img_dir+ "/GOBI_000088/";
+    string imgtmp = "/home/user1/Data/"+img_dir+ "/GOBI000088/";
     //ROS_INFO("******* Image directory is : [%s] *******", imgtmp.c_str());
     if (mkdir(imgtmp.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
     {
@@ -137,17 +141,24 @@ int main(int argc, char **argv)
                 int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
 
                 string imageDirectory = "/home/user1/Data/"+img_dir+ "/GOBI000088/"; 
-                string imageFilename =  "/home/user1/Data/"+img_dir+ "/GOBI000088/GOBI000088" + "_" + dateTime + ".xpng";
+                string imageFilename =  "/home/user1/Data/"+img_dir+ "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
+                string cvFilename =  "/home/user1/Data/"+img_dir+ "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
 
                 // ... grab a frame from the camera.
-                if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
+                if ((errorCode = XC_GetFrame(handle, FT_16_BPP_GRAY, XGF_Blocking, frameBuffer, frameSize * 2 /* bytes per pixel */)) != I_OK)
                 {
                     ROS_ERROR("*** Gobi ***: problem while fetching frame, errorCode %lu", errorCode);
                 }
                 else
                 {         
                     // TODO IF successful grab do a deep copy and write it to disk.
-                    
+                    cv::Mat cv_image(cv::Size(640, 480), CV_16UC1, frameBuffer);
+                    cv::imwrite( cvFilename, cv_image );
+                    //cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+                    //cv::imshow( "Display window", cv_image );                   // Show our image inside it.
+
+                    //cv::waitKey(0);
+
 
                     //ROS_INFO("=*=*=*=* Image directory is : [%s] =*=*=*=*", imageFilename.c_str());                    
                     if((errorCode = XC_SaveData(handle, imageFilename.c_str(), XSD_SaveThermalInfo | XSD_RFU_1)) != I_OK)

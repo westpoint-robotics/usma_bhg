@@ -5,6 +5,7 @@ project(usma_bhg)
 # add_compile_options(-std=c++11)
 SET(CMAKE_CXX_FLAGS "-std=c++11 -O3")
 
+find_package(OpenCV REQUIRED)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -12,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  cv_bridge
 )
 #find_library(PNG16 NAMES png16 libpng16 lpng16 PATHS /usr/lib/x86_64-linux-gnu /snap/core/7270/usr/lib/x86_64-linux-gnu)
 #if(NOT PNG12)
@@ -63,7 +65,7 @@ include_directories(include
 
 #add_executable(bool_pub src/bool_pub.cpp)
 add_executable(gobi_subscriber src/gobi_subscriber.cpp)
-target_link_libraries(gobi_subscriber ${catkin_LIBRARIES} -lxeneth -lstdc++ )
+target_link_libraries(gobi_subscriber ${catkin_LIBRARIES} -lxeneth -lstdc++  ${OpenCV_LIBS})
 
 #add_dependencies(bool_pub beginner_tutorials_generate_messages_cpp)
 
