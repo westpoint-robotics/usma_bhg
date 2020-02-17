@@ -129,7 +129,7 @@ int main(int argc, char **argv)
         if(record.data)
         {
                 // Initialize the 32-bit buffer.
-                frameBuffer = new dword[frameSize];
+                //frameBuffer = new dword[frameSize];
 
                 //Before taking a picture, grab timestamp to record to filename                 
                 ros::Time rosTimeSinceEpoch = ros::Time::now();
@@ -145,15 +145,18 @@ int main(int argc, char **argv)
                 string cvFilename =  "/home/user1/Data/"+img_dir+ "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
 
                 // ... grab a frame from the camera.
-                if ((errorCode = XC_GetFrame(handle, FT_16_BPP_GRAY, XGF_Blocking, frameBuffer, frameSize * 2 /* bytes per pixel */)) != I_OK)
+                //if ((errorCode = XC_GetFrame(handle, FT_16_BPP_GRAY, XGF_Blocking, frameBuffer, frameSize * 2 /* bytes per pixel */)) != I_OK)
+                //if ((errorCode = XC_GetFrame(handle, FT_32_BPP_GRAY, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
+                if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
                 {
                     ROS_ERROR("*** Gobi ***: problem while fetching frame, errorCode %lu", errorCode);
                 }
                 else
                 {         
                     // TODO IF successful grab do a deep copy and write it to disk.
-                    cv::Mat cv_image(cv::Size(640, 480), CV_16UC1, frameBuffer);
-                    cv::imwrite( cvFilename, cv_image );
+                    //cv::Mat cv_image(cv::Size(640, 480), CV_16UC1, frameBuffer);
+                    //cv::Mat cv_image(cv::Size(640, 480), CV_32FC1, frameBuffer);
+                    //cv::imwrite( cvFilename, cv_image );
                     //cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
                     //cv::imshow( "Display window", cv_image );                   // Show our image inside it.
 
