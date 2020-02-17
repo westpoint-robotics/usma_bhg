@@ -128,20 +128,16 @@ int main(int argc, char **argv)
                 frameBuffer = new dword[frameSize];
 
                 //Before taking a picture, grab timestamp to record to filename                 
-                time_t tt;
-                tm local_tm;
-                tm last_tm;
-
                 ros::Time rosTimeSinceEpoch = ros::Time::now();
                 std::time_t raw_time = static_cast<time_t>(rosTimeSinceEpoch.toSec());    
-                local_tm = *localtime(&raw_time);
+                tm local_tm = *localtime(&raw_time);
 
                 char dateTime [50];
-                int n;
-                n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, rosTimeSinceEpoch.nsec);
+                int ros_millisec = int((rosTimeSinceEpoch.nsec)/1000000);
+                int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
 
-                string imageDirectory = "/home/user1/Data/"+img_dir+ "/GOBI_000088/"; 
-                string imageFilename =  "/home/user1/Data/"+img_dir+ "/GOBI_000088/Xenic-Gobi" + "_" + dateTime + ".xpng";
+                string imageDirectory = "/home/user1/Data/"+img_dir+ "/GOBI000088/"; 
+                string imageFilename =  "/home/user1/Data/"+img_dir+ "/GOBI000088/GOBI000088" + "_" + dateTime + ".xpng";
 
                 // ... grab a frame from the camera.
                 if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)

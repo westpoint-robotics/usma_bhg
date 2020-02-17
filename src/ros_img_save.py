@@ -39,10 +39,9 @@ bridge = CvBridge()
 dataDirectory = "/home/user1/Data/"; 
 # Camera directories, csv file, and bag file all go here
 #now = datetime.now() # current date and time
-flirSN = "FLIR_18284612"
+flirSN = "FLIR18284612"
 flirDirectory = ""
 csvFilename = ""
-#gobiSN = "XEN_000088"
 timestamp_data = ""
 is_recording = False
 rel_alt = Altitude()
@@ -129,7 +128,7 @@ def image_callback(msg):
         #Before taking a picture, grab timestamp to record to filename, and CSV
         tNow = rospy.get_time() # current date and time
         #rospy.loginfo("tNow = %.3f\n", tNow)
-        datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')  
+        datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
               
         #Grab the image and convert it to OpenCV format        
         try:
@@ -137,8 +136,8 @@ def image_callback(msg):
             cv2_img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
         except CvBridgeError, e:
             print(e)
-        
-        flirFilename = flirDirectory + "/" + flirSN + "_" + datetimeData + ".ppm" #date_time + ".ppm"
+            
+        flirFilename = flirDirectory + "/" + flirSN + "_" + datetimeData[:-3] + ".ppm" #date_time + ".ppm"            
         # Save your OpenCV2 image as a jpeg 
         cv2.imwrite(flirFilename, cv2_img)
         imageCount = imageCount + 1

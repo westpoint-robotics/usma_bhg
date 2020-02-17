@@ -65,6 +65,9 @@ include_directories(include
 add_executable(gobi_subscriber src/gobi_subscriber.cpp)
 target_link_libraries(gobi_subscriber ${catkin_LIBRARIES} -lxeneth -lstdc++ )
 
+add_executable(gobi_subscriber2 src/gobi_subscriber2.cpp)
+target_link_libraries(gobi_subscriber2 ${catkin_LIBRARIES} -lstdc++ )
+
 #add_dependencies(bool_pub beginner_tutorials_generate_messages_cpp)
 
 #add_executable(bool_sub src/bool_sub.cpp)
