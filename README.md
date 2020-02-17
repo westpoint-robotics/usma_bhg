@@ -1,8 +1,13 @@
 # usma_bhg
 # TODOs
-- Migrate FLIR img_save to a nodelet.
-
-
+- Migrate FLIR img_save to a nodelet
+- Develop scripts to inform us if system is running as expected:
+1. Did the Flir driver start successfully
+2. Is the CSV being filled out properly
+3. Did the Gobiu driver start correctly
+4. Are pictures being saved to the correct director
+5. Did we leave a lense cap on
+- Develop a script that makes the newest data folder to a folder called latest, much like ros logs. Done 17FEB
 
 
 #ROS nodes, launch files, etc. for Bloodhound Gang project (USMA)
