@@ -4,8 +4,8 @@
 #include "std_msgs/String.h"
 
 #include <sys/stat.h> // mkdir command
-#include "stdio.h" // C Standard Input/Output library.
-#include "XCamera.h" // Xeneth SDK main header.
+#include "stdio.h"    // C Standard Input/Output library.
+#include "XCamera.h"  // Xeneth SDK main header.
 #include <iostream>   // std::cout
 #include <locale>
 #include <string>     // std::string, std::to_string
