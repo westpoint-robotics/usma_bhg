@@ -41,6 +41,7 @@ dataDirectory = "/home/user1/Data/";
 #now = datetime.now() # current date and time
 flirSN = "FLIR18284612"
 flirDirectory = ""
+flirFilename = ""
 csvFilename = ""
 timestamp_data = ""
 is_recording = False
@@ -54,7 +55,7 @@ imageCount = 0
 
 
 def make_header():
-    header = "rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
+    header = "filename,rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
     header += "gps_fix.status.status,gps_fix.status.service,gps_fix.latitude,gps_fix.longitude,gps_fix.altitude,"
     header += "imu_data.magnetic_field.x,imu_data.magnetic_field.y,imu_data.magnetic_field.z,"
     header += "imu_mag.orientation.x,imu_mag.orientation.y,imu_mag.orientation.z,imu_mag.orientation.w, imu_mag.angular_velocity.x,imu_mag.angular_velocity.y,imu_mag.angular_velocity.z,"
@@ -74,7 +75,7 @@ def make_logentry():
     vel_str = str(vel_gps.twist.linear.x) + "," + str(vel_gps.twist.linear.y) + "," + str(vel_gps.twist.linear.z) + ","
     vel_str += str(vel_gps.twist.angular.x) + "," + str(vel_gps.twist.angular.y) + "," + str(vel_gps.twist.angular.z)  
     temp_str = str(temp_imu.temperature)    
-    output = str(rospy.Time.now()) + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str
+    output = flirFilename + "," + str(rospy.Time.now()) + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str
     return output
 
 def alt_cb(msg):
@@ -124,6 +125,7 @@ def record_callback(msg):
 
 def image_callback(msg):  
     global imageCount
+    global flirFilename
     if (is_recording and os.path.exists(csvFilename) ):
         #Before taking a picture, grab timestamp to record to filename, and CSV
         tNow = rospy.get_time() # current date and time

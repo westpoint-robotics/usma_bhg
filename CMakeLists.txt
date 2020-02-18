@@ -67,6 +67,11 @@ include_directories(include
 add_executable(gobi_subscriber src/gobi_subscriber.cpp)
 target_link_libraries(gobi_subscriber ${catkin_LIBRARIES} -lxeneth -lstdc++  ${OpenCV_LIBS})
 
+#add_executable(imu_subscriber src/imu_subscriber.cpp)
+#target_link_libraries(imu_subscriber ${catkin_LIBRARIES} -lstdc++)
+#add_executable(csv_writer src/csv_writer.cpp)
+#target_link_libraries(csv_writer ${catkin_LIBRARIES} -lstdc++)
+
 #add_dependencies(bool_pub beginner_tutorials_generate_messages_cpp)
 
 #add_executable(bool_sub src/bool_sub.cpp)
