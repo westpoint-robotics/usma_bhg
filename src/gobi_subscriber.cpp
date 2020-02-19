@@ -56,17 +56,11 @@ std::ofstream csvOutfile;
 
 sensor_msgs::MagneticField mag_data;
 sensor_msgs::Imu imu_data;
+mavros_msgs::Altitude rel_alt;
+sensor_msgs::NavSatFix gps_fix;
+geometry_msgs::TwistStamped vel_gps;
+sensor_msgs::Temperature temp_imu;
 
-/*
-//timestamp_data = "";
-//is_recording = False;
-rel_alt = Altitude();
-gps_fix = NavSatFix();
-imu_mag = MagneticField();
-imu_data = Imu();
-vel_gps = TwistStamped();
-temp_imu = Temperature();
-*/
 string char_array_to_string(char* char_array)
 {
     string my_string(char_array);
@@ -98,48 +92,21 @@ string make_logentry()
     string vel_str;  
     string temp_str;
     string output;
-    /*
-    alt_str = imageFilename + "," + str(rel_alt.monotonic) + "," + str(rel_alt.amsl) + "," + str(rel_alt.local) + "," + str(rel_alt.relative); 
-    gps_str = str(gps_fix.status.status) + "," + str(gps_fix.status.service) + "," + str(gps_fix.latitude) + "," + str(gps_fix.longitude) + "," + str(gps_fix.altitude); 
-    mag_str = str(imu_mag.magnetic_field.x) + "," + str(imu_mag.magnetic_field.y) + "," + str(imu_mag.magnetic_field.z);
-    */
-    alt_str = imageFilename + "," + char_array_to_string(dateTime) + ",0,0,0,0"; 
-    gps_str = "0,0,0,0,0"; 
+    
+    alt_str = imageFilename + "," + char_array_to_string(dateTime) + "," 
+              + to_string(rel_alt.monotonic) + "," + to_string(rel_alt.amsl) + "," + to_string(rel_alt.local) + "," + to_string(rel_alt.relative); 
+    gps_str = to_string(gps_fix.status.status) + "," + to_string(gps_fix.status.service) + "," + to_string(gps_fix.latitude) + "," + to_string(gps_fix.longitude) + "," + to_string(gps_fix.altitude);; 
     mag_str = to_string(mag_data.magnetic_field.x) + "," + to_string(mag_data.magnetic_field.y) + "," + to_string(mag_data.magnetic_field.z);    
     imu_str = to_string(imu_data.orientation.x) + "," + to_string(imu_data.orientation.y) + "," + to_string(imu_data.orientation.z) + "," + to_string(imu_data.orientation.w) + ",";
     imu_str += to_string(imu_data.angular_velocity.x) + "," + to_string(imu_data.angular_velocity.y) + "," + to_string(imu_data.angular_velocity.z) + ",";
     imu_str += to_string(imu_data.linear_acceleration.x) + "," + to_string(imu_data.linear_acceleration.y) + "," + to_string(imu_data.linear_acceleration.z);    
-    vel_str = "0,0,0,";
-    vel_str += "0,0,0";  
-    temp_str = "0";
+    vel_str = to_string(vel_gps.twist.linear.x) + "," + to_string(vel_gps.twist.linear.y) + "," + to_string(vel_gps.twist.linear.z);
+    vel_str += to_string(vel_gps.twist.angular.x) + "," + to_string(vel_gps.twist.angular.y) + "," + to_string(vel_gps.twist.angular.z);  
+    temp_str = to_string(temp_imu.temperature);
     output = alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str;
     return output;
 }
 /*
-void alt_cb(msg)
-{
-    rel_alt = msg;
-}        
-
-void gps_cb(msg)
-{
-    gps_fix = msg;
-}    
-
-void mag_cb(msg)
-{
-    imu_mag = msg;
-}    
-
-void imu_cb(msg)
-{
-    imu_data = msg;
-}    
-
-void vel_cb(msg)
-{
-    vel_gps = msg;
-}
 
 void temp_cb(msg)
 {
@@ -149,23 +116,34 @@ void temp_cb(msg)
 /*** GOBI CSV CODE ***/
 
 //NBL: ROS Compliance
-void mag_cb(const sensor_msgs::MagneticField::ConstPtr& msg){
-     /*
-     ROS_INFO("*** Gobi ***:\nlinear acceleration\
-                 \nx: [%f]\ny:[%f]\nz:[%f]", msg->linear_acceleration.x,
-                 msg->linear_acceleration.y, msg->linear_acceleration.z);
-    */
+void mag_cb(const sensor_msgs::MagneticField::ConstPtr& msg)
+{
     mag_data = *msg;
 }
 
-void imu_cb(const sensor_msgs::Imu::ConstPtr& msg){
-     /*
-    ROS_INFO("*** Gobi ***:\nlinear acceleration\
-                 \nx: [%f]\ny:[%f]\nz:[%f]", msg->linear_acceleration.x,
-                 msg->linear_acceleration.y, msg->linear_acceleration.z);
-    */
+void imu_cb(const sensor_msgs::Imu::ConstPtr& msg)
+{
     imu_data = *msg;
-    //imu_data = msg->data.c_str();
+}
+
+void alt_cb(const mavros_msgs::Altitude::ConstPtr& msg)
+{
+    rel_alt = *msg;
+}
+
+void gps_cb(const sensor_msgs::NavSatFix::ConstPtr& msg)
+{
+    gps_fix = *msg;
+}
+
+void vel_cb(const geometry_msgs::TwistStamped::ConstPtr& msg)
+{
+    vel_gps = *msg;
+}
+
+void temp_cb(const sensor_msgs::Temperature::ConstPtr& msg)
+{
+    temp_imu = *msg;
 }
 
 void recordCallback(const std_msgs::Bool::ConstPtr& msg)
@@ -208,10 +186,14 @@ int main(int argc, char **argv)
     //NBL: ROS Compliance{
     ros::init(argc, argv, "gobi_capture");
     ros::NodeHandle n;
-    ros::Subscriber record_sub = n.subscribe("record", 1000, recordCallback);
-    ros::Subscriber dir_sub = n.subscribe("directory", 1000, dirCallback);
-    ros::Subscriber mag_sub = n.subscribe("/mavros/mag/data", 1000, mag_cb);
-    ros::Subscriber imu_sub = n.subscribe("/mavros/imu/data", 1000, imu_cb);
+    ros::Subscriber record_sub  = n.subscribe("record", 1000, recordCallback);
+    ros::Subscriber dir_sub     = n.subscribe("directory", 1000, dirCallback);
+    ros::Subscriber alt_sub     = n.subscribe("/mavros/altitude", 1000, alt_cb);
+    ros::Subscriber gps_sub     = n.subscribe("/mavros/global_position/raw/fix", 1000, gps_cb);
+    ros::Subscriber vel_sub     = n.subscribe("/mavros/global_position/raw/gps_vel", 1000, vel_cb); 
+    ros::Subscriber mag_sub     = n.subscribe("/mavros/imu/mag", 1000, mag_cb);
+    ros::Subscriber imu_sub     = n.subscribe("/mavros/imu/data", 1000, imu_cb);
+    ros::Subscriber temp_sub    = n.subscribe("/mavros/imu/temperature_imu", 1000, temp_cb);
 
     // Variables
     XCHANDLE handle = 0; // Handle to the camera
