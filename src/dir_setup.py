@@ -23,8 +23,7 @@ def main():
     directory_topic = "directory"
     dataDirectory = "/home/user1/Data/"
     rospy.init_node('directory_setup')  
-    #tNow = datetime.tNow() 
-    #missionName = tNow.strftime("%Y%m%d_%H%M%S_%f")[:-3]
+    
     tNow = rospy.get_time() # current date and time
     #rospy.loginfo("tNow = %.3f\n", tNow)
     missionName = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')

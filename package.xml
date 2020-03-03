@@ -59,6 +59,10 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
+<build_depend>image_transport</build_depend>
+
+<exec_depend>image_transport</exec_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

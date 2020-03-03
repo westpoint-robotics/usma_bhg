@@ -27,6 +27,10 @@
 #include <opencv2/opencv.hpp>
 #include <highgui.h>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <image_transport/image_transport.h>
+#include <sensor_msgs/image_encodings.h>
+#include <cv_bridge/cv_bridge.h>
+
 
 using namespace std;
 using namespace std::chrono;
@@ -34,13 +38,14 @@ using namespace std::chrono;
 double ros_now;
 //NBL: ROS Compliance
 std_msgs::Bool record;
-string img_dir;
+string img_dir = "temp"; // If no directory specified then save to here
 ros::Time rosTimeSinceEpoch;
 std::time_t raw_time;    
 tm local_tm;
 
 char dateTime [50];
 int ros_millisec;
+int recordStartTime;
 //int n;
 string imageDirectory; 
 string imageFilename;
@@ -195,11 +200,19 @@ int main(int argc, char **argv)
     ros::Subscriber imu_sub     = n.subscribe("/mavros/imu/data", 1000, imu_cb);
     ros::Subscriber temp_sub    = n.subscribe("/mavros/imu/temperature_imu", 1000, temp_cb);
 
+    image_transport::ImageTransport it_(n);
+    image_transport::Publisher image_pub_ = it_.advertise("/gobi_image", 1);
+
+    cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+
+
+
+
     // Variables
     XCHANDLE handle = 0; // Handle to the camera
     ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
     dword *frameBuffer = 0; // 16-bit buffer to store the capture frame.
-    dword frameSize = 0; // The size in bytes of the raw image.
+    dword frameSize = 0; // The size in bytes of the raw image. 
     imageCount = 0;
 
     ros_now = ros::WallTime::now().toSec() * 1e-6;
@@ -236,17 +249,19 @@ int main(int argc, char **argv)
         XC_SetColourMode(handle, ColourMode_Profile);
 
         // Determine framesize for a 32-bit buffer.
-        frameSize = XC_GetWidth(handle) * XC_GetHeight(handle);
+        frameSize = XC_GetWidth(handle) * XC_GetHeight(handle); // currently = 307200 which is 640x480
+        ROS_INFO("*** Gobi ***: Frame size is: %d",frameSize);
 
         // Initialize the 32-bit buffer.
-        frameBuffer = new dword[frameSize];
-        }
+        //frameBuffer = new dword[frameSize];
+      }
     }
     else
     {
         ROS_ERROR("*** Gobi ***: Failed to initialize. EXITING NOW!");
         exit(1);   
     }
+    
     //Initialize ros time ONCE
     ros::Time::init();
     ros::Rate loop_rate(20); //TODO how fast should this be?
@@ -255,60 +270,66 @@ int main(int argc, char **argv)
         //Can be stopped with a Ctrl-C, but otherwise, loop forever.
         
         //NBL: record = true      
-        if(record.data)
+        if(record.data)    
+        //if(true)
         {
-                // Initialize the 32-bit buffer.
-                //frameBuffer = new dword[frameSize];
+            // Initialize the 32-bit buffer.
+            //frameBuffer = new dword[frameSize];
 
-                //Before taking a picture, grab timestamp to record to filename                 
-                rosTimeSinceEpoch = ros::Time::now();
-                raw_time = static_cast<time_t>(rosTimeSinceEpoch.toSec());    
-                local_tm = *localtime(&raw_time);
+            //Before taking a picture, grab timestamp to record to filename                 
+            rosTimeSinceEpoch = ros::Time::now();
+            raw_time = static_cast<time_t>(rosTimeSinceEpoch.toSec());    
+            local_tm = *localtime(&raw_time);
+            
+            ros_millisec = int((rosTimeSinceEpoch.nsec)/1000000);
+            
+            int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
 
-                ros_millisec = int((rosTimeSinceEpoch.nsec)/1000000);
-                int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
+            imageDirectory = "/home/user1/Data/" + img_dir + "/GOBI000088/"; 
+            imageFilename  =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
+            cvFilename     =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
+            
+            
+            // Initialize the 32-bit buffer.
+            frameBuffer = new dword[frameSize];
+           
+            if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
+            {
+                ROS_ERROR("*** Gobi ***: problem while fetching frame, errorCode %lu", errorCode);
+            }
+            else
+            {         
+                // TODO IF successful grab do a deep copy and write it to disk.
+                //cv::Mat cv_image(cv::Size(640, 480), CV_16UC1, frameBuffer);
+                cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, frameBuffer);
+                cv::imwrite( cvFilename, cv_image );
 
-                imageDirectory = "/home/user1/Data/"+img_dir+ "/GOBI000088/"; 
-                imageFilename =  "/home/user1/Data/"+img_dir+ "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
-                cvFilename =  "/home/user1/Data/"+img_dir+ "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
+                cv_ptr->encoding = "rgba8";
+                cv_ptr->header.stamp =  ros::Time::now();
+                cv_ptr->header.frame_id = "/gobi";
 
-                // ... grab a frame from the camera.
-                //if ((errorCode = XC_GetFrame(handle, FT_16_BPP_GRAY, XGF_Blocking, frameBuffer, frameSize * 2 /* bytes per pixel */)) != I_OK)
-                //if ((errorCode = XC_GetFrame(handle, FT_32_BPP_GRAY, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
-                if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
+                cv_ptr->image = cv_image;
+                image_pub_.publish(cv_ptr->toImageMsg());
+ 
+
+                //cv::waitKey(0);
+                haveRecorded = true;
+
+                if((errorCode = XC_SaveData(handle, imageFilename.c_str(), XSD_SaveThermalInfo | XSD_RFU_1)) != I_OK)
                 {
-                    ROS_ERROR("*** Gobi ***: problem while fetching frame, errorCode %lu", errorCode);
+                    ROS_ERROR("*** Gobi ***: problem saving data, errorCode %lu\n", errorCode);
                 }
                 else
-                {         
-                    // TODO IF successful grab do a deep copy and write it to disk.
-                    //cv::Mat cv_image(cv::Size(640, 480), CV_16UC1, frameBuffer);
-                    //cv::Mat cv_image(cv::Size(640, 480), CV_32FC1, frameBuffer);
-                    //cv::imwrite( cvFilename, cv_image );
-                    //cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-                    //cv::imshow( "Display window", cv_image );                   // Show our image inside it.
-
-                    //cv::waitKey(0);
-
-
-                    //ROS_INFO("=*=*=*=* Image directory is : [%s] =*=*=*=*", imageFilename.c_str());                    
-                    if((errorCode = XC_SaveData(handle, imageFilename.c_str(), XSD_SaveThermalInfo | XSD_RFU_1)) != I_OK)
-                    {
-                        ROS_ERROR("*** Gobi ***: problem saving data, errorCode %lu\n", errorCode);
-                    }else
-                    {
-                        imageCount += 1;
-                        //NBL When you save your image, update your CSV file
-                        /***  CSV FILE UPDATE ***/
-                        csvOutfile << make_logentry() << endl;
-
-                        
-                        //csvOutfile << "Data";
-                        /***  CSV FILE UPDATE ***/
-                        ROS_INFO("*** Gobi ***: %s | %d\n", dateTime, imageCount);
-                        //ROS_INFO("*** Gobi ***: saved successfully!\n");
-                    }
-                }
+                {
+                    imageCount += 1;
+                    //NBL When you save your image, update your CSV file
+                    /***  CSV FILE UPDATE ***/
+                    csvOutfile << make_logentry() << endl;
+                    
+                    /***  CSV FILE UPDATE ***/
+                    ROS_INFO("*** Gobi ***: %s | %d\n", dateTime, imageCount);
+                 }
+            }
            
         }//NBL: /record = 1
         //NBL: record = 0
@@ -334,18 +355,27 @@ int main(int argc, char **argv)
     if(XC_IsCapturing(handle))
     {
         // ... stop capturing.
-        printf("Stop capturing.\n");
+        printf("*** Gobi ***: Stop capturing.\n");
         if ((errorCode = XC_StopCapture(handle)) != I_OK)
         {
             printf("Could not stop capturing, errorCode: %lu\n", errorCode);
         }
     }
 
+    printf("*** Gobi ***: Clearing buffers.\n");
+    if (frameBuffer != 0)
+    {
+       delete [] frameBuffer;
+       frameBuffer = 0;
+    }
+
     // When the handle to the camera is still initialised ...
     if (XC_IsInitialised(handle))
     {
-        printf("Gobi: closing connection to camera.\n");
+        printf("*** Gobi ***: closing connection to camera.\n");
         XC_CloseCamera(handle);
     }
+
+    
     return 0;
 }

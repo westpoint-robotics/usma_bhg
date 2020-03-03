@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   cv_bridge
+image_transport
 )
 #find_library(PNG16 NAMES png16 libpng16 lpng16 PATHS /usr/lib/x86_64-linux-gnu /snap/core/7270/usr/lib/x86_64-linux-gnu)
 #if(NOT PNG12)
