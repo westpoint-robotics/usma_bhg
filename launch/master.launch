@@ -1,6 +1,6 @@
 <launch>
 
-  <include file="$(find usma_mavros)/launch/px4.launch"/> 
+  <include file="$(find usma_bhg)/launch/px4.launch"/> 
    
   <node pkg="rosbag" type="record" name="rosbag_record"
        args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/"/>
