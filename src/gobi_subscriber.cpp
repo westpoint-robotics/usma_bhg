@@ -186,8 +186,8 @@ int main(int argc, char **argv)
     //NBL: ROS Compliance{
     ros::init(argc, argv, "gobi_capture");
     ros::NodeHandle n;
-    ros::Subscriber record_sub  = n.subscribe("record", 1000, recordCallback);
-    ros::Subscriber dir_sub     = n.subscribe("directory", 1000, dirCallback);
+    ros::Subscriber record_sub  = n.subscribe("/record", 1000, recordCallback);
+    ros::Subscriber dir_sub     = n.subscribe("/directory", 1000, dirCallback);
     ros::Subscriber alt_sub     = n.subscribe("/mavros/altitude", 1000, alt_cb);
     ros::Subscriber gps_sub     = n.subscribe("/mavros/global_position/raw/fix", 1000, gps_cb);
     ros::Subscriber vel_sub     = n.subscribe("/mavros/global_position/raw/gps_vel", 1000, vel_cb); 
@@ -242,9 +242,6 @@ int main(int argc, char **argv)
         // Determine framesize for a 32-bit buffer.
         frameSize = XC_GetWidth(handle) * XC_GetHeight(handle); // currently = 307200 which is 640x480
         ROS_INFO("*** Gobi ***: Frame size is: %d",frameSize);
-
-        // Initialize the 32-bit buffer.
-        //frameBuffer = new dword[frameSize];
       }
     }
     else
@@ -263,9 +260,6 @@ int main(int argc, char **argv)
         if(record.data)    
         //if(true)
         {
-            // Initialize the 32-bit buffer.
-            //frameBuffer = new dword[frameSize];
-
             //Before taking a picture, grab timestamp to record to filename                 
             rosTimeSinceEpoch = ros::Time::now();
             raw_time = static_cast<time_t>(rosTimeSinceEpoch.toSec());    
@@ -275,7 +269,7 @@ int main(int argc, char **argv)
             
             int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
 
-            imageDirectory = "/home/user1/Data/" + img_dir + "/GOBI000088/"; 
+            imageDirectory =  "/home/user1/Data/" + img_dir + "/GOBI000088/"; 
             imageFilename  =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
             cvFilename     =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
             
@@ -290,7 +284,6 @@ int main(int argc, char **argv)
             else
             {         
                 // TODO IF successful grab do a deep copy and write it to disk.
-                //cv::Mat cv_image(cv::Size(640, 480), CV_16UC1, frameBuffer);
                 cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, frameBuffer);
                 cv::imwrite( cvFilename, cv_image );
 
@@ -301,9 +294,6 @@ int main(int argc, char **argv)
                 cv_ptr->image = cv_image;
                 image_pub_.publish(cv_ptr->toImageMsg());
 
-
-                //cv::waitKey(0);
-                haveRecorded = true;
 
                 if((errorCode = XC_SaveData(handle, imageFilename.c_str(), XSD_SaveThermalInfo | XSD_RFU_1)) != I_OK)
                 {

@@ -30,7 +30,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
   <arg name="camera_serial" default="0" />
   <arg name="calibrated" default="0" />
 
-  <arg name="image_format_color_coding" value="GRB8" />
+  <arg name="image_format_color_coding" value="BayerRG8" />
+  <!-- <arg name="image_format_color_coding" value="BGR8" /> -->
   <arg name="auto_white_balance" value="On" />  
 
   <group ns="$(arg camera_name)">
