@@ -6,6 +6,6 @@
        args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/"/>
 
   <include file="$(find usma_bhg)/launch/img_capture.launch"/>
- 
+
 </launch>
 

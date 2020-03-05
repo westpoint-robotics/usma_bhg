@@ -181,11 +181,6 @@ void dirCallback(const std_msgs::String::ConstPtr& msg)
             
 }
 
-/*
-int AcquireImage()
-{
-}*/
-
 int main(int argc, char **argv)
 {
     //NBL: ROS Compliance{
@@ -202,17 +197,13 @@ int main(int argc, char **argv)
 
     image_transport::ImageTransport it_(n);
     image_transport::Publisher image_pub_ = it_.advertise("/gobi_image", 1);
-
     cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
-
-
-
 
     // Variables
     XCHANDLE handle = 0; // Handle to the camera
     ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
     dword *frameBuffer = 0; // 16-bit buffer to store the capture frame.
-    dword frameSize = 0; // The size in bytes of the raw image. 
+    dword frameSize = 0; // The size in bytes of the raw image.
     imageCount = 0;
 
     ros_now = ros::WallTime::now().toSec() * 1e-6;
@@ -268,7 +259,6 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         //Can be stopped with a Ctrl-C, but otherwise, loop forever.
-        
         //NBL: record = true      
         if(record.data)    
         //if(true)
@@ -310,7 +300,7 @@ int main(int argc, char **argv)
 
                 cv_ptr->image = cv_image;
                 image_pub_.publish(cv_ptr->toImageMsg());
- 
+
 
                 //cv::waitKey(0);
                 haveRecorded = true;
