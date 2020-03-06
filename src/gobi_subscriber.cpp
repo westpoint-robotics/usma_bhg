@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     ros::Subscriber temp_sub    = n.subscribe("/mavros/imu/temperature_imu", 1000, temp_cb);
 
     image_transport::ImageTransport it_(n);
-    image_transport::Publisher image_pub_ = it_.advertise("/gobi_image", 1);
+    image_transport::Publisher image_pub_ = it_.advertise("gobi_image", 1);
     cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
 
     // Variables
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
             {         
                 // TODO IF successful grab do a deep copy and write it to disk.
                 cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, frameBuffer);
-                cv::imwrite( cvFilename, cv_image );
+                //cv::imwrite( cvFilename, cv_image );
 
                 cv_ptr->encoding = "rgba8";
                 cv_ptr->header.stamp =  ros::Time::now();
