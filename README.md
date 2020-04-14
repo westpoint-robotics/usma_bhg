@@ -55,7 +55,7 @@ b. Connecting from the Ground Station
 #2. Launching image capture nodes
    - On your ground station computer, in the terminal from 1b., run the command:  
                             
-     `roslaunch beginner_tutorials bhg_pub_sub.launch`   
+     `roslaunch usma_bhg master.launch`   
      
      you should be able to tab complete the package and launch file.  If successful, you should see output about the names of 
      the nodes you lauched, and ROS_INFO messages about "Starting Publisher", and then "Number of cameras detected: 1" (if 
