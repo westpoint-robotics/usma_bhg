@@ -11,8 +11,19 @@
 - Develop a script that makes a symlink from the newest data folder to a folder called latest, much like ros logs. Done 17FEB
 - Develop CSV building capability for Gobi
 
+# Set up of Companion Computer (Option 1): Full Sysem Image
+1. Use Clonezilla to image the development Companion Computer.
 
-#ROS nodes, launch files, etc. for Bloodhound Gang project (USMA)
+# Set up of Companion Computer (Option 2): Ground Up
+1. Use Clonezilla to burn an image with Ubuntu 18.04.
+2. Install ROS Melodic.
+3. Install Xenics SDK and dependencies.
+4. Install [usma_spinnaker](https://github.com/westpoint-robotics/usma_spinnaker).  This will also have you install the Spinnaker SDK and dependencies.
+5. Install [usma_mavros](https://github.com/westpoint-robotics/usma_mavros).
+6. Install usma_bhg.
+7. Edit bashrc.
+
+# ROS nodes, launch files, etc. for Bloodhound Gang project (USMA)
 
 This document will show you how to 
 1. Access the companion computer, "brix012" on the USMA BHG T650 platform from a groundstation computer running Ubuntu 16.04 or 18.04.
@@ -20,7 +31,7 @@ This document will show you how to
 3. The toggling of the ROS topic, "record" which indicates whether to start recording images from a FLIR Blackfly camera, which can be mounted to the UAV.
 4. Mount the FLIR camera and connect it to the Brix.
 ------------------------------------------------------
-#1. Ground Station to Companion Computer Connection
+# 1. Ground Station to Companion Computer Connection
    
 a. Ascertaining the Brix IP Address
    
@@ -52,7 +63,7 @@ b. Connecting from the Ground Station
     logged in, your terminal prompt should read, "user1@brix012", or similar (whatever the name of your companion computer is 
     to the right of the "@".
    
-#2. Launching image capture nodes
+# 2. Launching image capture nodes
    - On your ground station computer, in the terminal from 1b., run the command:  
                             
      `roslaunch usma_bhg master.launch`   
@@ -65,14 +76,12 @@ b. Connecting from the Ground Station
   
 NOTE: before recording images, or flying, you will want to ensure removal of the FLIR lens cap!
 
-#3. Starting and Stopping Image Recording
-   - To start recording images, make sure the terminal in which you did the roslaunch in 2. is active.  Press the "SPACE" 
-     bar.  You should see the message scrolling by change to "recordData: 1".
-   - To stop recording, press "Q".  The message in the terminal will return to "recordData: 0".  You can toggle back and 
+# 3. Starting and Stopping Image Recording
+   - To start recording images, bring up a new terminal.  Here you will use ROS to publish a message, which will tell any subscribing camera scripts to start acquiring and saving images.  Enter: `rostopic pub /record /std_msgs/Bool True`  Use Ctrl-C to get a new prompt; this will not stop the publishing of the "record" topic.
+   - To stop recording, Enter: `rostopic pub /record /std_msgs/Bool False`.  You can toggle back and 
      forth using these two buttons as much as you want.
-   - To end the nodes that have been launched, you can use Ctrl-C.
    
-#4. Mounting the FLIR
+# 4. Mounting the FLIR
    - Locate the mounting bracket, screws, and washers for mounting.
      
      <img src="pictures/Bracket_to_Battery-Cage.jpg"
