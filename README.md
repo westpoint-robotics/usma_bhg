@@ -11,26 +11,36 @@
 - Develop a script that makes a symlink from the newest data folder to a folder called latest, much like ros logs. Done 17FEB
 - Develop CSV building capability for Gobi
 
-# Set up of Companion Computer (Option 1): Full Sysem Image
-1. Use Clonezilla to image the development Companion Computer.
-
-# Set up of Companion Computer (Option 2): Ground Up
-1. Use Clonezilla to burn an image with Ubuntu 18.04.
-2. Install ROS Melodic.
-3. Install Xenics SDK and dependencies.
-4. Install [usma_spinnaker](https://github.com/westpoint-robotics/usma_spinnaker).  This will also have you install the Spinnaker SDK and dependencies.
-5. Install [usma_mavros](https://github.com/westpoint-robotics/usma_mavros).
-6. Install usma_bhg.
-7. Edit bashrc.
-
+      
 # ROS nodes, launch files, etc. for Bloodhound Gang project (USMA)
 
 This document will show you how to 
-1. Access the companion computer, "brix012" on the USMA BHG T650 platform from a groundstation computer running Ubuntu 16.04 or 18.04.
+0. Set up a companion computer (NUC, Brix, or similar).
+1. Access the companion computer, (e.g. "brix012", "nuc002", etc.) on the USMA BHG T650 platform from a groundstation computer running Ubuntu 16.04 or 18.04.
 2. Launch ROS nodes, "bool_pub" and "camera_subscriber", which will allow
 3. The toggling of the ROS topic, "record" which indicates whether to start recording images from a FLIR Blackfly camera, which can be mounted to the UAV.
 4. Mount the FLIR camera and connect it to the Brix.
 ------------------------------------------------------
+# 0a. Set up of Companion Computer (Option 1): Full Sysem Image
+1. Use Clonezilla to image the development Companion Computer.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image. 
+
+# 0b. Set up of Companion Computer (Option 2): Ground Up
+1. Use Clonezilla to burn an image with Ubuntu 18.04.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image. 
+2. Install [ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu).
+3. Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.
+4. Install [usma_spinnaker](https://github.com/westpoint-robotics/usma_spinnaker).  This will also have you install the Spinnaker SDK and dependencies.
+5. Install [usma_mavros](https://github.com/westpoint-robotics/usma_mavros).
+6. Install usma_bhg.
+7. Edit bashrc:
+   a. `cd /home/user1/.bashrc`
+   b. `gedit .bashrc`
+   c. At the bottom of the .bashrc file, insert the lines:
+      source /opt/ros/melodic/setup.bash
+      source /home/user1/catkin_ws/devel/setup.bash
+      export ROS_MASTER_URI=http://[NUC_IP]:11311
+      export ROS_IP=[NUC_IP]
+   d. Save these changes.
+
 # 1. Ground Station to Companion Computer Connection
    
 a. Ascertaining the Brix IP Address
