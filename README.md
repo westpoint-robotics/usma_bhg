@@ -25,19 +25,47 @@ This document will show you how to:
    
 ### b. Option 2: From a clean install of Ubuntu
 1. Follow the instructions at: https://github.com/westpoint-robotics/os-setup/blob/master/ubuntu18_bhg.md
-2. Follow the instructions in part "c. Option3" below. 
+2. Follow the instructions in part "c. Option3" below, starting with step 2. 
 
 ### c. Option 3: From a computer with ROS already installed
-1. Use Clonezilla to burn an image with Ubuntu 18.04.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image. 
-2. Install [ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu).
-3. Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.
-4. Install [usma_spinnaker](https://github.com/westpoint-robotics/usma_spinnaker).  This will also have you install the Spinnaker SDK and dependencies.
-5. Install [usma_mavros](https://github.com/westpoint-robotics/usma_mavros).
-6. Install usma_bhg.
-7. Edit bashrc:
+1. Use Clonezilla to burn an image with Ubuntu 18.04.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image.   
+2. Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.  
+- Extract the files and cd into the created directory and run the below commands.  
+- `sudo apt-get install libusb-0.1-4`  
+- `sudo dpkg -i xeneth_2.7.0-181_amd64.deb`  
+
+3. Install spinnaker SDK and dependancies:  
+- Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457  
+- Uncompress the folders to get the folder spinnaker-2.0.0.109-Ubuntu18.04-amd64-pkg/spinnaker-2.0.0.109-amd64  
+`sudo apt-get install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev`  
+`sudo sh install_spinnaker.sh`  
+
+4. If you do not already have a catkin_ws then create one  
+`mkdir -p ~/catkin_ws/src`  
+`cd ~/catkin_ws/`  
+`catkin_make`  
+`echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc`  
+`source ~/.bashrc`  
+
+5. Clone dependencies and ROS flir camera drivers into catkin_ws:  
+`sudo apt-get install ros-melodic-camera-info-manager ros-melodic-dynamic-reconfigure`  
+`cd ~/catkin_ws/src/`  
+`git clone https://github.com/westpoint-robotics/flir_camera_driver.git`  
+`cd ..`  
+`catkin_make`  
+
+6. Install MavROS:  
+`sudo apt-get install ros-melodic-mavros`  
+
+7. Install usma_bhg.  
+`cd ~/catkin_ws/src/`  
+`git clone https://github.com/westpoint-robotics/usma_bhg.git`
+
+
+8. Edit bashrc:
    a. `cd /home/user1/.bashrc`
    b. `gedit .bashrc`
-   c. At the bottom of the .bashrc file, insert the lines:
+   c. At the bottom of the .bashrc file, insert the lines (if not already added):
       source /opt/ros/melodic/setup.bash
       source /home/user1/catkin_ws/devel/setup.bash
       export ROS_MASTER_URI=http://[NUC_IP]:11311
