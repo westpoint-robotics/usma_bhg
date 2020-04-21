@@ -7,6 +7,9 @@ import rospy
 import datetime
 #from datetime import datetime
 from std_msgs.msg import String
+from os.path import expanduser
+
+
 
 # This function was taken from roslogging.py to create a symlink to the latest directory
 def renew_latest_logdir(logfile_dir):
@@ -21,7 +24,8 @@ def renew_latest_logdir(logfile_dir):
 
 def main():
     directory_topic = "directory"
-    dataDirectory = "/home/user1/Data/"
+    home = expanduser("~")
+    dataDirectory = home + "/Data/"
     rospy.init_node('directory_setup')  
     
     tNow = rospy.get_time() # current date and time
@@ -42,7 +46,7 @@ def main():
 
     r = rospy.Rate(5) # 5hz
     while not rospy.is_shutdown():
-        pub.publish(missionName) #TODO change system to handle publish of missionDirectory
+        pub.publish(missionDirectory) #TODO change system to handle publish of missionDirectory
         r.sleep()
 
 if __name__ == '__main__':

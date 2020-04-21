@@ -36,7 +36,7 @@ from std_msgs.msg import Float64
 
 # Instantiate CvBridge
 bridge = CvBridge()
-dataDirectory = "/home/user1/Data/"; 
+dataDirectory = "/home/user1/Data/" # default value changes on subscribing
 # Camera directories, csv file, and bag file all go here
 #now = datetime.now() # current date and time
 flirSN = "FLIR18284612"
@@ -105,8 +105,8 @@ def temp_cb(msg):
 def directory_callback(msg):
     global flirDirectory
     global csvFilename
-    missionName = msg.data
-    missionDirectory = dataDirectory + missionName 
+    missionDirectory = msg.data
+    missionName = missionDirectory.split("/")[4]     
     flirDirectory    = missionDirectory + "/" + flirSN
     csvFilename      = missionDirectory + "/" + missionName + "_flir.csv"
     
