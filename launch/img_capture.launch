@@ -1,8 +1,8 @@
 <launch>
   
-<!--       -->
-   <node name="dir_setup" type="dir_setup.py" pkg="usma_bhg" output="screen"/>
 <!--        -->
+   <node name="dir_setup" type="dir_setup.py" pkg="usma_bhg" output="screen"/> 
+  <!--         --> 
    <include file="$(find usma_bhg)/launch/camera.launch"/>
    
    <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen"/> 

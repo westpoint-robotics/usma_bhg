@@ -176,7 +176,7 @@ void dirCallback(const std_msgs::String::ConstPtr& msg)
     {
         csvOutfile.open(csvFilename, std::ios_base::app); // append instead of overwrite 
         csvOutfile << make_header() << endl;   
-        ROS_INFO("*** Gobi ***: image directory created %i [%s]; along with CSV file %s\n", errno, img_dir.c_str(), csvFilename.c_str());
+        ROS_INFO("*** Gobi ***: image directory created %i [%s]\n\t\talong with CSV filenames [%s]\n", errno, img_dir.c_str(), csvFilename.c_str());
     }
             
 }
@@ -257,44 +257,43 @@ int main(int argc, char **argv)
     {
         //Can be stopped with a Ctrl-C, but otherwise, loop forever.
         //NBL: record = true      
-        if(record.data)    
-        //if(true)
+
+        //Before taking a picture, grab timestamp to record to filename                 
+        rosTimeSinceEpoch = ros::Time::now();
+        raw_time = static_cast<time_t>(rosTimeSinceEpoch.toSec());    
+        local_tm = *localtime(&raw_time);
+        
+        ros_millisec = int((rosTimeSinceEpoch.nsec)/1000000);
+        
+        int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
+
+        imageDirectory =  "/home/user1/Data/" + img_dir + "/GOBI000088/"; 
+        imageFilename  =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
+        cvFilename     =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
+        
+        // Initialize the 32-bit buffer.
+        frameBuffer = new dword[frameSize];
+       
+        if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
         {
-            //Before taking a picture, grab timestamp to record to filename                 
-            rosTimeSinceEpoch = ros::Time::now();
-            raw_time = static_cast<time_t>(rosTimeSinceEpoch.toSec());    
-            local_tm = *localtime(&raw_time);
-            
-            ros_millisec = int((rosTimeSinceEpoch.nsec)/1000000);
-            
-            int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
+            ROS_ERROR("*** Gobi ***: problem while fetching frame, errorCode %lu", errorCode);
+        }
+        else
+        {         
+            // TODO IF successful grab do a deep copy and write it to disk.
+            cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, frameBuffer);
+            //cv::imwrite( cvFilename, cv_image );
 
-            imageDirectory =  "/home/user1/Data/" + img_dir + "/GOBI000088/"; 
-            imageFilename  =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
-            cvFilename     =  "/home/user1/Data/" + img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
-            
-            
-            // Initialize the 32-bit buffer.
-            frameBuffer = new dword[frameSize];
-           
-            if ((errorCode = XC_GetFrame(handle, FT_32_BPP_RGBA, XGF_Blocking, frameBuffer, frameSize * 4 /* bytes per pixel */)) != I_OK)
+            cv_ptr->encoding = "rgba8";
+            cv_ptr->header.stamp =  ros::Time::now();
+            cv_ptr->header.frame_id = "/gobi";
+
+            cv_ptr->image = cv_image;
+            image_pub_.publish(cv_ptr->toImageMsg());
+
+            if(record.data)    
+            //if(true)
             {
-                ROS_ERROR("*** Gobi ***: problem while fetching frame, errorCode %lu", errorCode);
-            }
-            else
-            {         
-                // TODO IF successful grab do a deep copy and write it to disk.
-                cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, frameBuffer);
-                //cv::imwrite( cvFilename, cv_image );
-
-                cv_ptr->encoding = "rgba8";
-                cv_ptr->header.stamp =  ros::Time::now();
-                cv_ptr->header.frame_id = "/gobi";
-
-                cv_ptr->image = cv_image;
-                image_pub_.publish(cv_ptr->toImageMsg());
-
-
                 if((errorCode = XC_SaveData(handle, imageFilename.c_str(), XSD_SaveThermalInfo | XSD_RFU_1)) != I_OK)
                 {
                     ROS_ERROR("*** Gobi ***: problem saving data, errorCode %lu\n", errorCode);
@@ -309,40 +308,31 @@ int main(int argc, char **argv)
                     /***  CSV FILE UPDATE ***/
                     ROS_INFO("*** Gobi ***: %s | %d\n", dateTime, imageCount);
                  }
-            }
-           
-        }//NBL: /record = 1
-        //NBL: record = 0
-        else
-        {
+            }// End of if record
+        }// End if grame grabbed
 
-            //printf("Clearing buffers.\n");
-            if (frameBuffer != 0)
-            {
-                delete [] frameBuffer;
-                frameBuffer = 0;
-            }
-            //NBL: /record = 0
+        if (frameBuffer != 0)
+        {
+            delete [] frameBuffer;
+            frameBuffer = 0;
         }
         
         ros::spinOnce();
         loop_rate.sleep();
-    }
-    
-    // Cleanup.
-
+    } // end of big while loop
     // When the camera is still capturing, ...
+    
     if(XC_IsCapturing(handle))
     {
         // ... stop capturing.
-        printf("*** Gobi ***: Stop capturing.\n");
+        ROS_INFO("*** Gobi ***: Stop capturing.\n");
         if ((errorCode = XC_StopCapture(handle)) != I_OK)
         {
-            printf("Could not stop capturing, errorCode: %lu\n", errorCode);
+            ROS_INFO("*** GOBI ***: Could not stop capturing, errorCode: %lu\n", errorCode);
         }
     }
 
-    printf("*** Gobi ***: Clearing buffers.\n");
+    ROS_INFO("*** Gobi ***: Clearing buffers.\n");
     if (frameBuffer != 0)
     {
        delete [] frameBuffer;
@@ -352,7 +342,7 @@ int main(int argc, char **argv)
     // When the handle to the camera is still initialised ...
     if (XC_IsInitialised(handle))
     {
-        printf("*** Gobi ***: closing connection to camera.\n");
+        ROS_INFO("*** Gobi ***: closing connection to camera.\n");
         XC_CloseCamera(handle);
     }
 
