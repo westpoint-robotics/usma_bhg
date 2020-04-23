@@ -12,7 +12,7 @@
 8. Develop CSV building capability for Gobi
 
 ### ROS nodes, launch files, etc. for Bloodhound Gang project (USMA)
-This document will show you how to:   
+This document will show you how to:  
 1. Set up a companion computer (NUC, Brix, or similar).
 2. Access the companion computer, (e.g. "brix012", "nuc002", etc.) on the USMA BHG T650 platform from a groundstation computer running Ubuntu 16.04 or 18.04.
 3. Launch ROS nodes, "bool_pub" and "camera_subscriber", which will allow
@@ -28,17 +28,37 @@ This document will show you how to:
 2. Follow the instructions in part "c. Option3" below, starting with step 2. 
 
 ### c. Option 3: From a computer with ROS already installed
-1. Use Clonezilla to burn an image with Ubuntu 18.04.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image.   
+1. Use Clonezilla to burn an image with Ubuntu 18.04.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image.  
+
 2. Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.  
 - Extract the files and cd into the created directory and run the below commands.  
-- `sudo apt-get install libusb-0.1-4`  
+- $ `sudo apt-get install libusb-0.1-4`  
 - `sudo dpkg -i xeneth_2.7.0-181_amd64.deb`  
+- Add ip address into your local network  
+	- Go to Settings > Network > Wired, and click (+) button to add Gobi camera  
+	- In `Identity` tab, put the camera name (ex. `gobi`)  
+	- In `IPv4` tab, select `Manual` and enter the following information  
+	- Address: `169.254.107.22`  
+	- Netmask: `255.255.0.0`  
 
-3. Install spinnaker SDK and dependancies:  
+3. Install Spinnaker SDK and dependancies:  
 - Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457  
 - Uncompress the folders to get the folder spinnaker-2.0.0.109-Ubuntu18.04-amd64-pkg/spinnaker-2.0.0.109-amd64  
 `sudo apt-get install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev`  
 `sudo sh install_spinnaker.sh`  
+- During install process, add a new member to `flirimaging`
+<pre>
+Would you like to add a udev entry to allow access to USB hardware? If a udev entry is not added, your cameras may only be accessible by running Spinnaker as sudo.  
+[Y/n] $ <b>y</b>  
+Adding new members to usergroup flirimaging… To add a new member please enter username (or hit Enter to continue):  
+<b>Type your computer name (ex. $ user1)</b>  
+Writing the udev rules file… Do you want to restart the udev daemon?  
+[Y/n] $ <b>y</b>  
+Would you like to set USB-FS memory size to 1000 MB at startup (via /etc/rc.local)?  
+[Y/n] $ <b>y</b>  
+Would you like to make a difference by participating in the Spinnaker feedback program?  
+[Y/n] $ <b>n</b>  
+</pre>
 
 4. If you do not already have a catkin_ws then create one  
 `mkdir -p ~/catkin_ws/src`  
@@ -60,7 +80,6 @@ This document will show you how to:
 7. Install usma_bhg.  
 `cd ~/catkin_ws/src/`  
 `git clone https://github.com/westpoint-robotics/usma_bhg.git`
-
 
 8. Edit bashrc:
    a. `cd /home/user1/.bashrc`
