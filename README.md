@@ -84,19 +84,57 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 `catkin_make`  
 
 #5. Install MavROS  
+- Install the ROS package:  
 `sudo apt-get install ros-melodic-mavros`  
+- Use this script to download Deoid Model datasets for Mavros:  
+`sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh`  
 
 #6. Install usma_bhg  
 `cd ~/catkin_ws/src/`  
-`git clone https://github.com/westpoint-robotics/usma_bhg.git`
+`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
-#7 Edit bashrc:
-   a. `cd /home/user1/.bashrc`
-   b. `gedit .bashrc`
-   c. At the bottom of the .bashrc file, insert the lines (if not already added):
-      source /opt/ros/melodic/setup.bash
-      source /home/user1/catkin_ws/devel/setup.bash
-      export ROS_MASTER_URI=http://[NUC_IP]:11311
-      export ROS_IP=[NUC_IP]
-   d. Save these changes.
+#7 Edit bashrc:  
+   a. `cd /home/user1/.bashrc`  
+   b. `gedit .bashrc`  
+   c. At the bottom of the .bashrc file, insert the lines (if not already added):  
+      source /opt/ros/melodic/setup.bash  
+      source /home/user1/catkin_ws/devel/setup.bash  
+      export ROS_MASTER_URI=http://[NUC_IP]:11311   
+      export ROS_IP=[NUC_IP]  
+   d. Save these changes.  
+
+# Additonal installs for Mavproxy to work:
+`sudo apt-get install python3-dev python3-opencv python3-wxgtk3.0 libxml2-dev python3-pip python3-matplotlib python3-lxml`  
+`sudo apt-get update`    #Update the list of packages in the software center  
+`sudo apt-get install python3-dev python3-opencv python3-wxgtk3.0 libxml2-dev python3-pip python3-matplotlib python3-lxml`  
+`sudo pip3 install future`  
+`sudo pip3 install pymavlink`  
+`sudo pip3 install mavproxy`  
+
+# FTDI wiring.  
+- The FTDI adapter did not work as wired. I had to switch rx and tx wires for this to work with ardupilot. Now the rx pin on the pixhawk is wired to the rx pin on the FT232 and the same with the tx pin.  
+
+
+# Install the latest QGroundControl on Ubuntu 18.04
+- Install dependencies:
+`sudo apt-get install libqt5serialport5 qml-module-qtquick2 qtdeclarative5-qtquick2-plugin`
+- Download: https://firmware.ardupilot.org/Tools/APMPlanner/apm_planner_2.0.26_xenial64.deb
+- Install it with:
+`sudo dpkg -i apm_planner_2.0.26_xenial64.deb`
+
+# Mavros not working otally
+- Mavros was publishing diagnostics but no other topics. Running the below command fixed this:
+`rosservice call /mavros/set_stream_rate 0 10 1`
+- This is now incorporated in the ardupilot.launch node and appears to work from there.
+
+
+
+
+
+
+
+
+
+
+
 
