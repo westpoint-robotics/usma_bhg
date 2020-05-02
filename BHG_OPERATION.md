@@ -89,4 +89,13 @@ b. Connecting from the Ground Station
      alt="fully installed"
      class = "center"
      width="600px"/>
+     
+------------------------------------------------------   
+# 4. New Additions May2020
+- Cameras are now fully operational with running "master.launch". Previously Gobi would not take pictures until record was 'true'. Now both Gobi and Flir publish pictures upon starting master.luanch. They both listen for the topic "/record" to be true to start saving images or false to stop saving images.
+- master.launch and img_capture.launch have a set of bool args at the top of the file. These allow disabling or enabling the running of different components fo the system. This eliminates the copy and paste of comments to achieve this.
+- A new node call record.mux is created. This node listens for any change in th "F" switch on the DX9. If the switch changes and into any position but position "0" it publishes record = true, if it is changed to the "0" position it publishes record = false. This node only publishes once upon a switch change.
+- It is recommended to use the below commands to start and stop record from command line. They will puclish one time only. This is all that is required to make the change.  
+`rostopic pub -1 /record std_msgs/Bool True`  
+`rostopic pub -1 /record std_msgs/Bool False`   
 

@@ -4,6 +4,8 @@
     <arg name="run_cameras"            default="true"/>   
     <arg name="run_health"             default="true"/> 
     <arg name="run_rosbag_record"      default="true"/> 
+    <arg name="record_mux"             default="true"/> 
+    
 
     <!-- Start the Mavros node to talk with the Pixhawk -->
     <include file="$(find usma_bhg)/launch/ardupilot.launch" if='$(eval run_mavros)'/> 
@@ -19,6 +21,9 @@
 
     <!-- Record all topics except images -->     
     <node pkg="rosbag" type="record" name="rosbag_record" args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/bhg" if='$(eval run_rosbag_record)' />
+
+    <!-- Record Mux start -->     
+    <node pkg="usma_bhg" type="record_mux.py" name="record_mux" if='$(eval record_mux)' />
 
 </launch>
 
