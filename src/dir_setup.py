@@ -9,8 +9,6 @@ import datetime
 from std_msgs.msg import String
 from os.path import expanduser
 
-
-
 # This function was taken from roslogging.py to create a symlink to the latest directory
 def renew_latest_logdir(logfile_dir):
     log_dir = os.path.dirname(logfile_dir)
