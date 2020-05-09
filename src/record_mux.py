@@ -14,7 +14,10 @@ class RecordMux:
         
 
     def rcin_cb(self, msg):
-        self.crnt_switch_val = int(msg.channels[8])
+        try:
+            self.crnt_switch_val = int(msg.channels[8])
+        except:
+            rospy.loginfo("***** RECORD MUX MAV MSG not a list of 8 or more *****")
 
 if __name__ == '__main__':
     rospy.init_node('record_mux')

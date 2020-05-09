@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+
+<script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+<script type="text/javascript" type="text/javascript">
+
+
+
+  // Connecting to ROS
+  // -----------------
+
+  var ros = new ROSLIB.Ros({
+    url : 'ws://localhost:9090'
+  });
+
+  ros.on('connection', function() {
+    console.log('Connected to websocket server.');
+  });
+
+  ros.on('error', function(error) {
+    console.log('Error connecting to websocket server: ', error);
+  });
+
+  ros.on('close', function() {
+    console.log('Connection to websocket server closed.');
+  });
+
+  // Publishing a Topic
+  // ------------------
+
+  var cmdVel = new ROSLIB.Topic({
+    ros : ros,
+    name : '/cmd_vel',
+    messageType : 'geometry_msgs/Twist'
+  });
+
+  var twist = new ROSLIB.Message({
+    linear : {
+      x : 0.1,
+      y : 0.2,
+      z : 0.3
+    },
+    angular : {
+      x : -0.1,
+      y : -0.2,
+      z : -0.3
+    }
+  });
+  cmdVel.publish(twist);
+
+  // Publish the record topic
+  // ------------------------
+  var record_pub = new ROSLIB.Topic({
+    ros : ros,
+    name : '/record',
+    messageType : 'std_msgs/Bool'  
+  });
+  var record_msg = new ROSLIB.Message({
+    data : false
+  });  
+  
+  record_pub.publish(record_msg);
+  // Subscribing to a Topic
+  // ----------------------
+
+  var listener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/listener',
+    messageType : 'std_msgs/String'
+  });
+  
+  listener.subscribe(function(message) {
+    console.log('Received message on ' + listener.name + ': ' + message.data);
+    //listener.unsubscribe();
+  });
+  
+  function recordFunction() {
+    var r_checkBox = document.getElementById("record_checkBox");
+    if (r_checkBox.checked == true){
+        var record_msg = new ROSLIB.Message({
+            data : true
+        });
+    } else {
+        var record_msg = new ROSLIB.Message({
+            data : false
+        });
+    }  
+    record_pub.publish(record_msg);
+  }
+
+  function start_recordFunction() {
+    var record_msg = new ROSLIB.Message({
+        data : true
+    });
+    record_pub.publish(record_msg);
+  }
+
+  function stop_recordFunction() {
+    var record_msg = new ROSLIB.Message({
+        data : false
+    });
+    record_pub.publish(record_msg);
+  }
+  
+  var imageTopic = new ROSLIB.Topic({
+    ros : ros,
+    name : '/camera/image_color/compressed',
+    messageType : 'sensor_msgs/CompressedImage'
+  });
+  
+  imageTopic.subscribe(function(message)
+{
+   var imagedata = message.data;
+  document.getElementById('my_image').src = "data:image/jpg;base64," + message.data;
+
+});
+  
+
+
+</script>
+</head>
+
+<body>
+    <div>
+        <h1>Simple roslib Example</h1>
+        <p>Check your Web Console for output.</p>
+
+        <p><button type="button" id="start_record_btn" onclick="start_recordFunction()">Start Recording</button>
+        <button type="button" id="stop_record_btn"  onclick="stop_recordFunction()"> Stop Recording </button></p>
+        <p><input type="button" value="Vytvor" onclick="show_image()" > </p>
+        <img id="my_image" src="img_pulpit.jpg" alt="The Pulpit Rock" width="304" height="228">    
+
+    <div>
+</body>
+</html>

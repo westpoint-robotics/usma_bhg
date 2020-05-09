@@ -5,6 +5,7 @@
     <arg name="run_health"             default="true"/> 
     <arg name="run_rosbag_record"      default="true"/> 
     <arg name="record_mux"             default="true"/> 
+    <arg name="run_web"                default="false"/> 
     
 
     <!-- Start the Mavros node to talk with the Pixhawk -->
@@ -24,6 +25,12 @@
 
     <!-- Record Mux start -->     
     <node pkg="usma_bhg" type="record_mux.py" name="record_mux" if='$(eval record_mux)' />
+
+    <!-- Webserver for remote GUI  -->
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" if='$(eval run_web)'> 
+        <arg name="port" value="9090"/>
+    </include>
+
 
 </launch>
 
