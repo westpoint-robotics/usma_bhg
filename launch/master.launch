@@ -1,19 +1,18 @@
 <launch>
- 
+
     <arg name="run_mavros"             default="true"/> 
-    <arg name="run_cameras"            default="true"/>   
+    <arg name="run_cameras"            default="false"/>   
     <arg name="run_health"             default="true"/> 
-    <arg name="run_rosbag_record"      default="true"/> 
-    <arg name="record_mux"             default="true"/> 
+    <arg name="run_rosbag_record"      default="false"/> 
+    <arg name="record_mux"             default="false"/> 
     <arg name="run_web"                default="false"/> 
-    
 
     <!-- Start the Mavros node to talk with the Pixhawk -->
     <include file="$(find usma_bhg)/launch/ardupilot.launch" if='$(eval run_mavros)'/> 
 
     <!-- Start the cameras and the image saving nodes -->
     <include file="$(find usma_bhg)/launch/img_capture.launch" if='$(eval run_cameras)'/>
-  
+
     <!-- Health monitoring -->  
     <group if='$(eval run_health)'> 
         <node pkg="libsensors_monitor" type="libsensors_monitor" name="libsensors_monitor" respawn="True"/>
@@ -31,11 +30,12 @@
         <arg name="port" value="9090"/>
     </include>
 
-
 </launch>
 
-
 <!--
+Web GUI URL
+http://10.24.0.1:8085/usma_bhg/simple.html
+
 rostopic pub -1 /record std_msgs/Bool True
 
 rostopic pub -1 /record std_msgs/Bool False

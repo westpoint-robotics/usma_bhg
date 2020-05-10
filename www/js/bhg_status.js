@@ -1,81 +1,166 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+// Connecting to ROS
+// -----------------
+var ros = new ROSLIB.Ros();
 
-  <script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
-  <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+ros.connect('ws://10.42.0.1:9090');
 
-    <script type="text/javascript" type="text/javascript">
+// ------------------------
+// RECORD Topic
+// ------------------------
 
+// Create the record publisher
+var record_pub = new ROSLIB.Topic({
+  ros: ros,
+  name: '/record',
+  messageType: 'std_msgs/Bool'
+});
 
+// Create an initial message
+var record_msg = new ROSLIB.Message({
+  data: false
+});
 
-  // Connecting to ROS
-  // -----------------
+// Publish the initial message
+record_pub.publish(record_msg);
 
-  var ros = new ROSLIB.Ros();
-
-  ros.connect('ws://10.42.0.1:9090');
-  
-  // Publish the record topic
-  // ------------------------
-  var record_pub = new ROSLIB.Topic({
-    ros : ros,
-    name : '/record',
-    messageType : 'std_msgs/Bool'  
-  });
-  
+// Publish start function for button clicks
+function start_recordFunction() {
   var record_msg = new ROSLIB.Message({
-    data : false
-  });  
-  
-  record_pub.publish(record_msg);
-
-  function start_recordFunction() {
-    var record_msg = new ROSLIB.Message({
-        data : true
-    });
-    record_pub.publish(record_msg);
-  }
-
-  function stop_recordFunction() {
-    var record_msg = new ROSLIB.Message({
-        data : false
-    });
-    record_pub.publish(record_msg);
-  }
-  
-  
-    var imageTopic = new ROSLIB.Topic({
-    ros : ros,
-    name : '/camera/image_color/compressed',
-    messageType : 'sensor_msgs/CompressedImage'
+      data: true
   });
-  
-  imageTopic.subscribe(function(message)
-{
-   var imagedata = message.data;
+  record_pub.publish(record_msg);
+}
+
+// Publish stop function for button clicks
+function stop_recordFunction() {
+  var record_msg = new ROSLIB.Message({
+      data: false
+  });
+  record_pub.publish(record_msg);
+}
+
+// ------------------------
+// IMAGE display
+// ------------------------
+
+// Create the image subscriber for the flir camera
+var imageTopic = new ROSLIB.Topic({
+  ros: ros,
+  name: '/camera/image_color/compressed',
+  messageType: 'sensor_msgs/CompressedImage'
+});
+
+// The flir image subscriber callback
+imageTopic.subscribe(function(message) {
+  var imagedata = message.data;
   document.getElementById('flir_image').src = "data:image/jpg;base64," + message.data;
 
 });
-  
-  
- </script>
-</head>
 
-<body>
-    <div>
-        <h1>Simple roslib Example</h1>
-        <p>Check your Web Console for output.</p>
+// Create the image subscriber for the gobi camera
+var imageTopic = new ROSLIB.Topic({
+  ros: ros,
+  name: '/camera/gobi_image/compressed',
+  messageType: 'sensor_msgs/CompressedImage'
+});
 
-        <p><button type="button" id="start_record_btn" onclick="start_recordFunction()" >Start Recording</button>
-        <button type="button" id="stop_record_btn"  onclick="stop_recordFunction()"> Stop Recording </button></p>
-        <img id="flir_image" src="resources/flir.jpg" alt="FLIR Camera" width="304" height="228" style="border:1px solid black;"/>    
-        <img id="gobi_image" src="resources/gobi.jpg" border="1" alt="Gobi Camera" width="304" height="228" style="border:1px solid black;"/>    
-    <div>
-</body>
-</html>
+// The gobi image subscriber callback
+imageTopic.subscribe(function(message) {
+  var imagedata = message.data;
+  document.getElementById('gobi_image').src = "data:image/jpg;base64," + message.data;
+
+});
+
+
+// ------------------------
+// Diagnostics
+// ------------------------
+
+// Create the diagnostics subscriber 
+var diagnosticsTopic = new ROSLIB.Topic({
+  ros: ros,
+  name: '/diagnostics',
+  messageType: 'diagnostic_msgs/DiagnosticArray'
+});
+
+// The diagnostice subscriber callback
+diagnosticsTopic.subscribe(function(message) {
+  for (var status of message.status){
+    var status_name = status.name;
+
+    // Get status from FCU System
+    if (status_name.includes("System")){
+        for (var el of status.values){ 
+            if (el.key.startsWith("CPU Load")){
+              if (el.value > 90){
+                html_color = "red";
+              }
+              else if (el.value > 80){
+                html_color = "orange";              
+              }
+              else
+              {
+                html_color = "green";              
+              }              
+              htmlOut = `<span style="font-weight: bold;color:${html_color}"> ${el.value} <\span>`
+              document.getElementById('fcu_cpuload').innerHTML = htmlOut;     
+            }
+            else if (el.key.startsWith("Drop rate")){
+              if (el.value > 10){
+                html_color = "red";
+              }
+              else if (el.value > 5){
+                html_color = "orange";              
+              }
+              else
+              {
+                html_color = "green";              
+              }             
+              htmlOut = `<span style="font-weight: bold;color:${html_color}"> ${el.value} <\span>`
+              document.getElementById('fcu_droprate').innerHTML = htmlOut; 
+            }
+        }
+    };
+
+    // Get status from the NUC
+    if (status_name.includes("Package")){
+        for (var el of status.values){
+            //console.log(`${el.key} : ${el.value}`);             
+            if (el.key.startsWith("Temperature (")){
+              if (el.value > 90){
+                html_color = "red";
+              }
+              else if (el.value > 80){
+                html_color = "orange";              
+              }
+              else
+              {
+                html_color = "green";              
+              } 
+              //console.log(`${el.key} : ${el.value}`);
+              htmlOut = `<span style="font-weight: bold;color:${html_color}"> ${el.value} <\span>`
+              document.getElementById('nuc_temp').innerHTML = htmlOut;    
+            }
+        }
+    };
+  }
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

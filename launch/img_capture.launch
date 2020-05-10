@@ -2,7 +2,7 @@
   
     <arg name="run_dir_setup" default="false"/> 
     <arg name="run_flir"      default="true"/>  
-    <arg name="run_gobi"      default="false"/> 
+    <arg name="run_gobi"      default="true"/> 
 
    <node name="dir_setup" type="dir_setup.py" pkg="usma_bhg" output="screen" if='$(eval run_dir_setup)' /> 
 
@@ -11,7 +11,6 @@
    <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen" if='$(eval run_flir)' /> 
 
    <node pkg="usma_bhg" name="Xenics" type="gobi_subscriber" output="screen" ns='camera' if='$(eval run_gobi)' />
-     
      
      
 </launch> 
