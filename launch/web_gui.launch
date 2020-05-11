@@ -4,12 +4,6 @@
     <include file="$(find usma_bhg)/launch/rosbridge_websocket.launch"/> 
     <include file="$(find usma_bhg)/launch/roswww.launch"/> 
 
-
 </launch>
 
 
-<!--
-rostopic pub -1 /record std_msgs/Bool True
-
-rostopic pub -1 /record std_msgs/Bool False
--->

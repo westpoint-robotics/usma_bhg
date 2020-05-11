@@ -128,7 +128,7 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - This is now incorporated in the ardupilot.launch node and appears to work from there.
 
 # Web server and Ros   
-- `sudo apt-get install python-tornado python-bson ros-melodic-rosbridge-suite`
+- `sudo apt-get install python-tornado python-bson ros-melodic-rosbridge-suite  ros-melodic-roswww`
 - `roslaunch rosbridge_server rosbridge_websocket.launch`
 
 

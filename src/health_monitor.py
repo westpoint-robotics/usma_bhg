@@ -8,13 +8,15 @@ import datetime
 #from datetime import datetime
 from std_msgs.msg import String
 from os.path import expanduser
+from collections import namedtuple # used for disk analsis
 from std_msgs.msg import UInt16MultiArray
 from diagnostic_msgs.msg import DiagnosticArray
+from geometry_msgs.msg import Vector3Stamped
 
 class HealthMonitor:
     def __init__(self):
         self.counter = 0
-        self.pub = rospy.Publisher("/number_count", UInt16MultiArray, queue_size=10)
+        self.disk_pub = rospy.Publisher("/disk_usage", Vector3Stamped, queue_size=10)
         self.diagnostic = rospy.Subscriber("/diagnostics", DiagnosticArray, self.diagnostic_cb)
         self.temperature_case = 0
         self.temperature_cores = []
@@ -38,6 +40,20 @@ class HealthMonitor:
             
     def show_health(self):
         rospy.loginfo(self.diag)
+        
+    def publish_disk_usage(self, path):
+        """publish disk usage statistics about the given path.
+           unit of measure is GB. 
+        """
+        msg = Vector3Stamped()
+        st = os.statvfs(path)
+        free = st.f_bavail * st.f_frsize/1000000000.0
+        total = st.f_blocks * st.f_frsize/1000000000.0
+        used = (st.f_blocks - st.f_bfree) * st.f_frsize/1000000000.0
+        msg.vector.x = total
+        msg.vector.y = used
+        msg.vector.z = free
+        self.disk_pub.publish(msg) 
 
 if __name__ == '__main__':
     rospy.init_node('health_monitor')
@@ -57,7 +73,8 @@ if __name__ == '__main__':
             hm.temperature_status = "Green"
         if hm.fcu_usage > 90:
             rospy.logwarn("HHHHHHHM The FCU CPU usage is above 90% HHHHHHHM")
-
+        
+        hm.publish_disk_usage("/home")
         r.sleep()
             
 
