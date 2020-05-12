@@ -8,6 +8,7 @@ import datetime
 #from datetime import datetime
 from std_msgs.msg import String
 from os.path import expanduser
+import dir_cleanup as dc
 
 # This function was taken from roslogging.py to create a symlink to the latest directory
 def renew_latest_logdir(logfile_dir):
@@ -46,6 +47,15 @@ def main():
     while not rospy.is_shutdown():
         pub.publish(missionDirectory) #TODO change system to handle publish of missionDirectory
         r.sleep()
+        
+    # Below here is code to cleanup any unused directories in the Data directory
+    # Move the latest bagfile into the latest directory
+    disk_cleaner = dc.DirCleanup() 
+    disk_cleaner.move_bagfile(dataDirectory)   
+    disk_cleaner.find_dirs_to_delete(dataDirectory)
+    print("The following directories were unused and thus deleted:\n",disk_cleaner.get_dirs_to_delete())
+    disk_cleaner.delete_folders()
+    
 
 if __name__ == '__main__':
     main()
