@@ -5,7 +5,7 @@
     <arg name="run_health"             default="true"/> 
     <arg name="run_rosbag_record"      default="true"/> 
     <arg name="record_mux"             default="true"/> 
-    <arg name="run_web"                default="false"/> 
+    <arg name="run_web"                default="true"/> 
 
     <!-- Start the Mavros node to talk with the Pixhawk -->
     <include file="$(find usma_bhg)/launch/ardupilot.launch" if='$(eval run_mavros)'/> 
