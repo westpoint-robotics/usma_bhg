@@ -99,10 +99,14 @@ b. Connecting from the Ground Station
 `rostopic pub -1 /record std_msgs/Bool True`  
 `rostopic pub -1 /record std_msgs/Bool False`   
 
-# 5. Disk cleanup and maintenance tasks added:
-## The file dir_setup.py uses the file dir_cleanup.py to do the following Data directory tasks:
+## 5. Disk cleanup and maintenance tasks added:
+### The file dir_setup.py uses the file dir_cleanup.py to do the following Data directory tasks:
 - It removes any folders with less then 5 files in it. It is assumed these folders are unused data directories
 - If the symlink is broken by this removal it recreates to point to the last used directory.
 - It moves tha Bagfile to the last used folder.
 - All this is done after rosshutdown is triggered.
+
+# TODO
+- Automatically copy the flight log into the data directory.
+- Use Gui to create log entries for flight, things like direction of camera, angle camera, alti, flight plan
 

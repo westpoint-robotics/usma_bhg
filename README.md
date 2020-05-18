@@ -131,6 +131,11 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - `sudo apt-get install python-tornado python-bson ros-melodic-rosbridge-suite  ros-melodic-roswww`
 - `roslaunch rosbridge_server rosbridge_websocket.launch`
 
-
+## Experimental below here:
+- curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+- sudo apt-get install -y nodejs
+- node --version
+- npm --version
+solves problem of eventemitter2 missing on local computer
 
 

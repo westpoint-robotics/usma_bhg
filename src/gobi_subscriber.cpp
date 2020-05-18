@@ -243,7 +243,7 @@ int main(int argc, char **argv)
       {
         ROS_INFO("*** Gobi ***: Successfully capturing.");
 
-        /*        
+        /*       */  
         // Load the color profile delivered with this sample.
         if (errorCode = XC_LoadColourProfile(handle, "/home/user1/catkin_ws/src/usma_bhg/resources/ThermalBlue.png") != I_OK)
         {
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
         {
             ROS_INFO("*** Gobi ***: Successfully loaded the desired colorprofile.");
         }
-        */
+        
         // Set the colourmode so that the last loaded colorprofile is used.
         XC_SetColourMode(handle, ColourMode_Profile);
 
