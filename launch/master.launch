@@ -32,9 +32,11 @@
 
 <!--
 Web GUI URL
+
 http://10.24.0.1:8085/usma_bhg/simple.html
 
 rostopic pub -1 /record std_msgs/Bool True
 
 rostopic pub -1 /record std_msgs/Bool False
+
 -->

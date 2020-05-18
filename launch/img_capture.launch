@@ -4,7 +4,7 @@
     <arg name="run_flir"      default="true"/>  
     <arg name="run_gobi"      default="true"/> 
 
-   <node name="dir_setup" type="dir_setup.py" pkg="usma_bhg" output="screen" if='$(eval run_dir_setup)' /> 
+   <node name="dir_setup" type="dir_setup2.py" pkg="usma_bhg" output="screen" if='$(eval run_dir_setup)' /> 
 
    <include file="$(find usma_bhg)/launch/camera.launch" if='$(eval run_flir)' />
    

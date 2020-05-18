@@ -1,3 +1,4 @@
+
 // Connecting to ROS
 // -----------------
 var ros = new ROSLIB.Ros();
@@ -41,6 +42,51 @@ function stop_recordFunction() {
   });
   record_pub.publish(record_msg);
 }
+// ------------------------
+// FILE Count display
+// ------------------------
+// Create the gobi_fc subscriber 
+var imageTopic = new ROSLIB.Topic({
+  ros: ros,
+  name: '/gobi_fc',
+  messageType: 'std_msgs/Int32'
+});
+
+// The gobi_fc subscriber callback
+imageTopic.subscribe(function(message) {
+  var file_count = message.data;
+  if (file_count < 1){
+    html_color = "red";              
+  }
+  else
+  {
+    html_color = "green";              
+  }
+  htmlOut = `<span style="font-weight: bold;color:${html_color}"> ${file_count} <\span>`
+  document.getElementById('gobi_fc').innerHTML = htmlOut
+});
+
+// Create the flir_fc subscriber 
+var imageTopic = new ROSLIB.Topic({
+  ros: ros,
+  name: '/flir_fc',
+  messageType: 'std_msgs/Int32'
+});
+
+// The gobi_fc subscriber callback
+imageTopic.subscribe(function(message) {
+  var file_count = message.data;
+  if (file_count < 1){
+    html_color = "red";              
+  }
+  else
+  {
+    html_color = "green";              
+  }
+  htmlOut = `<span style="font-weight: bold;color:${html_color}"> ${file_count} <\span>`
+  document.getElementById('flir_fc').innerHTML = htmlOut
+});
+
 
 // ------------------------
 // IMAGE display
@@ -222,21 +268,4 @@ diagnosticsTopic.subscribe(function(message) {
   }
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
