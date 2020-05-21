@@ -5,7 +5,7 @@ var ros = new ROSLIB.Ros();
 
 //ros.connect('ws://10.42.0.1:9090');
 //ros.connect('ws://nuc40.rrc:9090');
-ros.connect('ws://nuc40:9090');
+ros.connect('ws://10.42.0.1:9090');
 //ros.connect('ws://127.0.0.1:9090');
 
 // ------------------------

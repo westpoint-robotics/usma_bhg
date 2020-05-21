@@ -9,6 +9,7 @@ import datetime
 from std_msgs.msg import String
 from std_msgs.msg import Int32
 from os.path import expanduser
+from std_msgs.msg import Bool
 import dir_cleanup as dc
 
 class DirSetup:
@@ -19,6 +20,14 @@ class DirSetup:
         self.dir_pub = rospy.Publisher('directory', String, queue_size=10)
         self.gobi_fc_pub = rospy.Publisher("gobi_fc", Int32, queue_size=10)
         self.flir_fc_pub = rospy.Publisher("flir_fc", Int32, queue_size=10)
+        rospy.Subscriber("/record", Bool, self.record_cb)
+        self.last_rec = False
+                
+    def record_cb(self):
+        if self.last_rec == False and self.data == True:
+            self.mission_directory = self.setup_mission_dir()
+            self.dir_pub(self.mission_directory)
+            rospy.loginfo("===== A new mission directory was created at: %s =====" % self.mission_directory) 
                 
     # This function was taken from roslogging.py to create a symlink to the latest directory
     def renew_latest_logdir(self, logfile_dir):
@@ -79,7 +88,7 @@ class DirSetup:
 if __name__ == '__main__':
     rospy.init_node('directory_setup')  
     ds = DirSetup()
-    r = rospy.Rate(2) # 5hz
+    r = rospy.Rate(5) # 5hz
     while not rospy.is_shutdown():
         ds.pub_mission_dir()
         ds.count_files()
