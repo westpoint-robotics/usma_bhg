@@ -36,13 +36,13 @@ from std_msgs.msg import Float64
 
 # Instantiate CvBridge
 bridge = CvBridge()
-dataDirectory = "/home/user1/Data/"; 
+dataDirectory = "/home/user1/Data/" # default value changes on subscribing
 # Camera directories, csv file, and bag file all go here
 #now = datetime.now() # current date and time
 flirSN = "FLIR18284612"
 flirDirectory = ""
 csvFilename = ""
-timestamp_data = ""
+datetimeData = ""
 is_recording = False
 rel_alt = Altitude()
 gps_fix = NavSatFix()
@@ -65,6 +65,7 @@ def make_header():
     return header
 
 def make_logentry():
+    global datetimeData
     alt_str = str(rel_alt.monotonic) + "," + str(rel_alt.amsl) + "," + str(rel_alt.local) + "," + str(rel_alt.relative) 
     gps_str = str(gps_fix.status.status) + "," + str(gps_fix.status.service) + "," + str(gps_fix.latitude) + "," + str(gps_fix.longitude) + "," + str(gps_fix.altitude) 
     mag_str = str(imu_mag.magnetic_field.x) + "," + str(imu_mag.magnetic_field.y) + "," + str(imu_mag.magnetic_field.z)
@@ -74,7 +75,7 @@ def make_logentry():
     vel_str = str(vel_gps.twist.linear.x) + "," + str(vel_gps.twist.linear.y) + "," + str(vel_gps.twist.linear.z) + ","
     vel_str += str(vel_gps.twist.angular.x) + "," + str(vel_gps.twist.angular.y) + "," + str(vel_gps.twist.angular.z)  
     temp_str = str(temp_imu.temperature)    
-    output = str(rospy.Time.now()) + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str
+    output = str(datetimeData + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str)
     return output
 
 def alt_cb(msg):
@@ -104,8 +105,8 @@ def temp_cb(msg):
 def directory_callback(msg):
     global flirDirectory
     global csvFilename
-    missionName = msg.data
-    missionDirectory = dataDirectory + missionName 
+    missionDirectory = msg.data
+    missionName = missionDirectory.split("/")[4]     
     flirDirectory    = missionDirectory + "/" + flirSN
     csvFilename      = missionDirectory + "/" + missionName + "_flir.csv"
     
@@ -124,6 +125,7 @@ def record_callback(msg):
 
 def image_callback(msg):  
     global imageCount
+    global datetimeData
     if (is_recording and os.path.exists(csvFilename) ):
         #Before taking a picture, grab timestamp to record to filename, and CSV
         tNow = rospy.get_time() # current date and time
@@ -133,7 +135,7 @@ def image_callback(msg):
         #Grab the image and convert it to OpenCV format        
         try:
             # Convert your ROS Image message to OpenCV2
-            cv2_img = bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
+            cv2_img = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         except CvBridgeError, e:
             print(e)
         

@@ -1,0 +1,9 @@
+<launch>
+
+    <!-- Webserver for remote GUI  -->
+    <include file="$(find usma_bhg)/launch/rosbridge_websocket.launch"/> 
+    <include file="$(find usma_bhg)/launch/roswww.launch"/> 
+
+</launch>
+
+

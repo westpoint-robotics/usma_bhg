@@ -1,21 +1,42 @@
 <launch>
 
-  <arg name="px4_namespace" default="px4" />
+    <arg name="run_mavros"             default="true"/> 
+    <arg name="run_cameras"            default="true"/>   
+    <arg name="run_health"             default="true"/> 
+    <arg name="run_rosbag_record"      default="true"/> 
+    <arg name="record_mux"             default="false"/> 
+    <arg name="run_web"                default="true"/> 
 
-  <include file="$(find usma_mavros)/launch/px4.launch">
-    <arg name="fcu_url" default="/dev/ttyUSB0:921600" />
-	<arg name="gcs_url" default="udp://:14555@10.42.0.1:14550" /> 
-	<!-- <arg name="gcs_url" default="1" /> -->
-	<!-- for gcs_url, enter in IP address for GCS laptop -->
-  </include>
-<!--     -->
+    <!-- Start the Mavros node to talk with the Pixhawk -->
+    <include file="$(find usma_bhg)/launch/ardupilot.launch" if='$(eval run_mavros)'/> 
 
+    <!-- Start the cameras and the image saving nodes -->
+    <include file="$(find usma_bhg)/launch/img_capture.launch" if='$(eval run_cameras)'/>
 
-   
-  <node pkg="rosbag" type="record" name="rosbag_record"
-       args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/"/>
-       
-  <include file="$(find usma_bhg)/launch/img_capture.launch"/>
+    <!-- Health monitoring -->  
+    <group if='$(eval run_health)'> 
+        <node pkg="libsensors_monitor" type="libsensors_monitor" name="libsensors_monitor" respawn="True"/>
+        <node pkg="usma_bhg" type="health_monitor.py" name="health_monitor" respawn="True" output="screen"/>
+    </group>
+
+    <!-- Record all topics except images -->     
+    <node pkg="rosbag" type="record" name="rosbag_record" args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/bhg" if='$(eval run_rosbag_record)' />
+
+    <!-- Record Mux start -->     
+    <node pkg="usma_bhg" type="record_mux.py" name="record_mux" if='$(eval record_mux)' />
+
+    <!-- Webserver for remote GUI  -->
+    <include file="$(find usma_bhg)/launch/web_gui.launch" if='$(eval run_web)'/>
 
 </launch>
 
+<!--
+Web GUI URL
+
+http://10.24.0.1:8085/usma_bhg/simple.html
+
+rostopic pub -1 /record std_msgs/Bool True
+
+rostopic pub -1 /record std_msgs/Bool False
+
+-->

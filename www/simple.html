@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+   <title>BHG Status</title>
+
+<script src="eventemitter2.min.js"></script>
+<script src="roslib.js"></script>
+<script src="js/bhg_status.js"></script>
+
+</head>
+
+<body>
+    <div>
+        <h1>BHG Tarot 650 and System Status</h1>
+        <p>This is just the start of a GUI</p>
+
+        <p><button type="button" id="start_record_btn" onclick="start_recordFunction()" >Start Recording</button>
+        <button type="button" id="stop_record_btn"  onclick="stop_recordFunction()"> Stop Recording </button></p>
+        <img id="flir_image" src="images/flir.jpg" alt="FLIR Camera" width="304" height="228" style="border:1px solid black;"/>    
+        <img id="gobi_image" src="images/gobi.jpg" alt="Gobi Camera" width="304" height="228" style="border:1px solid black;"/> 
+        <p>FCU CPU Load (%) : <span id="fcu_cpuload"></span> The low values triggering color change is for demo only. The real values will be used later</p>
+        <p>FCU Drop rate (%) : <span id="fcu_droprate"></span></p>  
+        <p>NUC Temperature (C): <span id="nuc_temp"></span></p>     
+        <p>Battery Volts (V): <span id="batt_volts"></span></p>     
+        <p>Battery Current (A): <span id="batt_current"></span></p> 
+        <p>Disk Usage (GB): Total Space: <span id="disk_total"></span>, Used: <span id="disk_used"></span>, Available: <span id="disk_avail"></span></p>    
+        <p>FLIR files saved: <span id="flir_fc"></span>, GOBI files saved <span id="gobi_fc"></span></p>  
+        <p>.</p>     
+        <p>.</p>     
+        <p>.</p>
+        <H4>The purpose of the GUI is to quickly highlight system status not to replace the ground control software. Focus on stuff that is not readily noticable or historical has caused problems in using our system. </H4>
+        <H2>TODO: </H2>
+        <ul>   
+            <li>DO NOT RE-INVENT QGroundcontrol/APM</li>   
+            <li>Make a clean presentation</li>
+            <li>Organize by subsystems</li>
+            <li>Display diagnostics from cameras (FLIR Produces a lot of metadata, for example camera temperature)</li>
+            <li>Display if it is saving files or not, use the diagnostic script method, not ROS</li>
+            <li>Display mavros heartbeat</li>
+            <li>Display wifi signal strength</li>
+            <li>Display telemetry radio stength</li>
+            <li>Display radio controller signal strength</li>          
+            <li></li>        
+            <li></li>        
+            <li></li>        
+            <li></li>        
+            <li></li>        
+        </ul>
+               
+    <div>
+</body>
+</html>
