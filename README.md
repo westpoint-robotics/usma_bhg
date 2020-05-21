@@ -4,7 +4,7 @@
 - Develop scripts to inform us if system is running as expected:
 1. Did the Flir driver start successfully
 2. Is the CSV being filled out properly
-3. Did the Gobiu driver start correctly
+3. Did the Gobi driver start correctly
 4. Are pictures being saved to the correct director
 5. Did we leave a lense cap on
 6. Warn if disk drive is filling up
