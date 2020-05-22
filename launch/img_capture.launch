@@ -1,7 +1,7 @@
 <launch>
 
     <arg name="run_flir"      default="true"/>  
-    <arg name="run_gobi"      default="true"/> 
+    <arg name="run_gobi"      default="false"/> 
 
    <include file="$(find usma_bhg)/launch/camera.launch" if='$(eval run_flir)' />
    

@@ -32,7 +32,7 @@ class DirSetup:
     def record_cb(self, msg):
         if self.last_rec == False and msg.data == True:
             self.mission_directory = self.setup_mission_dir()
-            self.dir_pub(self.mission_directory)
+            self.dir_pub.publish(self.mission_directory)
             rospy.loginfo("===== A new mission directory was created at: %s =====" % self.mission_directory) 
         self.last_rec = msg.data
                 
