@@ -13,6 +13,8 @@
   <arg name="image_format_color_coding" value="BayerRG16" /> <!-- RGB8Packed BayerRG16 -->
   <arg name="auto_white_balance" value="On" />  
   
+<!--  <arg name="calibrated" value="True" />  -->
+  
   <group ns="$(arg camera_namespace)">
     <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager" args="manager" cwd="node" output="screen"/>
 
@@ -30,8 +32,8 @@
       <!-- Use the camera_calibration package to create this file
            TODO NBL: This should be a .yaml file in /usma_bhg/cfg directory  
       <param name="camera_info_url" if="$(arg calibrated)"
-             value="file://$(env HOME)/.ros/camera_info/$(arg camera_serial).yaml" /> -->
-    </node>
+             value="file://$(find usma_bhg)/resources/18285440calibration.yaml" />  -->
+      </node>
 
     <node pkg="nodelet" type="nodelet" name="image_proc_debayer"
           args="load image_proc/debayer camera_nodelet_manager">

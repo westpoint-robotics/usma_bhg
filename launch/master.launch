@@ -4,8 +4,9 @@
     <arg name="run_cameras"            default="true"/>   
     <arg name="run_health"             default="true"/> 
     <arg name="run_rosbag_record"      default="true"/> 
-    <arg name="record_mux"             default="false"/> 
-    <arg name="run_web"                default="true"/> 
+    <arg name="record_mux"             default="true"/> 
+    <arg name="run_web"                default="true"/>   
+    <arg name="run_dir_setup"          default="false"/> 
 
     <!-- Start the Mavros node to talk with the Pixhawk -->
     <include file="$(find usma_bhg)/launch/ardupilot.launch" if='$(eval run_mavros)'/> 
@@ -27,6 +28,9 @@
 
     <!-- Webserver for remote GUI  -->
     <include file="$(find usma_bhg)/launch/web_gui.launch" if='$(eval run_web)'/>
+
+    <!-- Directory setup scripts  -->
+   <node name="dir_setup" type="dir_setup.py" pkg="usma_bhg" output="screen" if='$(eval run_dir_setup)' /> 
 
 </launch>
 
