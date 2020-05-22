@@ -70,7 +70,7 @@
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 16,
-                "doJumpId": 3,
+                "doJumpId": 4,
                 "frame": 3,
                 "params": [
                     2,
@@ -89,7 +89,7 @@
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 16,
-                "doJumpId": 4,
+                "doJumpId": 5,
                 "frame": 3,
                 "params": [
                     3,
@@ -105,7 +105,7 @@
             {
                 "autoContinue": true,
                 "command": 115,
-                "doJumpId": 5,
+                "doJumpId": 6,
                 "frame": 0,
                 "params": [
                     180,
@@ -124,7 +124,7 @@
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 16,
-                "doJumpId": 6,
+                "doJumpId": 7,
                 "frame": 3,
                 "params": [
                     5,
@@ -143,7 +143,7 @@
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 16,
-                "doJumpId": 7,
+                "doJumpId": 8,
                 "frame": 3,
                 "params": [
                     0,
