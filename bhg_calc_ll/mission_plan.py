@@ -23,7 +23,7 @@ def make_item2(alt, cmd, jumpid, frame, p1, p5, p6, p7):
     tmpstring += '\r\n\t\t\t\t"autoContinue": true,\r\n\t\t\t\t"command": ' + str(cmd) + ','
     tmpstring += '\r\n\t\t\t\t"doJumpId": ' + str(jumpid) + ',\r\n\t\t\t\t"frame": ' + str(frame) + ',\r\n\t\t\t\t"params": ['
     tmpstring += '\r\n\t\t\t\t\t' + str(p1) + ',\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,'
-    tmpstring += '\r\n\t\t\t\t\t' + str(p5) + ',\r\n\t\t\t\t\t' + str(p6) + ',\r\n\t\t\t\t\t' + str(p7) 
+    tmpstring += '\r\n\t\t\t\t\t' + str(p5) + ',\r\n\t\t\t\t\t' + str(p6) + ',\r\n\t\t\t\t\t' + str(alt) 
     tmpstring += '\r\n\t\t\t\t],\r\n\t\t\t\t"type": "SimpleItem"'
     tmpstring += '\r\n\t\t\t}'
     return tmpstring
@@ -46,16 +46,17 @@ def make_plan(waypoints, speed, yaw):
     outstring += '\r\n\t\t"items": ['
     outstring += make_item1(115,1,0,yaw,5,1,0)+','                   # 115 is MAV_CMD_CONDITION_YAW
     wp_lat,wp_lon,alt,hold = waypoints.pop(0)
-    outstring += make_item2(10,16,2,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
+    outstring += make_item2(alt,16,2,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
+    outstring += make_item1(178,3,2,1,speed,-1,0) + ','            #  178 is MAV_CMD_DO_CHANGE_SPEED
     wp_lat,wp_lon,alt,hold = waypoints.pop(0)
-    outstring += make_item2(10,16,4,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
+    outstring += make_item2(alt,16,3,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
     wp_lat,wp_lon,alt,hold = waypoints.pop(0)
-    outstring += make_item2(10,16,6,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
-    outstring += make_item1(115,8,0,180,5,-1,1)+','                  # 115 is MAV_CMD_CONDITION_YAW
+    outstring += make_item2(alt,16,4,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
+    outstring += make_item1(115,5,0,180,5,-1,1)+','                  # 115 is MAV_CMD_CONDITION_YAW
     wp_lat,wp_lon,alt,hold = waypoints.pop(0)
-    outstring += make_item2(10,16,9,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
+    outstring += make_item2(alt,16,6,3,hold,wp_lat,wp_lon,alt) + ','  #  16 is MAV_CMD_NAV_WAYPOINT
     wp_lat,wp_lon,alt,hold = waypoints.pop(0)
-    outstring += make_item2(10,16,10,3,hold,wp_lat,wp_lon,alt) + ',' #  16 is MAV_CMD_NAV_WAYPOINT
+    outstring += make_item2(alt,16,7,3,hold,wp_lat,wp_lon,alt)       #  16 is MAV_CMD_NAV_WAYPOINT
     outstring += '\r\n\t\t],\r\n\t\t"plannedHomePosition": [\r\n\t\t\t41.3802304,'
     outstring += '\r\n\t\t\t-73.9723826,\r\n\t\t\t228\r\n\t\t],\r\n\t\t"vehicleType": 2,'
     outstring += '\r\n\t\t"version": 2\r\n\t},\r\n\t"rallyPoints": {\r\n\t\t"points": ['
