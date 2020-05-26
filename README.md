@@ -134,8 +134,8 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - Install it with:  
 `sudo dpkg -i apm_planner_2.0.26_xenial64.deb`
 
-# Mavros not working otally
-- Mavros was publishing diagnostics but no other topics. Running the below command fixed this:  
+# Mavros not working Totally
+- Mavros was publishing diagnostits but no other topics. Running the below command fixed this:  
 `rosservice call /mavros/set_stream_rate 0 10 1`  
 - This is now incorporated in the ardupilot.launch node and appears to work from there.  
 
@@ -150,4 +150,6 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - npm --version
 solves problem of eventemitter2 missing on local computer
 
+### Solve the nagging error of: Failed to load module "canberra-gtk-module" 
+- sudo apt-get install libcanberra-gtk-module
 
