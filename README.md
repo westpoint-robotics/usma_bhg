@@ -38,7 +38,13 @@ Documentation on how to operate the BHG system can be found in "BHG_OPERATION.md
 - For Ubuntu 16.04, follow [these steps](http://wiki.ros.org/kinetic/Installation/Ubuntu).
 - For Ubuntu 18.04, follow [these steps](http://wiki.ros.org/melodic/Installation/Ubuntu).
 
-#3. Xenics SDK Install
+#3. Install MavROS  
+- Install the ROS package:  
+`sudo apt-get install ros-melodic-mavros`  
+- Use this script to download Geoid Model datasets for Mavros:  
+`sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh`  
+
+#4. Xenics SDK Install
 - Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.  
 - Extract the files and cd into the created directory and run the below commands.  
 - `sudo apt-get install libusb-0.1-4`  
@@ -50,7 +56,11 @@ Documentation on how to operate the BHG system can be found in "BHG_OPERATION.md
 	- Address: `169.254.107.22`  
 	- Netmask: `255.255.0.0`  
 
-#4. Install Spinnaker SDK and dependancies:  
+#5. Install usma_bhg  
+`cd ~/catkin_ws/src/`  
+`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
+
+#6. Install Spinnaker SDK and dependancies:  
 - Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457  
 - Uncompress the folders to get the folder spinnaker-2.0.0.109-Ubuntu18.04-amd64-pkg/spinnaker-2.0.0.109-amd64  
 `sudo apt-get install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev`  
@@ -99,14 +109,13 @@ Would you like to make a difference by participating in the Spinnaker feedback p
    c. At the bottom of the .bashrc file, insert the lines (if not already added):  
       source /opt/ros/melodic/setup.bash  
       source /home/user1/catkin_ws/devel/setup.bash  
-      export ROS_MASTER_URI=http://[NUC_IP]:11311   
-      export ROS_IP=[NUC_IP]  
+      # export ROS_MASTER_URI=http://[NUC_IP]:11311   
+      # export ROS_IP=[NUC_IP]  
    d. Save these changes.  
 
 # Additonal installs for Mavproxy to work:
-`sudo apt-get install python3-dev python3-opencv python3-wxgtk3.0 libxml2-dev python3-pip python3-matplotlib python3-lxml`  
 `sudo apt-get update`    #Update the list of packages in the software center  
-`sudo apt-get install python3-dev python3-opencv python3-wxgtk3.0 libxml2-dev python3-pip python3-matplotlib python3-lxml`  
+`sudo apt-get install python3-dev python3-opencv python3-wxgtk3.0 libxml2-dev python3-pip python3-matplotlib python3-lxml python-pip python3-pip`  
 `sudo pip3 install future`  
 `sudo pip3 install pymavlink`  
 `sudo pip3 install mavproxy`  
@@ -114,22 +123,25 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 # FTDI wiring.  
 - The FTDI adapter did not work as wired. I had to switch rx and tx wires for this to work with ardupilot. Now the rx pin on the pixhawk is wired to the rx pin on the FT232 and the same with the tx pin.  
 
-
 # Install the latest QGroundControl on Ubuntu 18.04
-- Install dependencies:
-`sudo apt-get install libqt5serialport5 qml-module-qtquick2 qtdeclarative5-qtquick2-plugin`
-- Download: https://firmware.ardupilot.org/Tools/APMPlanner/apm_planner_2.0.26_xenial64.deb
-- Install it with:
+- Install dependencies:  
+`sudo apt-get install libqt5serialport5 qml-module-qtquick2 qtdeclarative5-qtquick2-plugin gstreamer1.0-plugins-bad gstreamer1.0-libav`  
+- Remove modemmanager:  
+`sudo apt-get remove modemmanager -y`  
+- Download: https://s3-us-west-2.amazonaws.com/qgroundcontrol/latest/QGroundControl.AppImage  
+- `chmod +x ./QGroundControl.AppImage`
+- Download: https://firmware.ardupilot.org/Tools/APMPlanner/apm_planner_2.0.26_xenial64.deb  
+- Install it with:  
 `sudo dpkg -i apm_planner_2.0.26_xenial64.deb`
 
 # Mavros not working otally
-- Mavros was publishing diagnostics but no other topics. Running the below command fixed this:
-`rosservice call /mavros/set_stream_rate 0 10 1`
-- This is now incorporated in the ardupilot.launch node and appears to work from there.
+- Mavros was publishing diagnostics but no other topics. Running the below command fixed this:  
+`rosservice call /mavros/set_stream_rate 0 10 1`  
+- This is now incorporated in the ardupilot.launch node and appears to work from there.  
 
-# Web server and Ros   
-- `sudo apt-get install python-tornado python-bson ros-melodic-rosbridge-suite  ros-melodic-roswww`
-- `roslaunch rosbridge_server rosbridge_websocket.launch`
+# Web server and Ros    
+- `sudo apt-get install python-tornado python-bson ros-melodic-rosbridge-suite  ros-melodic-roswww`  
+- `roslaunch rosbridge_server rosbridge_websocket.launch`  
 
 ## Experimental below here:
 - curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
