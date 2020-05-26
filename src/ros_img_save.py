@@ -107,15 +107,15 @@ def directory_callback(msg):
     global csvFilename
     missionDirectory = msg.data
     missionName = missionDirectory.split("/")[4]     
-    flirDirectory    = missionDirectory + "/" + flirSN
-    csvFilename      = missionDirectory + "/" + missionName + "_flir.csv"
+    flirDirectory    = missionDirectory + flirSN
+    csvFilename      = missionDirectory + missionName + "_flir.csv"
     
     if(not (os.path.isdir(flirDirectory))):
         os.mkdir(flirDirectory)
-        rospy.loginfo("FLIR Directory Created: " + flirDirectory)
+        rospy.loginfo("***** FLIR *****: Directory Created: " + flirDirectory)
 
     if(not (os.path.exists(csvFilename))):
-        rospy.loginfo("FLIR CSV File Created: " + csvFilename)
+        rospy.loginfo("***** FLIR *****: CSV File Created: " + csvFilename)
         with open(csvFilename, 'a+') as csvFile:     
             csvFile.write(make_header() + "\n")
           
@@ -143,7 +143,8 @@ def image_callback(msg):
         # Save your OpenCV2 image as a jpeg 
         cv2.imwrite(flirFilename, cv2_img)
         imageCount = imageCount + 1
-        rospy.loginfo("*** FLIR ***: %s | %d\n", datetimeData, imageCount)
+        if (imageCount % 10 == 0):
+            rospy.loginfo("***** FLIR *****: Image Count: %d\n" %(imageCount) )
         # Update CSV file with the names of the images recorded at this date and time
         with open(csvFilename, 'a+') as csvFile:
             output_str = flirFilename + "," + make_logentry()

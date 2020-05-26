@@ -42,7 +42,7 @@ using namespace std::chrono;
 double ros_now;
 //NBL: ROS Compliance
 std_msgs::Bool record;
-string img_dir = "temp"; // If no directory specified then save to here
+string data_dir = "temp"; // If no directory specified then save to here
 ros::Time rosTimeSinceEpoch;
 std::time_t raw_time;    
 tm local_tm;
@@ -60,7 +60,7 @@ bool camerasInitialized;
 unsigned int imageCount;
 
 /*** GOBI CSV CODE ***/
-string csvFilename = "";
+//string csvFilename = "";
 std::ofstream csvOutfile;
 
 sensor_msgs::MagneticField mag_data;
@@ -164,34 +164,50 @@ void recordCallback(const std_msgs::Bool::ConstPtr& msg)
 
 void dirCallback(const std_msgs::String::ConstPtr& msg)
 {
-    img_dir       = msg->data.c_str();
+    data_dir = msg->data.c_str();
     std::vector<std::string> results; 
-    boost::split(results, img_dir, [](char c){return c == '/';});
-    // ROS_INFO("mission id is %s", results[4].c_str());
+    boost::split(results, data_dir, [](char c){return c == '/';});
+    //ROS_INFO("Subscibed dir is %s", data_dir);
+    // /home/user1/Data/20200526_085616_798277
        
-    string imgtmp = img_dir + "GOBI000088/";
-    csvFilename   = img_dir + results[4].c_str() + "_gobi.csv";
+    string imgtmp = data_dir + "GOBI000088/";
+    string csvFilename   = data_dir + results[4].c_str() + "_gobi.csv";
     
-    //ROS_INFO("******* Image directory is : [%s] *******", imgtmp.c_str());
     if (mkdir(imgtmp.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
     {
         if( errno == 0 ) { // TODO fix this to return accurate feedback
-            // does not exists
-              
+            // TODO figure out why this check for zero? 
+        }
+        else if (errno == 17){
+            // The directory already exists. Do nothing
+        }
+        else{
+            ROS_INFO("*** Gobi ***: ERROR: Directory does not exist and MKDIR failed the errno is %i",errno );        
         }
     }    
     else
     {
-        csvOutfile.open(csvFilename, std::ios_base::app); // append instead of overwrite 
-        csvOutfile << make_header() << endl;   
-        ROS_INFO("*** Gobi ***: image directory created %i [%s]\n\t\talong with CSV filenames [%s]", errno, img_dir.c_str(), csvFilename.c_str());
+        ROS_INFO("*** Gobi ***: Created Data Directory and establishing csv file" );  
+        ROS_INFO("*** Gobi ***: Data directory is: [%s]", imgtmp.c_str());
+        
+        if (csvOutfile.is_open()){
+            ROS_INFO("*** Gobi ***: GOBI CSV File is already open: [%s]", csvFilename.c_str());
+        }
+        else{        
+            csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file
+            if (!csvOutfile){
+                ROS_INFO("*** Gobi ***: ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csvFilename.c_str()); 
+                csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file           
+                ROS_INFO("*** Gobi ***: ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csvFilename.c_str());           
+            } 
+            ROS_INFO("*** Gobi ***: CSV file is: [%s]", csvFilename.c_str());                                  
+        }
     }
-            
+    csvOutfile << make_header() << endl;  
 }
 
 int main(int argc, char **argv)
 {
-
     // Get home directory
     const char *tmpdir;
     std::string homedir;
@@ -285,9 +301,10 @@ int main(int argc, char **argv)
         
         int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
 
-        imageDirectory =  img_dir + "/GOBI000088/"; 
-        imageFilename  =  img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
-        cvFilename     =  img_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
+        // DML: TODO stop using data_dir as global
+        imageDirectory =  data_dir + "/GOBI000088/"; 
+        imageFilename  =  data_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".png";
+        cvFilename     =  data_dir + "/GOBI000088/GOBI000088" + "_" + dateTime + ".jpg";
         
         // Initialize the 32-bit buffer.
         frameBuffer = new dword[frameSize];
@@ -324,7 +341,9 @@ int main(int argc, char **argv)
                     csvOutfile << make_logentry() << endl;
                     
                     /***  CSV FILE UPDATE ***/
-                    ROS_INFO("*** Gobi ***: %s | %d", dateTime, imageCount);
+                    if (imageCount % 10 == 0){
+                        ROS_INFO("*** Gobi ***: Image count: %d", imageCount);
+                    }
                  }
             }// End of if record
         }// End if grame grabbed
@@ -338,6 +357,9 @@ int main(int argc, char **argv)
         ros::spinOnce();
         loop_rate.sleep();
     } // end of big while loop
+
+    // Close the csv log file
+    csvOutfile.close(); 
     
     // Below here needs to use printf as all Ros functionality ends with ctr-c
     printf("*** Gobi ***: Starting shutdown procedures.\n");
@@ -368,3 +390,6 @@ int main(int argc, char **argv)
     
     return 0;
 }
+
+// TODO Transition to OOP. Too many side effects are occuring and creatign unreliable performance. 
+// Currently csvOutfile is causing problems with asynch code.

@@ -93,11 +93,19 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 `cd ..`  
 `catkin_make`  
 
-#5. Install MavROS  
-- Install the ROS package:  
-`sudo apt-get install ros-melodic-mavros`  
-- Use this script to download Deoid Model datasets for Mavros:  
-`sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh`  
+#5. Create a hotspot access piont
+- Open the network manager connection editor:  
+`nm-connection-editor`  
+- Choose the plus sign to add a connections  
+- Choose Wi-Fi for "Connection Type" and click "Create..."  
+- On the Wi-Fi tab:
+    - Set "Mode:" to Hotspot
+    - Set "SSID:" to NUC42
+- On the Wi-Fi Security Tab
+    - Set "Security:" to WPA & WPA2 Personal
+    - Set the password: nuc42access
+- On the General Tab
+    - Make sure 'Automatically connect ...' is checked
 
 #6. Install usma_bhg  
 `cd ~/catkin_ws/src/`  
@@ -151,5 +159,8 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 solves problem of eventemitter2 missing on local computer
 
 ### Solve the nagging error of: Failed to load module "canberra-gtk-module" 
-- sudo apt-get install libcanberra-gtk-module
+- `sudo apt-get install libcanberra-gtk-module`
+
+### Missing dependencies
+- `sudo apt-get install ros-melodic-libsensors-monitor`
 
