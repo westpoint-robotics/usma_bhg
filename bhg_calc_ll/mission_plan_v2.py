@@ -46,12 +46,12 @@ def make_plan(mission_input, speed, yaw):
     outstring += '\r\n\t\t"items": ['
     # Writing Mission Plan
     for i in range(len(mission_input)):
-        if len(mission_input[i]) == 2:
+        if len(mission_input[i]) == 3:
             if mission_input[i][0] == 115:     # 115 is MAV_CMD_CONDITION_YAW
                 if mission_input[i][1] < 0:
-                    outstring += make_item1(115,i+1,0,-mission_input[i][1],5,-1,0)
+                    outstring += make_item1(115,i+1,0,-mission_input[i][1],5,-1,mission_input[i][2])
                 else:
-                    outstring += make_item1(115,i+1,0,mission_input[i][1],5,1,0)
+                    outstring += make_item1(115,i+1,0,mission_input[i][1],5,1,mission_input[i][2])
             elif mission_input[i][0] == 178:   #  178 is MAV_CMD_DO_CHANGE_SPEED
                 outstring += make_item1(178,i+1,2,1,mission_input[i][1],-1,0)
         else:                           #  16 is MAV_CMD_NAV_WAYPOINT
