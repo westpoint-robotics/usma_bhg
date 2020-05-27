@@ -45,17 +45,13 @@ std_msgs::Bool record;
 string data_dir = "/tmp"; // If no directory specified then save to here
 ros::Time rosTimeSinceEpoch;
 std::time_t raw_time;    
-tm local_tm;
+//tm local_tm;
 
 char dateTime [50];
-int ros_millisec;
-int recordStartTime;
-//int n;
+//int ros_millisec;
 string imageDirectory; 
 string imageFilename;
 string cvFilename;
-//string recordData = "1";
-bool camerasInitialized;
 
 unsigned int imageCount;
 
@@ -295,11 +291,7 @@ int main(int argc, char **argv)
         //Before taking a picture, grab timestamp to record to filename                 
         rosTimeSinceEpoch = ros::Time::now();
         raw_time = static_cast<time_t>(rosTimeSinceEpoch.toSec());    
-        local_tm = *localtime(&raw_time);
-        
-        ros_millisec = int((rosTimeSinceEpoch.nsec)/1000000);
-        
-        int n=sprintf (dateTime, "%d%02d%02d_%02d%02d%02d_%03d", local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, ros_millisec);
+        //local_tm = *localtime(&raw_time);
 
         // DML: TODO stop using data_dir as global
         imageDirectory =  data_dir + "/GOBI000088/"; 
@@ -318,16 +310,16 @@ int main(int argc, char **argv)
             // TODO IF successful grab do a deep copy and write it to disk.
             cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, frameBuffer);
             //cv::imwrite( cvFilename, cv_image );
-            cv::Mat cv_image_rot;
+            //cv::Mat cv_image_rot;
             //cv::transpose(cv_image, cv_image);
 
-            cv::flip(cv_image, cv_image_rot, -1);
+            //cv::flip(cv_image, cv_image_rot, -1);
             
             cv_ptr->encoding = "rgba8";
             cv_ptr->header.stamp =  ros::Time::now();
             cv_ptr->header.frame_id = "/gobi";
 
-            cv_ptr->image = cv_image_rot;
+            cv_ptr->image = cv_image;
             image_pub_.publish(cv_ptr->toImageMsg());
 
             if(record.data)    

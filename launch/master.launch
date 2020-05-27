@@ -14,16 +14,16 @@
     <!-- Start the cameras and the image saving nodes -->
     <include file="$(find usma_bhg)/launch/img_capture.launch" if='$(eval run_cameras)'/>
 
-    <!-- Health monitoring -->  
+    <!-- Health monitoring -->
     <group if='$(eval run_health)'> 
         <node pkg="libsensors_monitor" type="libsensors_monitor" name="libsensors_monitor" respawn="True"/>
         <node pkg="usma_bhg" type="health_monitor.py" name="health_monitor" respawn="True" output="screen"/>
     </group>
 
-    <!-- Record all topics except images -->     
+    <!-- Record all topics except images -->
     <node pkg="rosbag" type="record" name="rosbag_record" args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/bhg" if='$(eval run_rosbag_record)' />
 
-    <!-- Record Mux start -->     
+    <!-- Record Mux start -->
     <node pkg="usma_bhg" type="record_mux.py" name="record_mux" if='$(eval record_mux)' />
 
     <!-- Webserver for remote GUI  -->
