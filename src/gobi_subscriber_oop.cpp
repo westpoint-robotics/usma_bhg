@@ -35,49 +35,55 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 
-
 using namespace std;
 using namespace std::chrono;
 
-double ros_now;
-//NBL: ROS Compliance
-std_msgs::Bool record;
-string data_dir = "/tmp"; // If no directory specified then save to here
-ros::Time rosTimeSinceEpoch;
-std::time_t raw_time;    
-tm local_tm;
+class Gobi_bhg {
+    private:
+        double ros_now;
+        //NBL: ROS Compliance
+        std_msgs::Bool record;
+        string data_dir = "temp"; // If no directory specified then save to here
+        ros::Time rosTimeSinceEpoch;
+        std::time_t raw_time;    
+        tm local_tm;
 
-char dateTime [50];
-int ros_millisec;
-int recordStartTime;
-//int n;
-string imageDirectory; 
-string imageFilename;
-string cvFilename;
-//string recordData = "1";
-bool camerasInitialized;
+        char dateTime [50];
+        int ros_millisec;
+        int recordStartTime;
+        //int n;
+        string imageDirectory; 
+        string imageFilename;
+        string cvFilename;
+        //string recordData = "1";
+        bool camerasInitialized;
 
-unsigned int imageCount;
+        unsigned int imageCount;
 
-/*** GOBI CSV CODE ***/
-//string csvFilename = "";
-std::ofstream csvOutfile;
+        /*** GOBI CSV CODE ***/
+        //string csvFilename = "";
+        std::ofstream csvOutfile;
 
-sensor_msgs::MagneticField mag_data;
-sensor_msgs::Imu imu_data;
-mavros_msgs::Altitude rel_alt;
-sensor_msgs::NavSatFix gps_fix;
-geometry_msgs::TwistStamped vel_gps;
-sensor_msgs::Temperature temp_imu;
+        sensor_msgs::MagneticField mag_data;
+        sensor_msgs::Imu imu_data;
+        mavros_msgs::Altitude rel_alt;
+        sensor_msgs::NavSatFix gps_fix;
+        geometry_msgs::TwistStamped vel_gps;
+        sensor_msgs::Temperature temp_imu;
+        
+    public:
+    string csvFilename; 
+        
+}
 
-string char_array_to_string(char* char_array)
+string Gobi_bhg::char_array_to_string(char* char_array)
 {
     string my_string(char_array);
 
     return my_string;
 }
 
-string make_header()
+string Gobi_bhg::make_header()
 {
     string header = "";
     header = "filename,rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,";
@@ -92,7 +98,7 @@ string make_header()
     return header;
 }
 
-string make_logentry()
+string Gobi_bhg::make_logentry()
 {
     string alt_str; 
     string gps_str; 
@@ -115,54 +121,45 @@ string make_logentry()
     output = alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str;
     return output;
 }
-/*
 
-void temp_cb(msg)
-{
-    temp_imu = msg;  
-}
-*/
-/*** GOBI CSV CODE ***/
-
-//NBL: ROS Compliance
-void mag_cb(const sensor_msgs::MagneticField::ConstPtr& msg)
+void Gobi_bhg::mag_cb(const sensor_msgs::MagneticField::ConstPtr& msg)
 {
     mag_data = *msg;
 }
 
-void imu_cb(const sensor_msgs::Imu::ConstPtr& msg)
+void Gobi_bhg::imu_cb(const sensor_msgs::Imu::ConstPtr& msg)
 {
     imu_data = *msg;
 }
 
-void alt_cb(const mavros_msgs::Altitude::ConstPtr& msg)
+void Gobi_bhg::alt_cb(const mavros_msgs::Altitude::ConstPtr& msg)
 {
     rel_alt = *msg;
 }
 
-void gps_cb(const sensor_msgs::NavSatFix::ConstPtr& msg)
+void Gobi_bhg::gps_cb(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
     gps_fix = *msg;
 }
 
-void vel_cb(const geometry_msgs::TwistStamped::ConstPtr& msg)
+void Gobi_bhg::vel_cb(const geometry_msgs::TwistStamped::ConstPtr& msg)
 {
     vel_gps = *msg;
 }
 
-void temp_cb(const sensor_msgs::Temperature::ConstPtr& msg)
+void Gobi_bhg::temp_cb(const sensor_msgs::Temperature::ConstPtr& msg)
 {
     temp_imu = *msg;
 }
 
-void recordCallback(const std_msgs::Bool::ConstPtr& msg)
+void Gobi_bhg::recordCallback(const std_msgs::Bool::ConstPtr& msg)
 {
     record = *msg;
  
     //ROS_INFO("*** Gobi *** recordCallback: [%s]", record);
 }
 
-void dirCallback(const std_msgs::String::ConstPtr& msg)
+void Gobi_bhg::dirCallback(const std_msgs::String::ConstPtr& msg)
 {
     data_dir = msg->data.c_str();
     std::vector<std::string> results; 
@@ -318,16 +315,12 @@ int main(int argc, char **argv)
             // TODO IF successful grab do a deep copy and write it to disk.
             cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, frameBuffer);
             //cv::imwrite( cvFilename, cv_image );
-            cv::Mat cv_image_rot;
-            //cv::transpose(cv_image, cv_image);
 
-            cv::flip(cv_image, cv_image_rot, -1);
-            
             cv_ptr->encoding = "rgba8";
             cv_ptr->header.stamp =  ros::Time::now();
             cv_ptr->header.frame_id = "/gobi";
 
-            cv_ptr->image = cv_image_rot;
+            cv_ptr->image = cv_image;
             image_pub_.publish(cv_ptr->toImageMsg());
 
             if(record.data)    
