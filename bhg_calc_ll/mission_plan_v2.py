@@ -17,13 +17,24 @@ def make_item1(cmd, jumpid, frame, p1, p2, p3, p4):
     tmpstring += '\r\n\t\t\t}'
     return tmpstring
 
-def make_item2(cmd, jumpid, frame, hold, pt_lat, pt_lon, alt):
+def waypoint_item(cmd, jumpid, frame, hold, pt_lat, pt_lon, alt):
     tmpstring ='\r\n\t\t\t{\r\n\t\t\t\t"AMSLAltAboveTerrain": null,\r\n\t\t\t\t"Altitude": ' + str(alt) + ','
     tmpstring += '\r\n\t\t\t\t"AltitudeMode": 1,'
     tmpstring += '\r\n\t\t\t\t"autoContinue": true,\r\n\t\t\t\t"command": ' + str(cmd) + ','
     tmpstring += '\r\n\t\t\t\t"doJumpId": ' + str(jumpid) + ',\r\n\t\t\t\t"frame": ' + str(frame) + ',\r\n\t\t\t\t"params": ['
     tmpstring += '\r\n\t\t\t\t\t' + str(hold) + ',\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,'
     tmpstring += '\r\n\t\t\t\t\t' + str(pt_lat) + ',\r\n\t\t\t\t\t' + str(pt_lon) + ',\r\n\t\t\t\t\t' + str(alt) 
+    tmpstring += '\r\n\t\t\t\t],\r\n\t\t\t\t"type": "SimpleItem"'
+    tmpstring += '\r\n\t\t\t}'
+    return tmpstring
+
+def landing_item(cmd, jumpid, frame, pt_lat, pt_lon, alt):
+    tmpstring ='\r\n\t\t\t{\r\n\t\t\t\t"AMSLAltAboveTerrain": null,\r\n\t\t\t\t"Altitude": 0 ,'
+    tmpstring += '\r\n\t\t\t\t"AltitudeMode": 1,'
+    tmpstring += '\r\n\t\t\t\t"autoContinue": true,\r\n\t\t\t\t"command": ' + str(cmd) + ','
+    tmpstring += '\r\n\t\t\t\t"doJumpId": ' + str(jumpid) + ',\r\n\t\t\t\t"frame": ' + str(frame) + ',\r\n\t\t\t\t"params": ['
+    tmpstring += '\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,\r\n\t\t\t\t\tnull,'
+    tmpstring += '\r\n\t\t\t\t\t' + str(pt_lat) + ',\r\n\t\t\t\t\t' + str(pt_lon) + ',\r\n\t\t\t\t\t0' 
     tmpstring += '\r\n\t\t\t\t],\r\n\t\t\t\t"type": "SimpleItem"'
     tmpstring += '\r\n\t\t\t}'
     return tmpstring
@@ -46,17 +57,21 @@ def make_plan(mission_input, speed, yaw):
     outstring += '\r\n\t\t"items": ['
     # Writing Mission Plan
     for i in range(len(mission_input)):
-        if len(mission_input[i]) == 2:
+        if len(mission_input[i]) == 3:
             if mission_input[i][0] == 115:     # 115 is MAV_CMD_CONDITION_YAW
                 if mission_input[i][1] < 0:
-                    outstring += make_item1(115,i+1,0,-mission_input[i][1],5,-1,0)
+                    outstring += make_item1(115,i+1,0,-mission_input[i][1],5,-1,mission_input[i][2])
                 else:
-                    outstring += make_item1(115,i+1,0,mission_input[i][1],5,1,0)
+                    outstring += make_item1(115,i+1,0,mission_input[i][1],5,1,mission_input[i][2])
             elif mission_input[i][0] == 178:   #  178 is MAV_CMD_DO_CHANGE_SPEED
                 outstring += make_item1(178,i+1,2,1,mission_input[i][1],-1,0)
-        else:                           #  16 is MAV_CMD_NAV_WAYPOINT
-            wp_lat,wp_lon,alt,hold = mission_input[i][0], mission_input[i][1], mission_input[i][2], mission_input[i][3]
-            outstring += make_item2(16,i+1,3,hold,wp_lat,wp_lon,alt)
+        else:
+            if mission_input[i][0] == 21:      #  21 is MAV_CMD_LANDING
+                wp_lat,wp_lon,alt = mission_input[i][1], mission_input[i][2], mission_input[i][3]
+                outstring += landing_item(21,i+1,3,wp_lat,wp_lon,alt)
+            else:                              #  16 is MAV_CMD_NAV_WAYPOINT
+                wp_lat,wp_lon,alt,hold = mission_input[i][0], mission_input[i][1], mission_input[i][2], mission_input[i][3]
+                outstring += waypoint_item(16,i+1,3,hold,wp_lat,wp_lon,alt)
         if i != len(mission_input)-1:
             outstring += ','
     outstring += '\r\n\t\t],\r\n\t\t"plannedHomePosition": [\r\n\t\t\t41.3802304,'
