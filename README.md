@@ -163,4 +163,12 @@ solves problem of eventemitter2 missing on local computer
 
 ### Missing dependencies
 - `sudo apt-get install ros-melodic-libsensors-monitor`
+- `sudo -H pip3 install --upgrae pip`
+- `sudo -H pip3 install matplotlib`
+- `sudo -H pip3 install jupyter`
+- `sudo -H pip3 install pymavlink`
+- `sudo -H pip3 install pandas`
+`
+
+
 
