@@ -5,8 +5,8 @@ https://medium.com/future-vision/google-maps-in-python-part-2-393f96196eaf
 
 dep:
 sudo apt-get install numpy python3-pandas
-
 '''
+
 import os
 
 def make_item1(cmd, jumpid, frame, p1, p2, p3, p4):
@@ -39,12 +39,15 @@ def landing_item(cmd, jumpid, frame, pt_lat, pt_lon, alt):
     tmpstring += '\r\n\t\t\t}'
     return tmpstring
 
-def make_plan(mission_input, speed, yaw):
-    '''
-    waypoints: a list of 4 waypoints, each waypoint is a list in this order (Lat, Long, Alt, Hold) 
-    speed: in mph
-    initial yaw: degrees, return yaw will be 180 from this
-    '''
+def rtl_item(cmd,jumpid,frame):
+    tmpstring = '\r\n\t\t\t{\r\n\t\t\t\t"autoContinue": true,\r\n\t\t\t\t"command": ' + str(cmd) + ','
+    tmpstring += '\r\n\t\t\t\t"doJumpId": ' + str(jumpid) + ',\r\n\t\t\t\t"frame": ' + str(frame) + ',\r\n\t\t\t\t"params": ['
+    tmpstring += '\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0,'
+    tmpstring += '\r\n\t\t\t\t\t0,\r\n\t\t\t\t\t0\r\n\t\t\t\t],\r\n\t\t\t\t"type": "SimpleItem"'
+    tmpstring += '\r\n\t\t\t}'
+    return tmpstring
+
+def make_plan(mission_input, speed):
     #print("Waypoints are: ", waypoints)
     outstring =  ''
     outstring += '{\r\n\t"fileType": "Plan",\r\n\t"geoFence": {\r\n\t\t"circles": [\r\n\t\t],'
@@ -57,12 +60,14 @@ def make_plan(mission_input, speed, yaw):
     outstring += '\r\n\t\t"items": ['
     # Writing Mission Plan
     for i in range(len(mission_input)):
-        if len(mission_input[i]) == 3:
+        if len(mission_input[i]) <= 3:
             if mission_input[i][0] == 115:     # 115 is MAV_CMD_CONDITION_YAW
                 if mission_input[i][1] < 0:
                     outstring += make_item1(115,i+1,0,-mission_input[i][1],5,-1,mission_input[i][2])
                 else:
                     outstring += make_item1(115,i+1,0,mission_input[i][1],5,1,mission_input[i][2])
+	    elif mission_input[i][0] == 20:    #  20 is MAV_CMD_RTL
+		outstring += rtl_item(20,i+1,2)
             elif mission_input[i][0] == 178:   #  178 is MAV_CMD_DO_CHANGE_SPEED
                 outstring += make_item1(178,i+1,2,1,mission_input[i][1],-1,0)
         else:
