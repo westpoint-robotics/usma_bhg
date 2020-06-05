@@ -29,7 +29,6 @@ class RecordMux:
             self.rec_pub.publish(True)
         elif self.last_mode == "AUTO" and msg.mode != "AUTO":
             self.rec_pub.publish(False)
-        self.last_mode = msg.mode
 
 if __name__ == '__main__':
     rospy.init_node('record_mux')
