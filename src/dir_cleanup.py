@@ -56,13 +56,15 @@ class DirCleanup:
         
     def move_bagfile(self, path):
         """ Moves the latest bagfile to the latest directory """
-        files = os.listdir(path)
-        files.sort(reverse=True)
-        for item in files:
-            if "bag" in item:
-                abspath = path + item
-                destpath = path + "latest/" + item
-                shutil.move(abspath, destpath)
+        # this is not working as expected
+        pass
+#        files = os.listdir(path)
+#        files.sort(reverse=True)
+#        for item in files:
+#            if "bag" in item:
+#                abspath = path + item
+#                destpath = path + "latest/" + item
+#                shutil.move(abspath, destpath)
  
 if __name__ == '__main__':
     # This is for testing and example on how to use
