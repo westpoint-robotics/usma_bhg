@@ -66,5 +66,5 @@ add_executable(gobi_oop src/gobi_subscriber_oop.cpp)
 target_link_libraries(gobi_oop ${catkin_LIBRARIES} -lxeneth -lstdc++ -lusb-1.0  ${OpenCV_LIBS})
 
 
-add_executable(gobi_trig_in src/gobi_trig.cpp)
+add_executable(gobi_trig_in src/gobi_trig_in.cpp)
 target_link_libraries(gobi_trig_in ${catkin_LIBRARIES} -lxeneth -lstdc++ -lusb-1.0  ${OpenCV_LIBS})

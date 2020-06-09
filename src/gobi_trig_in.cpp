@@ -5,14 +5,14 @@
 
 #include "XCamera.h"    // Xeneth SDK main header.
 // DML VVV
+
+#include "ros/ros.h"
 #include <cv.h>
 #include <opencv2/opencv.hpp>
 #include <highgui.h>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "ros/ros.h"
-
-#include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 
 
 using namespace cv;
@@ -91,9 +91,10 @@ int main(int argc, char **argv) {
         
         /* retrieve camera product id (PID) */
         errCode = XC_GetPropertyValueL(handle, "_CAM_PID", &pid);
+        if (!HandleError(errCode, "Retrieving the camera PID")) AbortSession(); 
         errCode = XC_GetPropertyValueL(handle, "_CAM_SER", &ser);
-        if (!HandleError(errCode, "Retrieving the camera PID")) AbortSession();        
-        printf("Connected to camera with product id (PID) 0x%ld" CRLF CRLF, pid);
+        if (!HandleError(errCode, "Retrieving the camera serial number")) AbortSession();        
+        printf("Connected to camera with product id (PID) 0x%ld and serial number %lu" CRLF CRLF, pid, ser);
 
         /* Check for the Gobi-640-GigE (F027) */
         if (pid == 0xF027) {
@@ -144,9 +145,6 @@ int main(int argc, char **argv) {
 
 
         // DML get props to check
-//        long triggerMode = 0;
-//        errCode = XC_GetPropertyValueL(handle, "TriggerMode", &triggerMode);
-//        printf("TriggerMode is '%lu' Values: Free running (=0),Level (low) (=1),Level (high) (=2), Falling edge (=3), Rising edge (=4)." CRLF, triggerMode);
         errCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 0, "");
         if (!HandleError(errCode, " * Set auto mode"))
             return false;
@@ -164,10 +162,7 @@ int main(int argc, char **argv) {
             return false;            
         errCode = XC_SetPropertyValueL(handle, "TriggerInPolarity", 1, "");
         if (!HandleError(errCode, " * Set trigger input polarity"))
-            return false;           
-//        errCode = XC_SetPropertyValueL(handle, "TriggerInSource", 0, "");
-//        if (!HandleError(errCode, " * Set trigger input source"))
-//            return false;            
+            return false;                    
         errCode = XC_SetPropertyValueL(handle, "TriggerOutEnable", 0, "");
         if (!HandleError(errCode, " * Disable trigger output"))
             return false;            
@@ -177,8 +172,11 @@ int main(int argc, char **argv) {
         errCode = XC_SetPropertyValueL(handle, "TriggerOutWidth", 30, "");
         if (!HandleError(errCode, " * Set TriggerOutWidth  ")) 
             return false;
-            
-        long trigdir = 0; // Values: Trigger input(0), Trigger output(1)
+
+        long automode = 0;
+        errorCode = XC_GetPropertyValueL(handle, "AutoModeUpdate", &automode);
+        printf("AutoModeUpdate '%lu' " CRLF, automode);             
+        long trigdir = 0; 
         errorCode = XC_GetPropertyValueL(handle, "TriggerDirection", &trigdir);
         printf("TriggerDirection is '%lu' Values: Trigger input(0), Trigger output(1)" CRLF, trigdir);
         long trigimode = 0;
@@ -193,9 +191,6 @@ int main(int argc, char **argv) {
         long trigipol = 0;
         errorCode = XC_GetPropertyValueL(handle, "TriggerInPolarity", &trigipol);
         printf("TriggerInPolarity is '%lu' Values: Level low/Falling edge(0), Level high/Rising edge(1)" CRLF, trigipol);
-        long automode = 0;
-        errorCode = XC_GetPropertyValueL(handle, "AutoModeUpdate", &automode);
-        printf("AutoModeUpdate '%lu' " CRLF, automode); 
         long trigoenable = 0;
         errorCode = XC_GetPropertyValueL(handle, "TriggerOutEnable", &trigoenable);
         printf("TriggerOutEnable is '%lu' Values: Off(0), On(1)" CRLF, trigoenable);
@@ -205,6 +200,7 @@ int main(int argc, char **argv) {
         long trigowdith = 0;
         errorCode = XC_GetPropertyValueL(handle, "TriggerOutWidth", &trigowdith);
         printf("TriggerOutWidth is '%lu' Values: Time in microseconds" CRLF, trigowdith);
+        printf(CRLF);
      
         
         // DML ^^^^^
