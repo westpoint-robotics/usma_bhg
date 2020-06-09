@@ -201,11 +201,8 @@ int main(int argc, char **argv) {
         errorCode = XC_GetPropertyValueL(handle, "TriggerOutWidth", &trigowdith);
         printf("TriggerOutWidth is '%lu' Values: Time in microseconds" CRLF, trigowdith);
         printf(CRLF);
-     
-        
+
         // DML ^^^^^
-
-
 
 
 
@@ -232,7 +229,6 @@ int main(int argc, char **argv) {
             cv_ptr->encoding = "rgba8";
             cv_ptr->header.stamp =  ros::Time::now();
             cv_ptr->header.frame_id = "/gobi";
-
             cv_ptr->image = cv_image;
             image_pub_.publish(cv_ptr->toImageMsg());
         }

@@ -104,11 +104,80 @@ class GobiBHG {
                     /* configure camera to disable the automatic shutter calibration process */
                     //if (!SetupShutterControl_F027(handle)) AbortSession();
                 }
+                else if (pid == 0xF027) {
+                    /* configure camera with no trigger */
+                    if (!Setup_F027(handle)) AbortSession();
+                }
+                
+                
+                
+                
             }
             else{
                 ROS_INFO("**** GOBI **** GOBI initialization failed");
                 this->is_initialized = false;    
             }
+        }
+
+        bool Setup_F027(XCHANDLE handle) {
+            ErrCode errorCode = I_OK;
+            
+//            errorCode = XC_SetPropertyValueL(handle, "InputHistogramBegin", 20, "");
+//            if (!HandleError(errorCode, " * Enable trigger input"))
+//                return false; 
+//            errorCode = XC_SetPropertyValueL(handle, "InputHistogramMidpoint", 30, "");
+//            if (!HandleError(errorCode, " * Enable trigger input"))
+//                return false; 
+            errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 1, "");
+            if (!HandleError(errorCode, " * Enable trigger input"))
+                return false;                             
+            errorCode = XC_SetPropertyValueL(handle, "AutoCorrectionEnabled", 1, "");
+            if (!HandleError(errorCode, " * Enable trigger input"))
+                return false;              
+            
+            
+            
+            
+            ROS_INFO("**** GOBI **** Configuring GOBI camera in free run mode with no trigger.");
+            errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 1, "");
+            if (!HandleError(errorCode, " * Set auto mode"))
+                return false;            
+            errorCode = XC_SetPropertyValueL(handle, "TriggerInEnable", 0, "");
+            if (!HandleError(errorCode, " * Enable trigger input"))
+                return false;                             
+            errorCode = XC_SetPropertyValueL(handle, "TriggerOutEnable", 0, "");
+            if (!HandleError(errorCode, " * Disable trigger output"))
+                return false;
+            errorCode = XC_SetPropertyValueL(handle, "TriggerInMode", 1, "");
+            if (!HandleError(errorCode, " * Set trigger input mode")) 
+                return false;                            
+
+            long automode = 1;
+            errorCode = XC_GetPropertyValueL(handle, "AutoModeUpdate", &automode);
+            ROS_INFO("**** GOBI **** AutoModeUpdate '%lu' ", automode);             
+            long trigimode = 0; 
+            errorCode = XC_GetPropertyValueL(handle, "TriggerInMode", &trigimode);
+            ROS_INFO("**** GOBI **** TriggerInMode is '%lu' Values:Free running(0), Triggered(1)", trigimode);        
+            long trigienable = 0;
+            errorCode = XC_GetPropertyValueL(handle, "TriggerInEnable", &trigienable);
+            ROS_INFO("**** GOBI **** TriggerInEnable is '%lu' Values: Off(0), On(1)", trigienable);        
+            long trigisens = 0;
+            errorCode = XC_GetPropertyValueL(handle, "TriggerInSensitivity", &trigisens);
+            ROS_INFO("**** GOBI **** TriggerInSensitivity is '%lu' Values: Level(0), Edge(1)", trigisens);
+            long trigipol = 0;
+            errorCode = XC_GetPropertyValueL(handle, "TriggerInPolarity", &trigipol);
+            ROS_INFO("**** GOBI **** TriggerInPolarity is '%lu' Values: Level low/Falling edge(0), Level high/Rising edge(1)", trigipol);
+            long trigoenable = 0;
+            errorCode = XC_GetPropertyValueL(handle, "TriggerOutEnable", &trigoenable);
+            ROS_INFO("**** GOBI **** TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
+            long trigopolarity = 0;
+            errorCode = XC_GetPropertyValueL(handle, "TriggerOutPolarity", &trigopolarity);
+            ROS_INFO("**** GOBI **** TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
+            long trigowdith = 0;
+            errorCode = XC_GetPropertyValueL(handle, "TriggerOutWidth", &trigowdith);
+            ROS_INFO("**** GOBI **** TriggerOutWidth is '%lu' Values: Time in microseconds", trigowdith);
+            
+            return true;        
         }
 
         /*
@@ -309,9 +378,18 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "gobi_trigger");
     ros::NodeHandle nh;
+    bool use_trig; 
+    if (ros::param::has("/gobi_trigger/use_trig")) {
+        
+        ros::param::get("/gobi_trigger/use_trig", use_trig);
+    }
+    else{
+        use_trig = false;
+    }
+    ROS_INFO("Use trigger mode is set to: %i",use_trig);  
     GobiBHG gobi_cam(&nh); // instantiate gobi class
     gobi_cam.retrieve_info();
-    gobi_cam.initialize_cam(true);
+    gobi_cam.initialize_cam(use_trig);
     gobi_cam.start_capture();
 
     uint64_t n=0;
