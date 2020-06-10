@@ -1,16 +1,25 @@
 #include "stdio.h" // C Standard Input/Output library.
 #include "XCamera.h" // Xeneth SDK main header.
 #include "XFilters.h" // Xeneth SDK main header.
-#include<string>
+#include <string>     // std::string, std::to_string
+#include <boost/algorithm/string.hpp>
+#include <sys/stat.h> // mkdir command
 
 #include "ros/ros.h"
 #include <cv.h>
 #include <opencv2/opencv.hpp>
-#include <highgui.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
-#include <string>     // std::string, std::to_string
+
+#include "std_msgs/String.h" // Callback for directory needs this
+#include "sensor_msgs/Imu.h"
+#include "sensor_msgs/NavSatFix.h"
+#include "sensor_msgs/Temperature.h"
+#include "sensor_msgs/MagneticField.h"
+#include "mavros_msgs/Altitude.h"
+#include "geometry_msgs/TwistStamped.h"
+#include "std_msgs/Bool.h"
 
 
 using namespace std;
@@ -24,21 +33,61 @@ class GobiBHG {
         bool is_initialized;
         int serial_num;
         image_transport::Publisher image_pub_;
-       
+
+        ros::Subscriber record_sub;
+        ros::Subscriber dir_sub;
+        ros::Subscriber alt_sub;
+        ros::Subscriber gps_sub;
+        ros::Subscriber vel_sub;
+        ros::Subscriber mag_sub;
+        ros::Subscriber imu_sub;
+        ros::Subscriber temp_sub;
+        
+        std::ofstream csvOutfile;
+        std::string imageFolder;
+        std::string imageFilename;
+        std::string img_time;
+        
+        // State updated by callbacks
+        sensor_msgs::MagneticField mag_data;
+        sensor_msgs::Imu imu_data;
+        mavros_msgs::Altitude rel_alt;
+        sensor_msgs::NavSatFix gps_fix;
+        geometry_msgs::TwistStamped vel_gps;
+        sensor_msgs::Temperature temp_imu;              
+        std::string data_dir; 
+  
     public:
         GobiBHG(ros::NodeHandle *nh){
             frameBuffer = 0; 
             frameSize = 0;  
             is_initialized = false;  
             serial_num = 0;
+            data_dir = "/tmp/BHG_DATA";
+            imageFilename = "default_imgname.png";
+            csvOutfile;
             image_transport::ImageTransport it_(*nh);
-            image_pub_ = it_.advertise("gobi_image", 1); // TODO Namespace this to /camera/gobi/ , use the same pattern as FLIR           
+            image_pub_ = it_.advertise("gobi_image", 1); // TODO Namespace this to /camera/gobi/ , use the same pattern as FLIR   
+            
+            record_sub  = nh->subscribe("/record", 1000, &GobiBHG::recordCallback, this);
+            dir_sub     = nh->subscribe("/directory", 1000, &GobiBHG::dirCallback, this);
+            alt_sub     = nh->subscribe("/mavros/altitude", 1000, &GobiBHG::alt_cb, this);
+            gps_sub     = nh->subscribe("/mavros/global_position/raw/fix", 1000, &GobiBHG::gps_cb, this);
+            vel_sub     = nh->subscribe("/mavros/global_position/raw/gps_vel", 1000, &GobiBHG::vel_cb, this); 
+            mag_sub     = nh->subscribe("/mavros/imu/mag", 1000, &GobiBHG::mag_cb, this);
+            imu_sub     = nh->subscribe("/mavros/imu/data", 1000, &GobiBHG::imu_cb, this);
+            temp_sub    = nh->subscribe("/mavros/imu/temperature_imu", 1000, &GobiBHG::temp_cb, this);            
+            
+            
+                    
         }
-        
+
         ~GobiBHG(){
             printf("**** GOBI **** Starting GOBI clean up as part of shutdown process\n");
             this->clean_up();
         }
+        
+        bool record; 
         
         int retrieve_info(){
             ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
@@ -307,16 +356,24 @@ class GobiBHG {
         int retrieve_frame(){
             ErrCode errorCode = 0; 
             //if ((errorCode = XC_GetFrame(this->handle, FT_NATIVE, XGF_Blocking, this->frameBuffer, this->frameSize)) != I_OK)
+            std::string crnt_time = make_datetime_stamp();
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
-                    ROS_INFO("**** GOBI **** Retrieve frame timed out waiting for frame (possibly not triggered), errorCode %lu", errorCode);                
+                    ROS_INFO("**** GOBI **** Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
                 }
                 else{
                     ROS_INFO("**** GOBI **** Problem while fetching frame, errorCode %lu", errorCode);
                 }
             }
-            //errorCode = XC_SaveData(this->handle, "output.xpng", XSD_SaveThermalInfo | XSD_Force16);
+            else if (this->record){
+                errorCode = XC_SaveData(this->handle, "output.xpng", XSD_SaveThermalInfo | XSD_Force16);
+                cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, this->frameBuffer);  
+                this->imageFilename = imageFolder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".png";                
+                cv::imwrite( this->imageFilename, cv_image );
+                              
+            }
+            
             return int(errorCode);
         }
         
@@ -331,7 +388,7 @@ class GobiBHG {
         }
         
         void clean_up(){
-        // NOTE: This function must use printf since ROS is shutdown it is run.
+        // NOTE: This function can't use ROS_INFO since ROS is shutdown it is run.
             printf("**** GOBI **** Conducting ROS clean up\n");
             ErrCode errorCode = 0; 
             // When the camera is still capturing, ...
@@ -359,37 +416,172 @@ class GobiBHG {
                 this->frameBuffer = 0;
             }       
         }
-//        
-//        string make_data_directory(){
-//            // Get home directory
-//            const char *tmpdir;
-//            std::string homedir;
-//            // check the $HOME environment variable, and if that does not exist, use getpwuid
-//            if ((tmpdir = getenv("HOME")) == NULL) {
-//                tmpdir = getpwuid(getuid())->pw_dir;
-//            }
-//            homedir.assign(tmpdir);
-//        }
-};
 
+        // Make a string with the date time stamp formatted for file names. Includes milliseconds.
+        std::string make_datetime_stamp(){
+            char buffer [80];    
+            ros::Time ros_timenow = ros::Time::now();
+            std::time_t raw_time = static_cast<time_t>(ros_timenow.toSec());    
+            struct tm * local_tm = localtime(&raw_time);        
+            int ros_millisec = int((ros_timenow.nsec)/1000000);         
+            strftime (buffer,80,"%Y%m%d_%H%M%S",local_tm);
+            sprintf(buffer,"%s.%03d", buffer, ros_millisec);
+            std::string datetime_stamp(buffer);
+            return datetime_stamp;                    
+        }
+        
+        void dirCallback(const std_msgs::String::ConstPtr& msg)
+        {
+            this->data_dir = msg->data.c_str();
+            std::vector<std::string> results; 
+            boost::split(results, data_dir, [](char c){return c == '/';});
+            //ROS_INFO("Subscibed dir is %s", data_dir);
+            // /home/user1/Data/20200526_085616_798277
+               
+            this->imageFolder = data_dir + "GOBI" + to_string(this->serial_num) + "/";
+            string csvFilename   = data_dir + results[4].c_str() + "_gobi.csv";
+            
+            if (mkdir(this->imageFolder.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
+            {
+                if( errno == 0 ) { // TODO fix this to return accurate feedback
+                    // TODO figure out why this check for zero? 
+                }
+                else if (errno == 17){
+                    // The directory already exists. Do nothing
+                }
+                else{
+                    ROS_INFO("*** Gobi ***: ERROR: Directory does not exist and MKDIR failed the errno is %i",errno );        
+                }
+            }    
+            else
+            {
+                ROS_INFO("*** Gobi ***: Created Data Directory and establishing csv file" );  
+                ROS_INFO("*** Gobi ***: Data directory is: [%s]", this->imageFolder.c_str());
+                
+                if (csvOutfile.is_open()){
+                    ROS_INFO("*** Gobi ***: GOBI CSV File is already open: [%s]", csvFilename.c_str());
+                }
+                else{        
+                    csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file
+                    if (!csvOutfile){
+                        ROS_INFO("*** Gobi ***: ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csvFilename.c_str()); 
+                        csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file           
+                        ROS_INFO("*** Gobi ***: ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csvFilename.c_str());           
+                    } 
+                    ROS_INFO("*** Gobi ***: CSV file is: [%s]", csvFilename.c_str());                                  
+                }
+            }
+            csvOutfile << make_header() << endl;  
+        }
+        
+        // Make the header for the csv file
+        // TODO clean this up, a lot of unused columns that printing zeros. Formating of code needs cleanup also.
+        string make_header()
+        {
+            string header = "";
+            header = "filename,rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,";
+            header += "gps_fix.status.status,gps_fix.status.service,gps_fix.latitude,gps_fix.longitude,gps_fix.altitude,";
+            header += "mag_data.magnetic_field.x,mag_data.magnetic_field.y,mag_data.magnetic_field.z,";
+            header += "imu_data.orientation.x,imu_data.orientation.y,imu_data.orientation.z,imu_data.orientation.w,"; 
+            header += "imu_data.angular_velocity.x,imu_data.angular_velocity.y,imu_data.angular_velocity.z,";
+            header += "imu_data.linear_acceleration.x,imu_data.linear_acceleration.y,imu_data.linear_acceleration.z,";
+            header += "vel_gps.twist.linear.x,vel_gps.twist.linear.y,vel_gps.twist.linear.z,";
+            header += "vel_gps.twist.angular.x,vel_gps.twist.angular.y,vel_gps.twist.angular.z,";
+            header += "temp_imu.temperature";
+            return header;
+        }        
+
+        string make_logentry()
+        {            
+            string alt_str = imageFilename + "," + img_time + "," 
+                      + to_string(rel_alt.monotonic) + "," + to_string(rel_alt.amsl) + "," 
+                      + to_string(rel_alt.local) + "," + to_string(rel_alt.relative); 
+            string gps_str = to_string(gps_fix.status.status) + "," + to_string(gps_fix.status.service) 
+                      + "," + to_string(gps_fix.latitude) + "," + to_string(gps_fix.longitude) + "," + to_string(gps_fix.altitude);
+            string mag_str = to_string(mag_data.magnetic_field.x) + "," + to_string(mag_data.magnetic_field.y) 
+                      + "," + to_string(mag_data.magnetic_field.z);    
+            string imu_str = to_string(imu_data.orientation.x) + "," + to_string(imu_data.orientation.y) + "," 
+                      + to_string(imu_data.orientation.z) + "," + to_string(imu_data.orientation.w) + ",";
+            imu_str += to_string(imu_data.angular_velocity.x) + "," + to_string(imu_data.angular_velocity.y) 
+                      + "," + to_string(imu_data.angular_velocity.z) + ",";
+            imu_str += to_string(imu_data.linear_acceleration.x) + "," + to_string(imu_data.linear_acceleration.y) 
+                      + "," + to_string(imu_data.linear_acceleration.z);    
+            string vel_str = to_string(vel_gps.twist.linear.x) + "," + to_string(vel_gps.twist.linear.y) + "," + to_string(vel_gps.twist.linear.z);
+            vel_str += to_string(vel_gps.twist.angular.x) + "," + to_string(vel_gps.twist.angular.y) + "," + to_string(vel_gps.twist.angular.z);  
+            string temp_str = to_string(temp_imu.temperature);
+            string output = alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str;
+            return output;
+        }
+        
+        string char_array_to_string(char* char_array)
+        {
+            string my_string(char_array);
+
+            return my_string;
+        }
+        
+        void mag_cb(const sensor_msgs::MagneticField::ConstPtr& msg)
+        {
+            mag_data = *msg;
+        }
+
+        void imu_cb(const sensor_msgs::Imu::ConstPtr& msg)
+        {
+            imu_data = *msg;
+        }
+
+        void alt_cb(const mavros_msgs::Altitude::ConstPtr& msg)
+        {
+            rel_alt = *msg;
+        }
+
+        void gps_cb(const sensor_msgs::NavSatFix::ConstPtr& msg)
+        {
+            gps_fix = *msg;
+        }
+
+        void vel_cb(const geometry_msgs::TwistStamped::ConstPtr& msg)
+        {
+            vel_gps = *msg;
+        }
+
+        void temp_cb(const sensor_msgs::Temperature::ConstPtr& msg)
+        {
+            temp_imu = *msg;
+        }
+
+        void recordCallback(const std_msgs::Bool msg)
+        {
+            record = msg.data; 
+            //ROS_INFO("*** Gobi *** recordCallback: [%s]", record);
+        }
+};
+  
 int main(int argc, char **argv)
 {
+    // start the ros node
     ros::init(argc, argv, "gobi_trigger");
     ros::NodeHandle nh;
+
+    // get ros param for trigger mode. 0 - trigger in, 1 - trigger out, 2- no trigger
     int use_trig; 
     if (ros::param::has("/gobi_trigger/use_trig")) {
         
         ros::param::get("/gobi_trigger/use_trig", use_trig);
     }
-    else{
+    else{ // Default to no trigger mode
         use_trig = 2;
     }
-    ROS_INFO("Use trigger mode is set to: %i",use_trig);  
-    GobiBHG gobi_cam(&nh); // instantiate gobi class
+    ROS_INFO("Use trigger mode is set to: %i",use_trig); 
+
+    // Setup camera and start capturing 
+    GobiBHG gobi_cam(&nh); 
     gobi_cam.retrieve_info();
     gobi_cam.initialize_cam(use_trig);
     gobi_cam.start_capture();
+ 
 
+    // Big while loop, continuously publish the images
     uint64_t n=0;
     ros::Rate loop_rate(20); //TODO how fast should this be?    
     while (ros::ok())
@@ -400,9 +592,8 @@ int main(int argc, char **argv)
             gobi_cam.publish_frame();
         }
     }
-    ROS_INFO("**** GOBI **** Received ROS shutdown command");
-    
 
-    
+    ROS_INFO("**** GOBI **** Received ROS shutdown command");
+
     return 0;
 }
