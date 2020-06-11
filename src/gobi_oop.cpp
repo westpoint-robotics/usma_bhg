@@ -2,7 +2,6 @@
 #include "XCamera.h" // Xeneth SDK main header.
 #include "XFilters.h" // Xeneth SDK main header.
 #include <string>     // std::string, std::to_string
-#include <boost/algorithm/string.hpp>
 #include <sys/stat.h> // mkdir command
 
 #include "ros/ros.h"
@@ -33,6 +32,7 @@ class GobiBHG {
         bool is_initialized;
         int serial_num;
         image_transport::Publisher image_pub_;
+        bool record;
 
         ros::Subscriber record_sub;
         ros::Subscriber dir_sub;
@@ -67,9 +67,10 @@ class GobiBHG {
             imageFilename = "default_imgname.png";
             csvOutfile;
             image_transport::ImageTransport it_(*nh);
-            image_pub_ = it_.advertise("gobi_image", 1); // TODO Namespace this to /camera/gobi/ , use the same pattern as FLIR   
+            image_pub_ = it_.advertise("gobi_image", 1); // TODO Namespace this to /camera/gobi/ , use the same pattern as FLIR  
+            record = false; 
             
-            record_sub  = nh->subscribe("/record", 1000, &GobiBHG::recordCallback, this);
+            record_sub  = nh->subscribe("/record", 10, &GobiBHG::recordCallback, this);
             dir_sub     = nh->subscribe("/directory", 1000, &GobiBHG::dirCallback, this);
             alt_sub     = nh->subscribe("/mavros/altitude", 1000, &GobiBHG::alt_cb, this);
             gps_sub     = nh->subscribe("/mavros/global_position/raw/fix", 1000, &GobiBHG::gps_cb, this);
@@ -77,32 +78,29 @@ class GobiBHG {
             mag_sub     = nh->subscribe("/mavros/imu/mag", 1000, &GobiBHG::mag_cb, this);
             imu_sub     = nh->subscribe("/mavros/imu/data", 1000, &GobiBHG::imu_cb, this);
             temp_sub    = nh->subscribe("/mavros/imu/temperature_imu", 1000, &GobiBHG::temp_cb, this);            
-            
-            
-                    
+            create_driectories();
         }
 
         ~GobiBHG(){
-            printf("**** GOBI **** Starting GOBI clean up as part of shutdown process\n");
+            printf("***** GOBI:  Starting GOBI clean up as part of shutdown process\n");
             this->clean_up();
         }
-        
-        bool record; 
+         
         
         int retrieve_info(){
             ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
             unsigned int deviceCount = 0;
             if ((errorCode = XCD_EnumerateDevices(NULL, &deviceCount, XEF_EnableAll)) != I_OK) {
-                ROS_INFO("**** GOBI **** An error occurred while enumerating the devices. errorCode: %i", int(errorCode));
+                ROS_INFO("***** GOBI:  An error occurred while enumerating the devices. errorCode: %i", int(errorCode));
                 return -1;
             }
             if (deviceCount == 0) {
-                ROS_INFO("**** GOBI **** Enumeration was a success but no devices were found!");
+                ROS_INFO("***** GOBI:  Enumeration was a success but no devices were found!");
                 return 0;
             }         
             XDeviceInformation *devices = new XDeviceInformation[deviceCount];
             if ((errorCode = XCD_EnumerateDevices(devices, &deviceCount, XEF_UseCached)) != I_OK) {
-                ROS_INFO("**** GOBI **** Error while retrieving the cached device information structures. errorCode: %i", int(errorCode));
+                ROS_INFO("***** GOBI:  Error while retrieving the cached device information structures. errorCode: %i", int(errorCode));
                 delete [] devices;
                 return -1;
             }
@@ -112,16 +110,16 @@ class GobiBHG {
 
             for(unsigned int i = 0; i < deviceCount; i++) {
                 XDeviceInformation * dev = &devices[i];
-                ROS_INFO("**** GOBI **** device[%i] %s @ %s (%s) ", i, dev->name, dev->address, dev->transport);
-                ROS_INFO("**** GOBI **** PID: %4X", dev->pid); 
-                ROS_INFO("**** GOBI **** Serial: %i", dev->serial);
-                ROS_INFO("**** GOBI **** URL: %s", dev->url);
-                ROS_INFO("**** GOBI **** State: %s", dev->state == XDS_Available ? "Available" : dev->state == XDS_Busy ? "Busy" : "Unreachable");
+                ROS_INFO("***** GOBI:  device[%i] %s @ %s (%s) ", i, dev->name, dev->address, dev->transport);
+                ROS_INFO("***** GOBI:  PID: %4X", dev->pid); 
+                ROS_INFO("***** GOBI:  Serial: %i", dev->serial);
+                ROS_INFO("***** GOBI:  URL: %s", dev->url);
+                ROS_INFO("***** GOBI:  State: %s", dev->state == XDS_Available ? "Available" : dev->state == XDS_Busy ? "Busy" : "Unreachable");
                 if (std::string(dev->name).rfind("Gobi") == 0){
                     this->serial_num = dev->serial;                    
                 }
             }
-            ROS_INFO("**** GOBI **** Gobi serial number is: %i", this->serial_num);
+            ROS_INFO("***** GOBI:  Serial number is: %i", this->serial_num);
             delete [] devices;   
             return 0;    
         }
@@ -129,10 +127,10 @@ class GobiBHG {
         void initialize_cam(int is_trigMode = 2){
             ErrCode errCode = I_OK;
             // Open a connection to the first detected camera by using connection string cam://0
-            ROS_INFO("**** GOBI **** Opening connection to cam://0");
+            ROS_INFO("***** GOBI:  Opening connection to cam://0");
             this->handle = XC_OpenCamera("cam://0"); 
             if(XC_IsInitialised(handle)){             
-                ROS_INFO("**** GOBI **** GOBI is initialized.");
+                ROS_INFO("***** GOBI:  is initialized.");
                 this->is_initialized = true;    
                 
                 /* retrieve camera product id (PID)  and serial number*/
@@ -142,7 +140,7 @@ class GobiBHG {
                 if (!HandleError(errCode, "Retrieving the camera PID")) AbortSession(); 
                 errCode = XC_GetPropertyValueL(this->handle, "_CAM_SER", &ser);
                 if (!HandleError(errCode, "Retrieving the camera serial number")) AbortSession();        
-                ROS_INFO("**** GOBI **** Connected to camera with product id (PID) 0x%ld and serial number %lu", pid, ser);
+                ROS_INFO("***** GOBI:  Connected to camera with product id (PID) 0x%ld and serial number %lu", pid, ser);
 
 //                /* Check for the Gobi-640-GigE (F027) and in trigger mode*/
 //                if (pid == 0xF027 and is_trigMode) {
@@ -162,7 +160,7 @@ class GobiBHG {
                 //SetupExternalTriggeredMode_F027(this->handle);
             }
             else{
-                ROS_INFO("**** GOBI **** GOBI initialization failed");
+                ROS_INFO("***** GOBI:  Initialization failed");
                 this->is_initialized = false;    
             }
         }
@@ -187,7 +185,7 @@ class GobiBHG {
                 return false;  
            
             if (trig_mode == 0){
-                ROS_INFO("**** GOBI **** Configuring GOBI camera in external trigger in mode with rising edge activation");
+                ROS_INFO("***** GOBI:  Configuring camera in external trigger in mode with rising edge activation");
                 errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 0, "");
                 if (!HandleError(errorCode, " * Set auto mode"))
                     return false;
@@ -217,7 +215,7 @@ class GobiBHG {
                     return false;
             }
             else if (trig_mode == 1){
-                ROS_INFO("**** GOBI **** Configuring GOBI camera in external trigger out mode");        
+                ROS_INFO("***** GOBI:  Configuring camera in external trigger out mode");        
                 errorCode = XC_SetPropertyValueL(handle, "TriggerDirection", 0, "");
                 if (!HandleError(errorCode, " * Set trigger direction"))
                     return false; 
@@ -242,7 +240,7 @@ class GobiBHG {
             }
             else // no trigger mode
             {
-                ROS_INFO("**** GOBI **** Configuring GOBI camera in free run mode with no trigger.");
+                ROS_INFO("***** GOBI:  Configuring camera in free run mode with no trigger.");
                 errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 1, "");
                 if (!HandleError(errorCode, " * Set auto mode"))
                     return false;            
@@ -259,28 +257,28 @@ class GobiBHG {
             
             long automode = 1;
             errorCode = XC_GetPropertyValueL(handle, "AutoModeUpdate", &automode);
-            ROS_INFO("**** GOBI **** AutoModeUpdate '%lu' ", automode);             
+            ROS_INFO("***** GOBI:  AutoModeUpdate '%lu' ", automode);             
             long trigimode = 0; 
             errorCode = XC_GetPropertyValueL(handle, "TriggerInMode", &trigimode);
-            ROS_INFO("**** GOBI **** TriggerInMode is '%lu' Values:Free running(0), Triggered(1)", trigimode);        
+            ROS_INFO("***** GOBI:  TriggerInMode is '%lu' Values:Free running(0), Triggered(1)", trigimode);        
             long trigienable = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerInEnable", &trigienable);
-            ROS_INFO("**** GOBI **** TriggerInEnable is '%lu' Values: Off(0), On(1)", trigienable);        
+            ROS_INFO("***** GOBI:  TriggerInEnable is '%lu' Values: Off(0), On(1)", trigienable);        
             long trigisens = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerInSensitivity", &trigisens);
-            ROS_INFO("**** GOBI **** TriggerInSensitivity is '%lu' Values: Level(0), Edge(1)", trigisens);
+            ROS_INFO("***** GOBI:  TriggerInSensitivity is '%lu' Values: Level(0), Edge(1)", trigisens);
             long trigipol = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerInPolarity", &trigipol);
-            ROS_INFO("**** GOBI **** TriggerInPolarity is '%lu' Values: Level low/Falling edge(0), Level high/Rising edge(1)", trigipol);
+            ROS_INFO("***** GOBI:  TriggerInPolarity is '%lu' Values: Level low/Falling edge(0), Level high/Rising edge(1)", trigipol);
             long trigoenable = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerOutEnable", &trigoenable);
-            ROS_INFO("**** GOBI **** TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
+            ROS_INFO("***** GOBI:  TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
             long trigopolarity = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerOutPolarity", &trigopolarity);
-            ROS_INFO("**** GOBI **** TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
+            ROS_INFO("***** GOBI:  TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
             long trigowdith = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerOutWidth", &trigowdith);
-            ROS_INFO("**** GOBI **** TriggerOutWidth is '%lu' Values: Time in microseconds", trigowdith);
+            ROS_INFO("***** GOBI:  TriggerOutWidth is '%lu' Values: Time in microseconds", trigowdith);
             
             return true;        
         }
@@ -293,13 +291,13 @@ class GobiBHG {
             char err_msg[sz];
 
             XC_ErrorToString(errCode, err_msg, sz);
-            ROS_INFO("**** GOBI **** %s: %s (%lu)", msg, err_msg, errCode);
+            ROS_INFO("***** GOBI:  %s: %s (%lu)", msg, err_msg, errCode);
 
             return I_OK == errCode;
         }        
         
         void AbortSession() {
-            ROS_INFO("**** GOBI **** Aborting session.");
+            ROS_INFO("***** GOBI:  Aborting session.");
             CleanupSession();
             exit(-1);
         }
@@ -320,7 +318,7 @@ class GobiBHG {
             ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
             if ((errorCode = XC_StartCapture(this->handle)) != I_OK)
             {
-                ROS_INFO("**** GOBI **** Could not start capturing, errorCode: %lu", errorCode);
+                ROS_INFO("***** GOBI:  Could not start capturing, errorCode: %lu", errorCode);
             }
             else if (XC_IsCapturing(this->handle)) // When the camera is capturing ...
             {    
@@ -328,11 +326,11 @@ class GobiBHG {
                 // Load the color profile delivered with this sample.
                 if (errorCode = XC_LoadColourProfile(handle, "/home/user1/catkin_ws/src/usma_bhg/resources/ThermalBlue.png") != I_OK)
                 {
-                    ROS_INFO("**** GOBI **** Problem while loading the desired colorprofile, errorCode: %lu", errorCode);
+                    ROS_INFO("***** GOBI:  Problem while loading the desired colorprofile, errorCode: %lu", errorCode);
                 }
                 else
                 {
-                    ROS_INFO("**** GOBI **** Successfully loaded the desired colorprofile.");
+                    ROS_INFO("***** GOBI:  Successfully loaded the desired colorprofile.");
                 }        
                 // Set the colourmode so that the last loaded colorprofile is used.
                 XC_SetColourMode(handle, ColourMode_Profile);
@@ -360,20 +358,19 @@ class GobiBHG {
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
-                    ROS_INFO("**** GOBI **** Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
+                    ROS_INFO("***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
                 }
                 else{
-                    ROS_INFO("**** GOBI **** Problem while fetching frame, errorCode %lu", errorCode);
+                    ROS_INFO("***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
                 }
             }
             else if (this->record){
-                errorCode = XC_SaveData(this->handle, "output.xpng", XSD_SaveThermalInfo | XSD_Force16);
+                //errorCode = XC_SaveData(this->handle, "output.xpng", XSD_SaveThermalInfo | XSD_Force16);
                 cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, this->frameBuffer);  
-                this->imageFilename = imageFolder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".png";                
+                this->imageFilename = imageFolder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".jpg";                
                 cv::imwrite( this->imageFilename, cv_image );
-                              
+                this->csvOutfile << make_logentry() << std::endl;
             }
-            
             return int(errorCode);
         }
         
@@ -389,27 +386,27 @@ class GobiBHG {
         
         void clean_up(){
         // NOTE: This function can't use ROS_INFO since ROS is shutdown it is run.
-            printf("**** GOBI **** Conducting ROS clean up\n");
+            printf("***** GOBI:  Conducting ROS clean up\n");
             ErrCode errorCode = 0; 
             // When the camera is still capturing, ...
             if(XC_IsCapturing(this->handle))
             {
                 // ... stop capturing.
-                printf("**** GOBI **** Stop capturing.\n");
+                printf("***** GOBI:  Stop capturing.\n");
                 if ((errorCode = XC_StopCapture(this->handle)) != I_OK)
                 {
-                    printf("**** GOBI **** Could not stop capturing, errorCode: %lu\n", errorCode);
+                    printf("***** GOBI:  Could not stop capturing, errorCode: %lu\n", errorCode);
                 }
             }
 
             // When the handle to the camera is still initialised ...
             if (XC_IsInitialised(this->handle))
             {
-                printf("**** GOBI **** Closing connection to camera.\n");
+                printf("***** GOBI:  Closing connection to camera.\n");
                 XC_CloseCamera(this->handle);
             }
 
-            printf("**** GOBI **** Clearing buffers.\n");
+            printf("***** GOBI:  Clearing buffers.\n");
             if (this->frameBuffer != 0)
             {
                 delete [] this->frameBuffer;
@@ -430,48 +427,48 @@ class GobiBHG {
             return datetime_stamp;                    
         }
         
-        void dirCallback(const std_msgs::String::ConstPtr& msg)
-        {
-            this->data_dir = msg->data.c_str();
-            std::vector<std::string> results; 
-            boost::split(results, data_dir, [](char c){return c == '/';});
-            //ROS_INFO("Subscibed dir is %s", data_dir);
-            // /home/user1/Data/20200526_085616_798277
-               
-            this->imageFolder = data_dir + "GOBI" + to_string(this->serial_num) + "/";
-            string csvFilename   = data_dir + results[4].c_str() + "_gobi.csv";
-            
-            if (mkdir(this->imageFolder.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1)
-            {
+        bool create_driectories(){
+            data_dir.pop_back();
+            std::string dir_time(data_dir.substr(data_dir.rfind("/")));
+
+            this->imageFolder = data_dir + "/GOBI_SN_" + to_string(this->serial_num) + "/";
+            string csvFilename   = data_dir + dir_time + "_gobi.csv";
+            //std::exit(12345);
+            if (mkdir(this->imageFolder.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
                 if( errno == 0 ) { // TODO fix this to return accurate feedback
                     // TODO figure out why this check for zero? 
+                    ROS_INFO("***** GOBI:  ERROR: Directory does not exist and MKDIR failed the errno is %i",errno ); 
                 }
                 else if (errno == 17){
                     // The directory already exists. Do nothing
                 }
                 else{
-                    ROS_INFO("*** Gobi ***: ERROR: Directory does not exist and MKDIR failed the errno is %i",errno );        
+                    ROS_INFO("***** GOBI:  ERROR: Directory does not exist and MKDIR failed the errno is %i",errno );        
                 }
             }    
-            else
-            {
-                ROS_INFO("*** Gobi ***: Created Data Directory and establishing csv file" );  
-                ROS_INFO("*** Gobi ***: Data directory is: [%s]", this->imageFolder.c_str());
+            else {
+                ROS_INFO("***** GOBI:  Created Data Directory and establishing csv file" );  
+                ROS_INFO("***** GOBI:  Data directory is: [%s]", this->imageFolder.c_str());
                 
-                if (csvOutfile.is_open()){
-                    ROS_INFO("*** Gobi ***: GOBI CSV File is already open: [%s]", csvFilename.c_str());
-                }
-                else{        
-                    csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file
-                    if (!csvOutfile){
-                        ROS_INFO("*** Gobi ***: ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csvFilename.c_str()); 
-                        csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file           
-                        ROS_INFO("*** Gobi ***: ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csvFilename.c_str());           
-                    } 
-                    ROS_INFO("*** Gobi ***: CSV file is: [%s]", csvFilename.c_str());                                  
-                }
-            }
-            csvOutfile << make_header() << endl;  
+                if (csvOutfile.is_open()){ // Close the old csv file
+                    ROS_INFO("***** GOBI:  GOBI CSV File is already open: [%s]", csvFilename.c_str());
+                    csvOutfile.close();
+                }                        
+                csvOutfile.open(csvFilename, std::ios_base::app); // open new csv file
+                if (!csvOutfile){
+                    ROS_INFO("***** GOBI:  ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csvFilename.c_str()); 
+                    csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file           
+                    ROS_INFO("***** GOBI:  ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csvFilename.c_str());           
+                } 
+                ROS_INFO("***** GOBI:  CSV file is: [%s]", csvFilename.c_str()); 
+                csvOutfile << make_header() << endl;            
+            }                      
+        }
+        
+        void dirCallback(const std_msgs::String::ConstPtr& msg)
+        {
+            this->data_dir = msg->data.c_str();
+            create_driectories();
         }
         
         // Make the header for the csv file
@@ -552,8 +549,8 @@ class GobiBHG {
 
         void recordCallback(const std_msgs::Bool msg)
         {
-            record = msg.data; 
-            //ROS_INFO("*** Gobi *** recordCallback: [%s]", record);
+            this->record = msg.data; 
+            ROS_INFO("***** GOBI:  recordCallback: [%d]", this->record);
         }
 };
   
@@ -588,12 +585,15 @@ int main(int argc, char **argv)
     {
         if(gobi_cam.retrieve_frame() ==0){        
             n++;
-            ROS_INFO("**** GOBI **** Received frame %lu", n);
+            if (n % 40 == 0){
+                ROS_INFO("***** GOBI:  Received frame %lu", n);
+            }
             gobi_cam.publish_frame();
         }
+        ros::spinOnce();
     }
 
-    ROS_INFO("**** GOBI **** Received ROS shutdown command");
+    ROS_INFO("***** GOBI:  Received ROS shutdown command");
 
     return 0;
 }
