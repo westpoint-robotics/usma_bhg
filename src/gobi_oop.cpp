@@ -44,8 +44,8 @@ class GobiBHG {
         ros::Subscriber temp_sub;
         
         std::ofstream csvOutfile;
-        std::string imageFolder;
-        std::string imageFilename;
+        std::string image_folder;
+        std::string image_filename;
         std::string img_time;
         
         // State updated by callbacks
@@ -64,7 +64,7 @@ class GobiBHG {
             is_initialized = false;  
             serial_num = 0;
             data_dir = "/tmp/BHG_DATA";
-            imageFilename = "default_imgname.png";
+            image_filename = "default_imgname.png";
             csvOutfile;
             image_transport::ImageTransport it_(*nh);
             image_pub_ = it_.advertise("gobi_image", 1); // TODO Namespace this to /camera/gobi/ , use the same pattern as FLIR  
@@ -78,7 +78,7 @@ class GobiBHG {
             mag_sub     = nh->subscribe("/mavros/imu/mag", 1000, &GobiBHG::mag_cb, this);
             imu_sub     = nh->subscribe("/mavros/imu/data", 1000, &GobiBHG::imu_cb, this);
             temp_sub    = nh->subscribe("/mavros/imu/temperature_imu", 1000, &GobiBHG::temp_cb, this);            
-            create_driectories();
+            create_directories();
         }
 
         ~GobiBHG(){
@@ -87,7 +87,7 @@ class GobiBHG {
         }
          
         
-        int retrieve_info(){
+        int retrieve_info(bool verbose){
             ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
             unsigned int deviceCount = 0;
             if ((errorCode = XCD_EnumerateDevices(NULL, &deviceCount, XEF_EnableAll)) != I_OK) {
@@ -110,11 +110,13 @@ class GobiBHG {
 
             for(unsigned int i = 0; i < deviceCount; i++) {
                 XDeviceInformation * dev = &devices[i];
-                ROS_INFO("***** GOBI:  device[%i] %s @ %s (%s) ", i, dev->name, dev->address, dev->transport);
-                ROS_INFO("***** GOBI:  PID: %4X", dev->pid); 
-                ROS_INFO("***** GOBI:  Serial: %i", dev->serial);
-                ROS_INFO("***** GOBI:  URL: %s", dev->url);
-                ROS_INFO("***** GOBI:  State: %s", dev->state == XDS_Available ? "Available" : dev->state == XDS_Busy ? "Busy" : "Unreachable");
+                if (verbose){
+                    ROS_INFO("***** GOBI:  device[%i] %s @ %s (%s) ", i, dev->name, dev->address, dev->transport);
+                    ROS_INFO("***** GOBI:  PID: %4X", dev->pid); 
+                    ROS_INFO("***** GOBI:  Serial: %i", dev->serial);
+                    ROS_INFO("***** GOBI:  URL: %s", dev->url);
+                    ROS_INFO("***** GOBI:  State: %s", dev->state == XDS_Available ? "Available" : dev->state == XDS_Busy ? "Busy" : "Unreachable");
+                }
                 if (std::string(dev->name).rfind("Gobi") == 0){
                     this->serial_num = dev->serial;                    
                 }
@@ -320,7 +322,7 @@ class GobiBHG {
             errorCode = XC_GetPropertyValueL(handle, "MinimumFrameTime", &minimumFrameTime);
             float hz = 1000000.0 / minimumFrameTime;
             ROS_INFO("***** GOBI:  MinimumFrameTime is '%lu' Values: Time in microseconds or %.1f hz", minimumFrameTime,hz);  
-            
+
             ExecuteCalibration_F027(handle); 
             return true;        
         }
@@ -410,8 +412,8 @@ class GobiBHG {
             else if (this->record){
                 //errorCode = XC_SaveData(this->handle, "output.xpng", XSD_SaveThermalInfo | XSD_Force16);
                 cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, this->frameBuffer);  
-                this->imageFilename = imageFolder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".jpg";                
-                cv::imwrite( this->imageFilename, cv_image );
+                this->image_filename = image_folder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".jpg";                
+                cv::imwrite( this->image_filename, cv_image );
                 this->csvOutfile << make_logentry() << std::endl;
             }
             return int(errorCode);
@@ -465,19 +467,19 @@ class GobiBHG {
             struct tm * local_tm = localtime(&raw_time);        
             int ros_millisec = int((ros_timenow.nsec)/1000000);         
             strftime (buffer,80,"%Y%m%d_%H%M%S",local_tm);
-            sprintf(buffer,"%s.%03d", buffer, ros_millisec);
+            sprintf(buffer,"%s_%03d", buffer, ros_millisec);
             std::string datetime_stamp(buffer);
             return datetime_stamp;                    
         }
         
-        bool create_driectories(){
-            data_dir.pop_back();
+        bool create_directories(){
+            this->data_dir.pop_back();
             std::string dir_time(data_dir.substr(data_dir.rfind("/")));
 
-            this->imageFolder = data_dir + "/GOBI_SN_" + to_string(this->serial_num) + "/";
-            string csvFilename   = data_dir + dir_time + "_gobi.csv";
-            //std::exit(12345);
-            if (mkdir(this->imageFolder.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
+            this->image_folder = data_dir + "/GOBI_SN_" + to_string(this->serial_num) + "/";
+            string csv_filename   = data_dir + dir_time + "_gobi.csv";
+
+            if (mkdir(this->image_folder.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
                 if( errno == 0 ) { // TODO fix this to return accurate feedback
                     // TODO figure out why this check for zero? 
                     ROS_INFO("***** GOBI:  ERROR: Directory does not exist and MKDIR failed the errno is %i",errno ); 
@@ -491,19 +493,19 @@ class GobiBHG {
             }    
             else {
                 ROS_INFO("***** GOBI:  Created Data Directory and establishing csv file" );  
-                ROS_INFO("***** GOBI:  Data directory is: [%s]", this->imageFolder.c_str());
+                ROS_INFO("***** GOBI:  Data directory is: [%s]", this->image_folder.c_str());
                 
                 if (csvOutfile.is_open()){ // Close the old csv file
-                    ROS_INFO("***** GOBI:  GOBI CSV File is already open: [%s]", csvFilename.c_str());
+                    ROS_INFO("***** GOBI:  GOBI CSV File is already open: [%s]", csv_filename.c_str());
                     csvOutfile.close();
                 }                        
-                csvOutfile.open(csvFilename, std::ios_base::app); // open new csv file
+                csvOutfile.open(csv_filename, std::ios_base::app); // open new csv file
                 if (!csvOutfile){
-                    ROS_INFO("***** GOBI:  ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csvFilename.c_str()); 
-                    csvOutfile.open(csvFilename, std::ios_base::app); // DML is unrealable in creating the initial file           
-                    ROS_INFO("***** GOBI:  ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csvFilename.c_str());           
+                    ROS_INFO("***** GOBI:  ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csv_filename.c_str()); 
+                    csvOutfile.open(csv_filename, std::ios_base::app); // DML is unrealable in creating the initial file           
+                    ROS_INFO("***** GOBI:  ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csv_filename.c_str());           
                 } 
-                ROS_INFO("***** GOBI:  CSV file is: [%s]", csvFilename.c_str()); 
+                ROS_INFO("***** GOBI:  CSV file is: [%s]", csv_filename.c_str()); 
                 csvOutfile << make_header() << endl;            
             }                      
         }
@@ -511,7 +513,7 @@ class GobiBHG {
         void dirCallback(const std_msgs::String::ConstPtr& msg)
         {
             this->data_dir = msg->data.c_str();
-            create_driectories();
+            create_directories();
         }
         
         // Make the header for the csv file
@@ -533,7 +535,7 @@ class GobiBHG {
 
         string make_logentry()
         {            
-            string alt_str = imageFilename + "," + img_time + "," 
+            string alt_str = image_filename + "," + img_time + "," 
                       + to_string(rel_alt.monotonic) + "," + to_string(rel_alt.amsl) + "," 
                       + to_string(rel_alt.local) + "," + to_string(rel_alt.relative); 
             string gps_str = to_string(gps_fix.status.status) + "," + to_string(gps_fix.status.service) 
@@ -615,7 +617,7 @@ int main(int argc, char **argv)
 
     // Setup camera and start capturing 
     GobiBHG gobi_cam(&nh); 
-    //gobi_cam.retrieve_info(); // Not using this as it prints all cameras. 
+    gobi_cam.retrieve_info(false); // Not using this as it prints all cameras. 
     gobi_cam.initialize_cam(use_trig);
     gobi_cam.start_capture();
  

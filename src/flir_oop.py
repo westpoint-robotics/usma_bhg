@@ -6,6 +6,8 @@ from __future__ import print_function
 import PySpin
 import rospy
 import cv2
+import os
+import datetime
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image  
 from std_msgs.msg import Bool
@@ -31,8 +33,11 @@ class Bhg_flir:
         self.cam_system = PySpin.System.GetInstance()
         self.cam_list = self.cam_system.GetCameras()
         self.num_cameras = self.cam_list.GetSize()
-        self.flirDirectory = ""
-        self.csvFilename = ""
+        self.ser_num = '0'
+        self.data_dir = "/tmp/BHG_DATA"
+        self.image_folder = self.data_dir + '/FLIR/'
+        self.image_filename = "default_flir_imgname.png"
+        self.csv_filename = "default_flir.csv"
         self.datetimeData = ""
         self.is_recording = False
         self.rel_alt = Altitude()
@@ -191,11 +196,10 @@ class Bhg_flir:
             print("Acquiring images...")
 
             # Get device serial number for filename
-            device_serial_number = ""
             if self.cam.TLDevice.DeviceSerialNumber.GetAccessMode() == PySpin.RO:
-                device_serial_number = self.cam.TLDevice.DeviceSerialNumber.GetValue()
+                self.ser_num = self.cam.TLDevice.DeviceSerialNumber.GetValue()
 
-                print("Device serial number retrieved as %s..." % device_serial_number)
+                print("Device serial number retrieved as %s..." % self.ser_num)
 
             # Retrieve, convert, and save images
             bridge = CvBridge()
@@ -227,6 +231,16 @@ class Bhg_flir:
                         #  Convert image to mono 8
                         image_converted = image_result.Convert(PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
                         image_data = image_converted.GetNDArray()
+                        
+                        if (self.is_recording and os.path.exists(self.csv_filename) ):
+                            #Before taking a picture, grab timestamp to record to filename, and CSV
+                            tNow = rospy.get_time() # current date and time
+                            datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
+                            flirFilename = self.image_folder + "/FLIR" + self.ser_num + "_" + datetimeData[:-3] + ".jpg"        
+                            # Save your OpenCV2 image as a jpeg 
+                            cv2.imwrite(flirFilename, image_data)                            
+                        
+                        
                         
                         #cv2.imshow("frame",image_data)
                         #cv2.waitKey(1)
@@ -415,19 +429,23 @@ class Bhg_flir:
         self.temp_imu = msg  
 
     def directory_callback(self, msg):
-        missionDirectory = msg.data
-        missionName = missionDirectory.split("/")[4]     
-        self.flirDirectory    = missionDirectory + flirSN
-        self.csvFilename      = missionDirectory + missionName + "_flir.csv"
+        self.data_dir = msg.data
+        self.create_directories();
+        
+    def create_directories(self):
+        # missionDirectory = msg.data   # data: "/home/user1/Data/20200615_145002_422/"
+        dir_time = self.data_dir.split("/")[4] #   missionName  "20200615_145002_422"
+        self.image_folder = self.data_dir + '/FLIR_SN_' + self.ser_num + '/'
+        self.csv_filename = self.data_dir + dir_time + "_flir.csv"
 
-        if(not (os.path.isdir(self.flirDirectory))):
-            os.mkdir(self.flirDirectory)
-            rospy.loginfo("***** FLIR *****: Directory Created: " + self.flirDirectory)
+        if(not (os.path.isdir(self.image_folder))):
+            os.mkdir(self.image_folder)
+            rospy.loginfo("***** FLIR *****: Directory Created: " + self.image_folder)
 
-        if(not (os.path.exists(self.csvFilename))):
-            rospy.loginfo("***** FLIR *****: CSV File Created: " + self.csvFilename)
-            with open(self.csvFilename, 'a+') as csvFile:     
-                csvFile.write(make_header() + "\n")
+        if(not (os.path.exists(self.csv_filename))):
+            rospy.loginfo("***** FLIR *****: CSV File Created: " + self.csv_filename)
+            with open(self.csv_filename, 'w') as csvFile:     
+                csvFile.write(self.make_header() + "\n")
 
     def record_callback(self, msg):
         self.is_recording = msg.data

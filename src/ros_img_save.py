@@ -129,7 +129,6 @@ def image_callback(msg):
     if (is_recording and os.path.exists(csvFilename) ):
         #Before taking a picture, grab timestamp to record to filename, and CSV
         tNow = rospy.get_time() # current date and time
-        #rospy.loginfo("tNow = %.3f\n", tNow)
         datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
               
         #Grab the image and convert it to OpenCV format        
