@@ -149,7 +149,6 @@ def image_callback(msg):
         with open(csvFilename, 'a+') as csvFile:
             output_str = flirFilename + "," + make_logentry()
             csvFile.write(output_str + "\n")
-                    
 
 def main():
     

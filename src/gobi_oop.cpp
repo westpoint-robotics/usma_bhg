@@ -247,9 +247,6 @@ class GobiBHG {
                     return false;                   
                 errorCode = XC_SetPropertyValueL(handle, "TriggerOutWidth", duty_cycle, "");
                 if (!HandleError(errorCode, " * Set TriggerOutWidth  ")) 
-                    return false; 
-                errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 1, "");
-                if (!HandleError(errorCode, " * Set auto mode"))
                     return false;             
             }
             else // no trigger mode

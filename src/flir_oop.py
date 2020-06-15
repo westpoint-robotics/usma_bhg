@@ -7,7 +7,15 @@ import PySpin
 import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import Image        
+from sensor_msgs.msg import Image  
+from std_msgs.msg import Bool  
+from mavros_msgs.msg import Altitude
+from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import MagneticField
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import TwistStamped
+from sensor_msgs.msg import Temperature
+from std_msgs.msg import Float64    
         
 class TriggerType:
     SOFTWARE = 1
@@ -21,7 +29,25 @@ class Bhg_flir:
         self.image_pub = rospy.Publisher("image_color",Image, queue_size=10)
         self.cam_system = PySpin.System.GetInstance()
         self.cam_list = self.cam_system.GetCameras()
-        num_cameras = self.cam_list.GetSize()
+        self.num_cameras = self.cam_list.GetSize()
+        self.flirDirectory = ""
+        self.csvFilename = ""
+        self.datetimeData = ""
+        self.is_recording = False
+        self.rel_alt = Altitude()
+        self.gps_fix = NavSatFix()
+        self.imu_mag = MagneticField()
+        self.imu_data = Imu()
+        self.vel_gps = TwistStamped()
+        self.temp_imu = Temperature()
+        self.rospy.Subscriber('/directory', String, directory_callback)
+        self.rospy.Subscriber("/record", Bool, record_callback)
+        self.rospy.Subscriber("/mavros/altitude", Altitude, alt_cb)
+        self.rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, gps_cb)
+        self.rospy.Subscriber("/mavros/imu/mag", MagneticField, mag_cb)
+        self.rospy.Subscriber("/mavros/imu/data", Imu, imu_cb)
+        self.rospy.Subscriber("/mavros/global_position/raw/gps_vel", TwistStamped, vel_cb)
+        self.rospy.Subscriber("/mavros/imu/temperature_imu", Temperature, temp_cb)
 
         # Finish if there are no cameras
         if num_cameras == 0:
@@ -276,7 +302,6 @@ class Bhg_flir:
                     node_feature = PySpin.CValuePtr(feature)
                     print("%s: %s" % (node_feature.GetName(),
                                       node_feature.ToString() if PySpin.IsReadable(node_feature) else "Node not readable"))
-
             else:
                 print("Device control information not available.")
 
@@ -329,7 +354,7 @@ class Bhg_flir:
             result = False
 
         return result  
-        
+
     def close_camera(self):
         # Release reference to camera
         # NOTE: Unlike the C++ examples, we cannot rely on pointer objects being automatically
@@ -343,7 +368,68 @@ class Bhg_flir:
 
         # Release instance
         self.cam_system.ReleaseInstance()
-    
+
+    def make_header(self):
+        header = "filename,rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
+        header += "gps_fix.status.status,gps_fix.status.service,gps_fix.latitude,gps_fix.longitude,gps_fix.altitude,"
+        header += "imu_data.magnetic_field.x,imu_data.magnetic_field.y,imu_data.magnetic_field.z,"
+        header += "imu_mag.orientation.x,imu_mag.orientation.y,imu_mag.orientation.z,imu_mag.orientation.w," 
+                  "imu_mag.angular_velocity.x,imu_mag.angular_velocity.y,imu_mag.angular_velocity.z,"
+        header += "imu_mag.linear_acceleration:.x,imu_mag.linear_acceleration:.y,imu_mag.linear_acceleration:.z,"
+        header += "vel_gps.twist.linear.x,vel_gps.twist.linear.y,vel_gps.twist.linear.z,"
+        header += "vel_gps.twist.angular.x,vel_gps.twist.angular.y,vel_gps.twist.angular.z,"
+        header += "temp_imu.temperature"
+        return header
+
+    def make_logentry(self):
+        alt_str = str(self.rel_alt.monotonic) + "," + str(self.rel_alt.amsl) + "," + str(self.rel_alt.local) + "," + str(self.rel_alt.relative) 
+        gps_str = str(self.gps_fix.status.status) + "," + str(self.gps_fix.status.service) + "," + str(self.gps_fix.latitude) + "," + str(self.gps_fix.longitude) + "," + str(self.gps_fix.altitude) 
+        mag_str = str(self.imu_mag.magnetic_field.x) + "," + str(self.imu_mag.magnetic_field.y) + "," + str(self.imu_mag.magnetic_field.z)
+        imu_str = str(self.imu_data.orientation.x) + "," + str(self.imu_data.orientation.y) + "," + str(self.imu_data.orientation.z) + "," + str(self.imu_data.orientation.w) + ","
+        imu_str += str(self.imu_data.angular_velocity.x) + "," + str(self.imu_data.angular_velocity.y) + "," + str(self.imu_data.angular_velocity.z) + ","
+        imu_str += str(self.imu_data.linear_acceleration.x) + "," + str(self.imu_data.linear_acceleration.y) + "," + str(self.imu_data.linear_acceleration.z)    
+        vel_str = str(self.vel_gps.twist.linear.x) + "," + str(self.vel_gps.twist.linear.y) + "," + str(self.vel_gps.twist.linear.z) + ","
+        vel_str += str(self.vel_gps.twist.angular.x) + "," + str(self.vel_gps.twist.angular.y) + "," + str(self.vel_gps.twist.angular.z)  
+        temp_str = str(self.temp_imu.temperature)    
+        output = str(self.datetimeData + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str)
+        return output
+
+    def alt_cb(self, msg):
+        self.rel_alt = msg
+
+    def gps_cb(self, msg):
+        self.gps_fix = msg
+
+    def mag_cb(self, msg):
+        self.imu_mag = msg
+
+    def imu_cb(self, msg):
+        self.imu_data = msg
+
+    def vel_cb(self, msg):
+        self.vel_gps = msg
+
+    def temp_cb(self, msg):
+        self.temp_imu = msg  
+
+    def directory_callback(self, msg):
+        missionDirectory = msg.data
+        missionName = missionDirectory.split("/")[4]     
+        self.flirDirectory    = missionDirectory + flirSN
+        self.csvFilename      = missionDirectory + missionName + "_flir.csv"
+
+        if(not (os.path.isdir(self.flirDirectory))):
+            os.mkdir(self.flirDirectory)
+            rospy.loginfo("***** FLIR *****: Directory Created: " + self.flirDirectory)
+
+        if(not (os.path.exists(self.csvFilename))):
+            rospy.loginfo("***** FLIR *****: CSV File Created: " + self.csvFilename)
+            with open(self.csvFilename, 'a+') as csvFile:     
+                csvFile.write(make_header() + "\n")
+
+    def record_callback(self, msg):
+        self.is_recording = msg.data
+
 if __name__ == "__main__":
         """
         Example entry point; please see Enumeration example for more in-depth
