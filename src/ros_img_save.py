@@ -149,6 +149,7 @@ def image_callback(msg):
         with open(csvFilename, 'a+') as csvFile:
             output_str = flirFilename + "," + make_logentry()
             csvFile.write(output_str + "\n")
+                    
 
 def main():
     
@@ -161,7 +162,7 @@ def main():
     #timestamp_topic = 'timestamp'
     rospy.Subscriber('/directory', String, directory_callback)
     rospy.Subscriber("/record", Bool, record_callback)
-#    rospy.Subscriber(image_topic, Image, image_callback)
+    rospy.Subscriber(image_topic, Image, image_callback)
     rospy.Subscriber("/mavros/altitude", Altitude, alt_cb)
     rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, gps_cb)
     rospy.Subscriber("/mavros/imu/mag", MagneticField, mag_cb)

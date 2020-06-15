@@ -8,7 +8,8 @@ import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image  
-from std_msgs.msg import Bool  
+from std_msgs.msg import Bool
+from std_msgs.msg import String  
 from mavros_msgs.msg import Altitude
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import MagneticField
@@ -40,17 +41,17 @@ class Bhg_flir:
         self.imu_data = Imu()
         self.vel_gps = TwistStamped()
         self.temp_imu = Temperature()
-        self.rospy.Subscriber('/directory', String, directory_callback)
-        self.rospy.Subscriber("/record", Bool, record_callback)
-        self.rospy.Subscriber("/mavros/altitude", Altitude, alt_cb)
-        self.rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, gps_cb)
-        self.rospy.Subscriber("/mavros/imu/mag", MagneticField, mag_cb)
-        self.rospy.Subscriber("/mavros/imu/data", Imu, imu_cb)
-        self.rospy.Subscriber("/mavros/global_position/raw/gps_vel", TwistStamped, vel_cb)
-        self.rospy.Subscriber("/mavros/imu/temperature_imu", Temperature, temp_cb)
+        rospy.Subscriber('/directory', String, self.directory_callback)
+        rospy.Subscriber("/record", Bool, self.record_callback)
+        rospy.Subscriber("/mavros/altitude", Altitude, self.alt_cb)
+        rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, self.gps_cb)
+        rospy.Subscriber("/mavros/imu/mag", MagneticField, self.mag_cb)
+        rospy.Subscriber("/mavros/imu/data", Imu, self.imu_cb)
+        rospy.Subscriber("/mavros/global_position/raw/gps_vel", TwistStamped, self.vel_cb)
+        rospy.Subscriber("/mavros/imu/temperature_imu", Temperature, self.temp_cb)
 
         # Finish if there are no cameras
-        if num_cameras == 0:
+        if self.num_cameras == 0:
             # Clear camera list before releasing system
             self.cam_list.Clear()
 
@@ -217,10 +218,11 @@ class Bhg_flir:
 
                     else:
                         n += 1
-                        #  Print image information
-                        width = image_result.GetWidth()
-                        height = image_result.GetHeight()
-                        print("Grabbed Image %d, width = %d, height = %d" % (n, width, height))
+                        if (n % 40 == 0):
+                            #  Print image information
+                            width = image_result.GetWidth()
+                            height = image_result.GetHeight()
+                            print("Grabbed Image %d, width = %d, height = %d" % (n, width, height))
                         
                         #  Convert image to mono 8
                         image_converted = image_result.Convert(PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
@@ -373,8 +375,8 @@ class Bhg_flir:
         header = "filename,rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
         header += "gps_fix.status.status,gps_fix.status.service,gps_fix.latitude,gps_fix.longitude,gps_fix.altitude,"
         header += "imu_data.magnetic_field.x,imu_data.magnetic_field.y,imu_data.magnetic_field.z,"
-        header += "imu_mag.orientation.x,imu_mag.orientation.y,imu_mag.orientation.z,imu_mag.orientation.w," 
-                  "imu_mag.angular_velocity.x,imu_mag.angular_velocity.y,imu_mag.angular_velocity.z,"
+        header += "imu_mag.orientation.x,imu_mag.orientation.y,imu_mag.orientation.z,imu_mag.orientation.w,"
+        header += "imu_mag.angular_velocity.x,imu_mag.angular_velocity.y,imu_mag.angular_velocity.z,"
         header += "imu_mag.linear_acceleration:.x,imu_mag.linear_acceleration:.y,imu_mag.linear_acceleration:.z,"
         header += "vel_gps.twist.linear.x,vel_gps.twist.linear.y,vel_gps.twist.linear.z,"
         header += "vel_gps.twist.angular.x,vel_gps.twist.angular.y,vel_gps.twist.angular.z,"
