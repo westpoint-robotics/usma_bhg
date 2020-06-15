@@ -124,68 +124,77 @@ class GobiBHG {
             return 0;    
         }
         
-        void initialize_cam(int is_trigMode = 2){
+        void initialize_cam(int is_trigMode = 0){ // 0: no triger, 1: input trigger, 2: output trigger
             ErrCode errCode = I_OK;
             // Open a connection to the first detected camera by using connection string cam://0
             ROS_INFO("***** GOBI:  Opening connection to cam://0");
             this->handle = XC_OpenCamera("cam://0"); 
             if(XC_IsInitialised(handle)){             
-                ROS_INFO("***** GOBI:  is initialized.");
+                ROS_INFO("***** GOBI:  Is initialized.");
                 this->is_initialized = true;    
                 
                 /* retrieve camera product id (PID)  and serial number*/
                 long pid = 0;
                 long ser = 0;
+                long timeout = 0;
                 errCode = XC_GetPropertyValueL(this->handle, "_CAM_PID", &pid);
                 if (!HandleError(errCode, "Retrieving the camera PID")) AbortSession(); 
                 errCode = XC_GetPropertyValueL(this->handle, "_CAM_SER", &ser);
                 if (!HandleError(errCode, "Retrieving the camera serial number")) AbortSession();        
                 ROS_INFO("***** GOBI:  Connected to camera with product id (PID) 0x%ld and serial number %lu", pid, ser);
-
-//                /* Check for the Gobi-640-GigE (F027) and in trigger mode*/
-//                if (pid == 0xF027 and is_trigMode) {
-
-//                    /* configure camera in external triggered mode */
-//                    if (!SetupExternalTriggeredMode_F027(handle)) AbortSession();
-
-//                    /* configure camera to disable the automatic shutter calibration process */
-//                    //if (!SetupShutterControl_F027(handle)) AbortSession();
-//                }
-//                else if (pid == 0xF027) {
-//                    /* configure camera with no trigger */
-//                    if (!Setup_F027(handle)) AbortSession();
-//                }
+                errCode = XC_GetPropertyValueL(this->handle, "_API_GETFRAME_TIMEOUT", &timeout);
+                if (!HandleError(errCode, "Retrieving the camera frame timeout")) AbortSession();        
+                ROS_INFO("***** GOBI:  Frame timeout is: %lu", timeout);
+       
                 Setup_F027(this->handle, is_trigMode);
-                
-                //SetupExternalTriggeredMode_F027(this->handle);
             }
             else{
                 ROS_INFO("***** GOBI:  Initialization failed");
                 this->is_initialized = false;    
             }
         }
+        
+
+        /*
+         *  To make sure the image does not drift and stays corrected between bursts 
+         *  the camera has to be occasionally calibrated by stopping / starting the
+         *  acquisition or by executing the "Calibrate"-property between bursts by setting 
+         *  its value to 1. In the case that automatic correction was enabled the calibration
+         *  operation occurs every 150 seconds or when the devices temperature deviates 0.5
+         *  degrees from the last measured point.
+         *
+         *  Automatic correction while we are expecting triggers can cause events to 
+         *  be missed. Because of this the calibration progress has to be controlled.
+         */
+        bool ExecuteCalibration_F027(XCHANDLE handle) {
+
+            ErrCode errCode = I_OK;
+            
+            errCode = XC_SetPropertyValueL(handle, "Calibrate", 1, "");
+            if (!HandleError(errCode, "Perform calibration"))
+                return false;
+
+            usleep(3000000);
+
+            return true;
+        }        
+        
+        
 
         /*
          *  In Setup_F027 we configure the camera in one of three modes: 
-         *  Mode 0: external trigger in mode with rising edge activation
-         *  Mode 1: in external trigger out mode 
-         *  Mode 2: free run no trigger
+         *  Mode 0: free run no trigger
+         *  Mode 1: external trigger in mode with rising edge activation 
+         *  Mode 2: in external trigger out mode
          */
-        bool Setup_F027(XCHANDLE handle, int trig_mode = 3) {
-            ROS_INFO("========================================Trigger mode is: %d",trig_mode);
-            ErrCode errorCode = I_OK;
-            errorCode = XC_SetPropertyValueL(handle, "GainControl", 0, "");
-            if (!HandleError(errorCode, " * Set GainControl"))
-                return false; 
-            errorCode = XC_SetPropertyValueL(handle, "OffsetControl", 0, "");
-            if (!HandleError(errorCode, " * Set OffsetControl"))
-                return false;                             
-            errorCode = XC_SetPropertyValueL(handle, "AutoCorrectionEnabled", 1, "");
-            if (!HandleError(errorCode, " * Set AutoCorrectionEnabled"))
-                return false;  
+        bool Setup_F027(XCHANDLE handle, int trig_mode = 0) {
+            ROS_INFO("***** GOBI:  BHG trigger mode is: %d. (0 = No trigger | 1 = External In | 2 = External Out)",trig_mode);
+            ErrCode errorCode = I_OK;      
+            long wavelength = 50000; 
+            long duty_cycle = wavelength / 2;  
            
-            if (trig_mode == 0){
-                ROS_INFO("***** GOBI:  Configuring camera in external trigger in mode with rising edge activation");
+            if (trig_mode == 1){
+                ROS_INFO("***** GOBI:  Configuring camera in external 'TRIGGER IN' mode with rising edge activation");
                 errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 0, "");
                 if (!HandleError(errorCode, " * Set auto mode"))
                     return false;
@@ -210,12 +219,12 @@ class GobiBHG {
                 errorCode = XC_SetPropertyValueL(handle, "TriggerOutPolarity", 0, "");
                 if (!HandleError(errorCode, " * Set TriggerOutPolarity")) 
                     return false;
-                errorCode = XC_SetPropertyValueL(handle, "TriggerOutWidth", 30, "");
-                if (!HandleError(errorCode, " * Set TriggerOutWidth  ")) 
-                    return false;
             }
-            else if (trig_mode == 1){
-                ROS_INFO("***** GOBI:  Configuring camera in external trigger out mode");        
+            else if (trig_mode == 2){
+                errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 0, "");
+                if (!HandleError(errorCode, " * Set auto mode"))
+                    return false;            
+                ROS_INFO("***** GOBI:  Configuring camera in external 'TRIGGER OUT' mode");        
                 errorCode = XC_SetPropertyValueL(handle, "TriggerDirection", 0, "");
                 if (!HandleError(errorCode, " * Set trigger direction"))
                     return false; 
@@ -231,7 +240,12 @@ class GobiBHG {
                 errorCode = XC_SetPropertyValueL(handle, "TriggerOutPolarity", 1, "");
                 if (!HandleError(errorCode, " * Set TriggerOutPolarity")) 
                     return false;
-                errorCode = XC_SetPropertyValueL(handle, "TriggerOutWidth", 2500, "");
+                // MinimumFrameTime Values: Time in microseconds. This limits the camera capture rate
+                // and consequentially the trigger rate.   
+                errorCode = XC_SetPropertyValueL(handle, "MinimumFrameTime", wavelength, "");
+                if (!HandleError(errorCode, " * Set MinimumFrameTime"))
+                    return false;                   
+                errorCode = XC_SetPropertyValueL(handle, "TriggerOutWidth", duty_cycle, "");
                 if (!HandleError(errorCode, " * Set TriggerOutWidth  ")) 
                     return false; 
                 errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 1, "");
@@ -255,31 +269,62 @@ class GobiBHG {
                     return false;                            
             }
             
+            // GainControl Values: Automatic (=0), Manual (=1)
+            errorCode = XC_SetPropertyValueL(handle, "GainControl", 0, "");
+            if (!HandleError(errorCode, " * Set GainControl"))
+                return false; 
+            // OffsetControl Values: Automatic (=0), Manual (=1) 
+            errorCode = XC_SetPropertyValueL(handle, "OffsetControl", 0, "");
+            if (!HandleError(errorCode, " * Set OffsetControl"))
+                return false;    
+            // AutoCorrectionEnabled Values: Off(0), On(1)                         
+            errorCode = XC_SetPropertyValueL(handle, "AutoCorrectionEnabled", 1, "");
+            if (!HandleError(errorCode, " * Set AutoCorrectionEnabled"))
+                return false;  
+                          
+            long gaincontrol = 0;
+            errorCode = XC_GetPropertyValueL(handle, "GainControl", &gaincontrol);
+            ROS_INFO("***** GOBI:  GainControl '%lu' Global gain factor applied to the image is computed automatically. "
+                            "Values: Automatic (=0), Manual (=1)", gaincontrol);
+            long offsetControl = 0;
+            errorCode = XC_GetPropertyValueL(handle, "OffsetControl", &offsetControl);
+            ROS_INFO("***** GOBI:  OffsetControl '%lu' The offset applied to the image is computed automatically. "
+                            "Values: Automatic (=0), Manual (=1)", offsetControl);     
+            long autoCorrectionEnabled = 0;
+            errorCode = XC_GetPropertyValueL(handle, "AutoCorrectionEnabled", &autoCorrectionEnabled);
+            ROS_INFO("***** GOBI:  AutoCorrectionEnabled '%lu' Enables the automatic internal calbration. "
+                            "Values: Automatic (=0), Manual (=1)", autoCorrectionEnabled);
             long automode = 1;
             errorCode = XC_GetPropertyValueL(handle, "AutoModeUpdate", &automode);
-            ROS_INFO("***** GOBI:  AutoModeUpdate '%lu' ", automode);             
+            ROS_INFO("***** GOBI:  AutoModeUpdate '%lu' Freeze the current values for the offset and the gain. Values: Running (=0), Stopped (=1)", automode);             
             long trigimode = 0; 
             errorCode = XC_GetPropertyValueL(handle, "TriggerInMode", &trigimode);
-            ROS_INFO("***** GOBI:  TriggerInMode is '%lu' Values:Free running(0), Triggered(1)", trigimode);        
+            ROS_INFO("***** GOBI:  TriggerInMode is '%lu' Sets the current trigger mode. Values:Free running(0), Triggered(1)", trigimode);        
             long trigienable = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerInEnable", &trigienable);
-            ROS_INFO("***** GOBI:  TriggerInEnable is '%lu' Values: Off(0), On(1)", trigienable);        
+            ROS_INFO("***** GOBI:  TriggerInEnable is '%lu' Enables the trigger input. Values: Off(0), On(1)", trigienable);        
             long trigisens = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerInSensitivity", &trigisens);
-            ROS_INFO("***** GOBI:  TriggerInSensitivity is '%lu' Values: Level(0), Edge(1)", trigisens);
+            ROS_INFO("***** GOBI:  TriggerInSensitivity is '%lu' When the camera captures an image. Values: Level(0), Edge(1)", trigisens);
             long trigipol = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerInPolarity", &trigipol);
-            ROS_INFO("***** GOBI:  TriggerInPolarity is '%lu' Values: Level low/Falling edge(0), Level high/Rising edge(1)", trigipol);
+            ROS_INFO("***** GOBI:  TriggerInPolarity is '%lu' Whether images are captured if the signal is high or low. "
+                                    "Values: Level low/Falling edge(0), Level high/Rising edge(1)", trigipol);
             long trigoenable = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerOutEnable", &trigoenable);
-            ROS_INFO("***** GOBI:  TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
+            ROS_INFO("***** GOBI:  TriggerOutEnable is '%lu' Enables trigger output. Values: Off(0), On(1)", trigoenable);
             long trigopolarity = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerOutPolarity", &trigopolarity);
-            ROS_INFO("***** GOBI:  TriggerOutEnable is '%lu' Values: Off(0), On(1)", trigoenable);
+            ROS_INFO("***** GOBI:  TriggerOutPolarity is '%lu' Values: Active low (0), Active high (1)", trigoenable);
             long trigowdith = 0;
             errorCode = XC_GetPropertyValueL(handle, "TriggerOutWidth", &trigowdith);
-            ROS_INFO("***** GOBI:  TriggerOutWidth is '%lu' Values: Time in microseconds", trigowdith);
+            ROS_INFO("***** GOBI:  TriggerOutWidth is '%lu' Duration of the active output after a trigger event. Values: Time in microseconds", trigowdith);
+            long minimumFrameTime = 0; 
+            errorCode = XC_GetPropertyValueL(handle, "MinimumFrameTime", &minimumFrameTime);
+            float hz = 1000000.0 / minimumFrameTime;
+            ROS_INFO("***** GOBI:  MinimumFrameTime is '%lu' Values: Time in microseconds or %.1f hz", minimumFrameTime,hz);  
             
+            ExecuteCalibration_F027(handle); 
             return true;        
         }
 
@@ -291,8 +336,9 @@ class GobiBHG {
             char err_msg[sz];
 
             XC_ErrorToString(errCode, err_msg, sz);
-            ROS_INFO("***** GOBI:  %s: %s (%lu)", msg, err_msg, errCode);
-
+            if (errCode != 0){
+                ROS_INFO("***** GOBI:  %s: %s (%lu)", msg, err_msg, errCode);
+            }
             return I_OK == errCode;
         }        
         
@@ -562,9 +608,8 @@ int main(int argc, char **argv)
 
     // get ros param for trigger mode. 0 - trigger in, 1 - trigger out, 2- no trigger
     int use_trig; 
-    if (ros::param::has("/gobi_trigger/use_trig")) {
-        
-        ros::param::get("/gobi_trigger/use_trig", use_trig);
+    if (nh.hasParam("/camera/xenics/use_trig")){        
+        nh.getParam("/camera/xenics/use_trig", use_trig);
     }
     else{ // Default to no trigger mode
         use_trig = 2;
@@ -573,14 +618,17 @@ int main(int argc, char **argv)
 
     // Setup camera and start capturing 
     GobiBHG gobi_cam(&nh); 
-    gobi_cam.retrieve_info();
+    //gobi_cam.retrieve_info(); // Not using this as it prints all cameras. 
     gobi_cam.initialize_cam(use_trig);
     gobi_cam.start_capture();
  
 
     // Big while loop, continuously publish the images
     uint64_t n=0;
-    ros::Rate loop_rate(20); //TODO how fast should this be?    
+    ros::Rate loop_rate(25); //This should be faster than the camera capture rate.  
+    // NOTE: We are limiting the camera to 20HZ frames and this loop uses a blocking call 
+    // for get frame. Therefore this loop will not go any faster than the camera. By setting
+    // the loop rate to 25hz, we attempt to have the loop wait at the blocking call for the image.
     while (ros::ok())
     {
         if(gobi_cam.retrieve_frame() ==0){        
@@ -591,8 +639,8 @@ int main(int argc, char **argv)
             gobi_cam.publish_frame();
         }
         ros::spinOnce();
+        loop_rate.sleep();
     }
-
     ROS_INFO("***** GOBI:  Received ROS shutdown command");
 
     return 0;

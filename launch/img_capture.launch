@@ -8,7 +8,7 @@
    <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen" if='$(eval run_flir)' /> 
 
    <node pkg="usma_bhg" name="xenics" type="gobi_oop" output="screen" ns='camera' if='$(eval run_gobi)' >
-        <param name="/gobi_trigger/use_trig" value='2'/>
+        <param name="/use_trig" value='2'/>
    </node>
      
 </launch> 
