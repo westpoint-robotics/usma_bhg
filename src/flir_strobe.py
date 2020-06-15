@@ -34,6 +34,11 @@ from sensor_msgs.msg import Temperature
 from std_msgs.msg import Float64
 
 
+# Install PySpin for Python 2.7
+import PySpin
+import sys
+
+
 # Instantiate CvBridge
 bridge = CvBridge()
 dataDirectory = "/home/user1/Data/" # default value changes on subscribing
@@ -134,22 +139,88 @@ def image_callback(msg):
               
         #Grab the image and convert it to OpenCV format        
         try:
+
+            # Enable STROBE
+            system = PySpin.System.GetInstance()
+            cam_list = system.GetCameras()
+            cam_strobe = cam_list[0]            
+            enable_strobe_bfs(cam_strobe)
+
             # Convert your ROS Image message to OpenCV2
             cv2_img = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        except CvBridgeError, e:
+        except CvBridgeError as e:
             print(e)
         
         flirFilename = flirDirectory + "/" + flirSN + "_" + datetimeData[:-3] + ".ppm" #date_time + ".ppm"            
         # Save your OpenCV2 image as a jpeg 
         cv2.imwrite(flirFilename, cv2_img)
         imageCount = imageCount + 1
+
+        # Disable STROBE
+        disable_strobe_bfs(cam_strobe)
+
         if (imageCount % 10 == 0):
             rospy.loginfo("***** FLIR *****: Image Count: %d\n" %(imageCount) )
         # Update CSV file with the names of the images recorded at this date and time
         with open(csvFilename, 'a+') as csvFile:
             output_str = flirFilename + "," + make_logentry()
             csvFile.write(output_str + "\n")
-                    
+
+# Strobe
+'''
+Measure the voltage across Line2 (as this line is used for strobe)
+and see whether it spikes periodically.
+Plugging Line2(pin3) and ground(pin6) into a voltage meter or oscilloscope.
+'''
+
+def enable_strobe_bfs(cam):
+    """
+    Enables stobe for the given bfs `cam` by turning
+    on 3.3V Enable for Line2 and Line1 output on ExposureActive
+    *Maybe need the "nodemap"
+    # Initialize camera
+    cam.Init()
+    # Retrieve GenICam nodemap
+    nodemap = cam.GetNodeMap()
+    """
+    print('+++++ STROBE: Enable +++++')
+
+    # Initialize camera
+    cam.Init()
+    # Retrieve GenICam nodemap
+    nodemap = cam.GetNodeMap()
+
+    # Turn on 3.3V Enable for Line 2
+    cam.LineSelector.SetValue(PySpin.LineSelector_Line2)
+    cam.V3_3Enable.SetValue(True)
+    # Turn on strobe for Line 1
+    cam.LineSelector.SetValue(PySpin.LineSelector_Line1)
+    cam.LineSource.SetValue(PySpin.LineSource_ExposureActive)
+
+def disable_strobe_bfs(cam):
+    """
+    Enables stobe for the given bfs `cam` by turning
+    off 3.3V Enable for Line2 and Line1 output on ExposureActive
+    *Maybe need the "nodemap"
+    # Initialize camera
+    cam.Init()
+    # Retrieve GenICam nodemap
+    nodemap = cam.GetNodeMap()
+    """
+    print('----- STROBE: Disable -----')
+
+    # Initialize camera
+    cam.Init()
+    # Retrieve GenICam nodemap
+    nodemap = cam.GetNodeMap()
+
+    # Turn on 3.3V disable for Line 2
+    cam.LineSelector.SetValue(PySpin.LineSelector_Line2)
+    cam.V3_3Enable.SetValue(False)
+    # Turn on strobe for Line 1
+    cam.LineSelector.SetValue(PySpin.LineSelector_Line1)
+    cam.LineSource.SetValue(PySpin.LineSource_ExposureActive)
+
 
 def main():
     
@@ -162,7 +233,7 @@ def main():
     #timestamp_topic = 'timestamp'
     rospy.Subscriber('/directory', String, directory_callback)
     rospy.Subscriber("/record", Bool, record_callback)
-#    rospy.Subscriber(image_topic, Image, image_callback)
+    rospy.Subscriber(image_topic, Image, image_callback)
     rospy.Subscriber("/mavros/altitude", Altitude, alt_cb)
     rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, gps_cb)
     rospy.Subscriber("/mavros/imu/mag", MagneticField, mag_cb)
@@ -176,6 +247,9 @@ def main():
     #    r.sleep()    
     rospy.sleep(3)
     rospy.spin()
+
+
+    return result
 
 if __name__ == '__main__':
     main()

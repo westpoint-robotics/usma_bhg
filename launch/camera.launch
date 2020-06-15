@@ -33,10 +33,10 @@
            TODO NBL: This should be a .yaml file in /usma_bhg/cfg directory  
       <param name="camera_info_url" if="$(arg calibrated)"
              value="file://$(find usma_bhg)/resources/18285440calibration.yaml" />  -->
-      </node>
+    </node>
 
     <node pkg="nodelet" type="nodelet" name="image_proc_debayer"
-          args="load image_proc/debayer camera_nodelet_manager">
-    </node>
+          args="load image_proc/debayer camera_nodelet_manager"/>
+
   </group>
 </launch>

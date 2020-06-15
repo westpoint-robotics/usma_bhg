@@ -1,14 +1,16 @@
 <launch>
 
-    <arg name="run_flir"      default="false"/>  
+    <arg name="run_flir"      default="true"/>  
     <arg name="run_gobi"      default="true"/> 
 
    <include file="$(find usma_bhg)/launch/camera.launch" if='$(eval run_flir)' />
    
-   <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen" if='$(eval run_flir)' /> 
+   <node name="image_saver_jh" type="ros_img_save.py" pkg="usma_bhg" output="screen" if='$(eval run_flir)' /> 
+  
+   <node name="trigger_jh" type="flir_trigger.py" pkg="usma_bhg" output="screen" /> 
 
    <node pkg="usma_bhg" name="xenics" type="gobi_oop" output="screen" ns='camera' if='$(eval run_gobi)' >
         <param name="/use_trig" value='2'/>
    </node>
      
-</launch> 
+</launch>
