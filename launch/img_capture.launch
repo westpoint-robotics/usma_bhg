@@ -9,6 +9,8 @@
   
    <node name="trigger_jh" type="flir_trigger.py" pkg="usma_bhg" output="screen" /> 
 
-   <node pkg="usma_bhg" name="Xenics" type="gobi_subscriber" output="screen" ns='camera' if='$(eval run_gobi)' />
+   <node pkg="usma_bhg" name="xenics" type="gobi_oop" output="screen" ns='camera' if='$(eval run_gobi)' >
+        <param name="/gobi_trigger/use_trig" value='2'/>
+   </node>
      
 </launch>
