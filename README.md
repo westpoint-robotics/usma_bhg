@@ -127,7 +127,7 @@ source /opt/ros/melodic/setup.bash
 source /home/user1/catkin_ws/devel/setup.bash  
 # export ROS_MASTER_URI=http://[NUC_IP]:11311  
 # export ROS_IP=[NUC_IP]  
-<\pre>
+</pre>
 
 &nbsp;&nbsp;&nbsp;d. Save these changes.  
 
