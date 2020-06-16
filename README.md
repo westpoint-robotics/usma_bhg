@@ -125,8 +125,8 @@ ex. `python Examples/Python3/DeviceEvents.py`
 ```
 source /opt/ros/melodic/setup.bash  
 source /home/user1/catkin_ws/devel/setup.bash  
-\# export ROS_MASTER_URI=http://[NUC_IP]:11311  
-\# export ROS_IP=[NUC_IP]  
+# export ROS_MASTER_URI=http://[NUC_IP]:11311  
+# export ROS_IP=[NUC_IP]  
 ```
 &nbsp;&nbsp;&nbsp;d. Save these changes.  
 
