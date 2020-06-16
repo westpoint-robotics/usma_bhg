@@ -48,8 +48,8 @@ This document will show you how to:
 #3. Xenics SDK Install
 - Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.
 - Extract the files and cd into the created directory and run the below commands.
-- `sudo apt-get install libusb-0.1-4`
-- `sudo dpkg -i xeneth_2.7.0-181_amd64.deb`
+&nbsp;&nbsp;&nbsp;`sudo apt-get install libusb-0.1-4`
+&nbsp;&nbsp;&nbsp;`sudo dpkg -i xeneth_2.7.0-181_amd64.deb`
 - Add ip address into your local network
 	- Go to Settings > Network > Wired, and click (+) button to add Gobi camera
 	- In `Identity` tab, put the camera name (ex. `gobi`)
@@ -101,8 +101,8 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 `ex. python Examples/Python3/DeviceEvents.py`  
 
 #6. Install usma_bhg package  
-`cd ~/catkin_ws/src/`  
-`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
+&nbsp;&nbsp;&nbsp;`cd ~/catkin_ws/src/`  
+&nbsp;&nbsp;&nbsp;`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
 #7. Create a hotspot access piont
 - Open the network manager connection editor:  
@@ -119,16 +119,16 @@ Would you like to make a difference by participating in the Spinnaker feedback p
     - Make sure 'Automatically connect ...' is checked
 
 #8 Edit bashrc:  
-    a. `cd /home/user1/.bashrc`  
-    b. `gedit .bashrc`  
-    c. At the bottom of the .bashrc file, insert the lines (if not already added):  
-       ```xml
+&nbsp;&nbsp;&nbsp;a. `cd /home/user1/.bashrc`  
+&nbsp;&nbsp;&nbsp;b. `gedit .bashrc`  
+&nbsp;&nbsp;&nbsp;c. At the bottom of the .bashrc file, insert the lines (if not already added):  
+       ```
        source /opt/ros/melodic/setup.bash  
        source /home/user1/catkin_ws/devel/setup.bash  
        # export ROS_MASTER_URI=http://[NUC_IP]:11311  
        # export ROS_IP=[NUC_IP]  
        ```  
-    d. Save these changes.  
+&nbsp;&nbsp;&nbsp;d. Save these changes.  
 
 # Additonal installs for MAVProxy to work:
 `sudo apt-get update`    #Update the list of packages in the software center  
