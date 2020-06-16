@@ -236,13 +236,10 @@ class Bhg_flir:
                             #Before taking a picture, grab timestamp to record to filename, and CSV
                             tNow = rospy.get_time() # current date and time
                             datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
-                            flirFilename = self.image_folder + "/FLIR" + self.ser_num + "_" + datetimeData[:-3] + ".jpg"        
+                            flirFilename = self.image_folder + "/FLIR" + self.ser_num + "_" + datetimeData[:-3] + ".png"        
                             # Save your OpenCV2 image as a jpeg 
                             cv2.imwrite(flirFilename, image_data)                            
-                        
-                        
-                        
-                        #cv2.imshow("frame",image_data)
+                                                #cv2.imshow("frame",image_data)
                         #cv2.waitKey(1)
                         try:
                           self.image_pub.publish(bridge.cv2_to_imgmsg(image_data, "bgr8"))

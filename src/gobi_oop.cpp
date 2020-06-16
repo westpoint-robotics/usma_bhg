@@ -395,11 +395,12 @@ class GobiBHG {
                 this->frameBuffer = new dword[this->frameSize];  
             }
         }
-        
+
         int retrieve_frame(){
             ErrCode errorCode = 0; 
             //if ((errorCode = XC_GetFrame(this->handle, FT_NATIVE, XGF_Blocking, this->frameBuffer, this->frameSize)) != I_OK)
             std::string crnt_time = make_datetime_stamp();
+            //if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGB, XGF_Blocking, this->frameBuffer, this->frameSize * 3)) != I_OK)
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
@@ -409,24 +410,23 @@ class GobiBHG {
                     ROS_INFO("***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
                 }
             }
-            else if (this->record){
-                //errorCode = XC_SaveData(this->handle, "output.xpng", XSD_SaveThermalInfo | XSD_Force16);
-                cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, this->frameBuffer);  
-                this->image_filename = image_folder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".jpg";                
-                cv::imwrite( this->image_filename, cv_image );
-                this->csvOutfile << make_logentry() << std::endl;
-            }
+            else {
+                cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, this->frameBuffer); 
+                cv::cvtColor(cv_image , cv_image, CV_RGBA2BGR);
+                if (this->record){
+                    this->image_filename = image_folder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".png";
+                    //errorCode = XC_SaveData(this->handle, "output.png", XSD_SaveThermalInfo | XSD_Force16); 
+                    cv::imwrite( this->image_filename, cv_image);
+                    this->csvOutfile << make_logentry() << std::endl;
+                }
+                cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+                cv_ptr->encoding = "bgr8";
+                cv_ptr->header.stamp =  ros::Time::now();
+                cv_ptr->header.frame_id = "gobi";
+                cv_ptr->image = cv_image;
+                this->image_pub_.publish(cv_ptr->toImageMsg());  
+            }   
             return int(errorCode);
-        }
-        
-        void publish_frame(){
-            cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
-            cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, this->frameBuffer);
-            cv_ptr->encoding = "rgba8";
-            cv_ptr->header.stamp =  ros::Time::now();
-            cv_ptr->header.frame_id = "gobi";
-            cv_ptr->image = cv_image;
-            this->image_pub_.publish(cv_ptr->toImageMsg());            
         }
         
         void clean_up(){
@@ -482,13 +482,13 @@ class GobiBHG {
             if (mkdir(this->image_folder.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
                 if( errno == 0 ) { // TODO fix this to return accurate feedback
                     // TODO figure out why this check for zero? 
-                    ROS_INFO("***** GOBI:  ERROR: Directory does not exist and MKDIR failed the errno is %i",errno ); 
+                    ROS_INFO("***** GOBI:  0 Directory does not exist and MKDIR failed the errno is %i",errno ); 
                 }
                 else if (errno == 17){
                     // The directory already exists. Do nothing
                 }
                 else{
-                    ROS_INFO("***** GOBI:  ERROR: Directory does not exist and MKDIR failed the errno is %i",errno );        
+                    ROS_INFO("***** GOBI: Directory does not exist and MKDIR failed the errno is %i",errno );        
                 }
             }    
             else {
@@ -635,7 +635,6 @@ int main(int argc, char **argv)
             if (n % 40 == 0){
                 ROS_INFO("***** GOBI:  Received frame %lu", n);
             }
-            gobi_cam.publish_frame();
         }
         ros::spinOnce();
         loop_rate.sleep();
