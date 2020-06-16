@@ -98,7 +98,7 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - Move to the location in which the whl file is located, and run  
 `sudo python -m pip install spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.whl`  
 - The examples are located in the Examples folder of the extracted tarball. Run with:  
-`ex. python Examples/Python3/DeviceEvents.py`  
+ex. `python Examples/Python3/DeviceEvents.py`  
 
 #6. Install usma_bhg package  
 &nbsp;&nbsp;&nbsp;`cd ~/catkin_ws/src/`  
@@ -122,11 +122,11 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 &nbsp;&nbsp;&nbsp;a. `cd /home/user1/.bashrc`  
 &nbsp;&nbsp;&nbsp;b. `gedit .bashrc`  
 &nbsp;&nbsp;&nbsp;c. At the bottom of the .bashrc file, insert the lines (if not already added):  
-       ```
-       source /opt/ros/melodic/setup.bash  
+       ```python
+&nbsp;&nbsp;&nbsp;source /opt/ros/melodic/setup.bash
        source /home/user1/catkin_ws/devel/setup.bash  
-       # export ROS_MASTER_URI=http://[NUC_IP]:11311  
-       # export ROS_IP=[NUC_IP]  
+       # export ROS_MASTER_URI=http://[NUC_IP]:11311
+       # export ROS_IP=[NUC_IP]
        ```  
 &nbsp;&nbsp;&nbsp;d. Save these changes.  
 
