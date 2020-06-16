@@ -122,13 +122,12 @@ ex. `python Examples/Python3/DeviceEvents.py`
 &nbsp;&nbsp;&nbsp;a. `cd /home/user1/.bashrc`  
 &nbsp;&nbsp;&nbsp;b. `gedit .bashrc`  
 &nbsp;&nbsp;&nbsp;c. At the bottom of the .bashrc file, insert the lines (if not already added):  
-<pre>
+```
 source /opt/ros/melodic/setup.bash  
 source /home/user1/catkin_ws/devel/setup.bash  
 \# export ROS_MASTER_URI=http://[NUC_IP]:11311  
 \# export ROS_IP=[NUC_IP]  
-</pre>
-
+```
 &nbsp;&nbsp;&nbsp;d. Save these changes.  
 
 # Additonal installs for MAVProxy to work:
