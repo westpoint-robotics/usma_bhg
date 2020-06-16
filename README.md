@@ -40,9 +40,9 @@ This document will show you how to:
 - For Ubuntu 18.04, follow [these steps](http://wiki.ros.org/melodic/Installation/Ubuntu).
 
 #2. Install MavROS  
-- Install the ROS package:
+- Install the ROS package:  
 `sudo apt-get install ros-melodic-mavros`  
-- Use this script to download Geoid Model datasets for Mavros:
+- Use this script to download Geoid Model datasets for Mavros:  
 `sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh`  
 
 #3. Xenics SDK Install
@@ -59,7 +59,7 @@ This document will show you how to:
 
 #4. Install Spinnaker SDK and dependancies:  
 - Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457
-- Uncompress the folders to get the folder spinnaker-2.0.0.109-Ubuntu18.04-amd64-pkg/spinnaker-2.0.0.109-amd64
+- Uncompress the folders to get the folder spinnaker-2.0.0.109-Ubuntu18.04-amd64-pkg/spinnaker-2.0.0.146-amd64  
 `sudo apt-get install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev`  
 `sudo sh install_spinnaker.sh`  
 - During install process, add a new member to `flirimaging`
@@ -76,14 +76,14 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 [Y/n] $ <b>n</b>  
 </pre>
 
-- If you do not already have a catkin_ws then create one
+- If you do not already have a catkin_ws then create one  
 `mkdir -p ~/catkin_ws/src`  
 `cd ~/catkin_ws/`  
 `catkin_make`  
 `echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc`  
 `source ~/.bashrc`  
 
-- Clone dependencies and ROS FLIR camera drivers into catkin_ws:
+- Clone dependencies and ROS FLIR camera drivers into catkin_ws:  
 `sudo apt-get install ros-melodic-camera-info-manager ros-melodic-dynamic-reconfigure`  
 `cd ~/catkin_ws/src/`  
 `git clone https://github.com/westpoint-robotics/flir_camera_driver.git`  
@@ -91,21 +91,21 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 `catkin_make`  
 
 #5. Install PySpin
-- Download the package (spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.tar.gz) that corresponds to the python version (2.7) and Spinnaker version (spinnaker-2.0.0.109) from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74728781416
-- Uncompress the folders and run
+- Download the package (spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.tar.gz) that corresponds to the python version (2.7) and Spinnaker version (spinnaker-2.0.0.146) from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74728781416
+- Uncompress the folders and run  
 `sudo python -m pip install --upgrade numpy matplotlib`  
 `python2.7 -m pip install enum34`  
-- Move to the location in which the whl file is located, and run
+- Move to the location in which the whl file is located, and run  
 `sudo python -m pip install spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.whl`  
-- The examples are located in the Examples folder of the extracted tarball. Run with:
+- The examples are located in the Examples folder of the extracted tarball. Run with:  
 `ex. python Examples/Python3/DeviceEvents.py`  
 
-#6. Install usma_bhg package
+#6. Install usma_bhg package  
 `cd ~/catkin_ws/src/`  
 `git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
 #7. Create a hotspot access piont
-- Open the network manager connection editor:
+- Open the network manager connection editor:  
 `nm-connection-editor`
 - Choose the plus sign to add a connections
 - Choose Wi-Fi for "Connection Type" and click "Create..."
