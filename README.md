@@ -46,11 +46,13 @@ This document will show you how to:
 `sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh`  
 
 #3. Xenics SDK Install
-- Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.
-- Extract the files and cd into the created directory and run the below commands.
-&nbsp;&nbsp;&nbsp;`sudo apt-get install libusb-0.1-4`
-&nbsp;&nbsp;&nbsp;`sudo dpkg -i xeneth_2.7.0-181_amd64.deb`
-- Add ip address into your local network
+- The Xenics SDK is located in a file called "SDK_Linux_27.zip" located in RRC BHG sharepoint site or can vbe downloaded from the Xeneth web site at [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip).
+- Extract this file and follow the instructions.
+- Install and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.  
+- Extract the files and cd into the created directory and run the below commands.  
+`sudo apt-get install libusb-0.1-4`  
+`sudo dpkg -i xeneth_2.7.0-181_amd64.deb`  
+- Add ip address into your local network  
 	- Go to Settings > Network > Wired, and click (+) button to add Gobi camera
 	- In `Identity` tab, put the camera name (ex. `gobi`)
 	- In `IPv4` tab, select `Manual` and enter the following information
@@ -90,15 +92,20 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 `cd ..`  
 `catkin_make`  
 
-#5. Install PySpin
+
+- Install PySpin: Spinnaker Python packages, download from the same location as the SDK.
+- The file name is: spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.tar.gz
 - Download the package (spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.tar.gz) that corresponds to the python version (2.7) and Spinnaker version (spinnaker-2.0.0.146) from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74728781416
 - Uncompress the folders and run  
+`sudo apt-get install python-pip python3-pip`  
 `sudo python -m pip install --upgrade numpy matplotlib`  
-`python2.7 -m pip install enum34`  
+`python2 -m pip install enum34`  
 - Move to the location in which the whl file is located, and run  
 `sudo python -m pip install spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.whl`  
 - The examples are located in the Examples folder of the extracted tarball. Run with:  
 ex. `python Examples/Python3/DeviceEvents.py`  
+
+
 
 #6. Install usma_bhg package  
 &nbsp;&nbsp;&nbsp;`cd ~/catkin_ws/src/`  
@@ -110,6 +117,7 @@ ex. `python Examples/Python3/DeviceEvents.py`
 - Choose the plus sign to add a connections
 - Choose Wi-Fi for "Connection Type" and click "Create..."
 - On the Wi-Fi tab:
+    - Set "Connection Name:" to NUC42Hotspot
     - Set "Mode:" to Hotspot
     - Set "SSID:" to NUC42
 - On the Wi-Fi Security Tab
