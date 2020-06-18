@@ -108,8 +108,8 @@ ex. `python Examples/Python3/DeviceEvents.py`
 
 
 #6. Install usma_bhg package  
-&nbsp;&nbsp;&nbsp;`cd ~/catkin_ws/src/`  
-&nbsp;&nbsp;&nbsp;`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
+`cd ~/catkin_ws/src/`  
+`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
 #7. Create a hotspot access piont
 - Open the network manager connection editor:  
@@ -126,17 +126,17 @@ ex. `python Examples/Python3/DeviceEvents.py`
 - On the General Tab
     - Make sure 'Automatically connect ...' is checked
 
-#8 Edit bashrc:  
-&nbsp;&nbsp;&nbsp;a. `cd /home/user1/.bashrc`  
-&nbsp;&nbsp;&nbsp;b. `gedit .bashrc`  
-&nbsp;&nbsp;&nbsp;c. At the bottom of the .bashrc file, insert the lines (if not already added):  
+#8 Edit bashrc: (DML: DO NOT DO THIS if already done. The above the instructions already do this.)  
+- `cd /home/user1/.bashrc`  
+- `gedit .bashrc`  
+- At the bottom of the .bashrc file, insert the lines (if not already added):  
 ```
 source /opt/ros/melodic/setup.bash  
 source /home/user1/catkin_ws/devel/setup.bash  
-# export ROS_MASTER_URI=http://[NUC_IP]:11311  
+# export ROS_MASTER_URI=http://[NUC_IP]:11311 (DML: Do not do this unless you can garauntee the IP address is always available and does not change)  
 # export ROS_IP=[NUC_IP]  
 ```
-&nbsp;&nbsp;&nbsp;d. Save these changes.  
+- Save these changes.  
 
 # Additonal installs for MAVProxy to work:
 `sudo apt-get update`    #Update the list of packages in the software center  
@@ -173,7 +173,7 @@ source /home/user1/catkin_ws/devel/setup.bash
 - sudo apt-get install -y nodejs
 - node --version
 - npm --version
-solves problem of eventemitter2 missing on local computer
+solves problem of eventemitter2 missing on local computer when using the webserver
 
 ### Solve the nagging error of: Failed to load module "canberra-gtk-module" 
 - `sudo apt-get install libcanberra-gtk-module`
