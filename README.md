@@ -23,7 +23,7 @@ This document will show you how to:
 
 Documentation on how to operate the BHG system can be found in "BHG_OPERATION.md".
 ------------------------------------------------------
-# 1. Ubuntu: Image Restore or Installation
+## 1. Ubuntu: Image Restore or Installation
 ### a. Option 1: Full Sysem Image
 - Use Clonezilla to image the development Companion Computer.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image. 
    
@@ -34,17 +34,17 @@ Documentation on how to operate the BHG system can be found in "BHG_OPERATION.md
 ### c. Option 3: From a computer with ROS already installed
 - Use Clonezilla to burn an image with Ubuntu 18.04.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image.  
 
-#2. ROS Install 
+## 2. ROS Install 
 - For Ubuntu 16.04, follow [these steps](http://wiki.ros.org/kinetic/Installation/Ubuntu).
 - For Ubuntu 18.04, follow [these steps](http://wiki.ros.org/melodic/Installation/Ubuntu).
 
-#3. Install MavROS  
+## 3. Install MavROS  
 - Install the ROS package:  
 `sudo apt-get install ros-melodic-mavros`  
 - Use this script to download Geoid Model datasets for Mavros:  
 `sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh`  
 
-#4. Xenics SDK Install
+## 4. Xenics SDK Install
 - Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.  
 - Extract the files and cd into the created directory and run the below commands.  
 - `sudo apt-get install libusb-0.1-4`  
@@ -56,12 +56,20 @@ Documentation on how to operate the BHG system can be found in "BHG_OPERATION.md
 	- Address: `169.254.107.22`  
 	- Netmask: `255.255.0.0`  
 
-#5. Install usma_bhg and dependencies:  
+## 5. Install usma_bhg and dependencies: 
+- Enable auto login:   
+    1. Go to System | Users menu.   
+    2. Click Users to open the panel.  
+    3. Select the user account that you want to log in to automatically at startup.  
+    4. Press Unlock in the top right corner and type in your password when prompted.  
+    5. Switch the Automatic Login switch to on.  
+
 - `sudo apt-get install ros-melodic-libsensors-monitor ros-melodic-rosbridge-server python-pip python3-pip python-tornado python-bson ros-melodic-rosbridge-suite ros-melodic-roswww nodejs libcanberra-gtk-module python3-dev python3-opencv python3-wxgtk4.0 libxml2-dev python3-pip python3-matplotlib python3-lxml`  
+- `sudo -H pip3 install matplotlib jupyter pymavlink pandas`
 - `cd ~/catkin_ws/src/`  
 - `git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
-#6. Install Spinnaker SDK and dependancies:  
+## 6. Install Spinnaker SDK and dependancies:  
 - Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457  
 - Uncompress the folders to get the folder spinnaker-2.0.0.109-Ubuntu18.04-amd64-pkg/spinnaker-2.0.0.109-amd64  
 `sudo apt-get install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev`  
@@ -95,7 +103,7 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 `cd ..`  
 `catkin_make`  
 
-#5. Create a hotspot access piont
+## 7. Create a hotspot access piont
 - Open the network manager connection editor:  
 `nm-connection-editor`  
 - Choose the plus sign to add a connections  
@@ -109,7 +117,7 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - On the General Tab
     - Make sure 'Automatically connect ...' is checked
 
-#7 Edit bashrc:  
+## 8 Edit bashrc:  
    a. `cd /home/user1/.bashrc`  
    b. `gedit .bashrc`  
    c. At the bottom of the .bashrc file, insert the lines (if not already added):  
@@ -119,17 +127,19 @@ Would you like to make a difference by participating in the Spinnaker feedback p
       # export ROS_IP=[NUC_IP]  
    d. Save these changes.  
 
-# Additonal installs for Mavproxy to work:
+## Additonal installs for Mavproxy to work:
 `sudo apt-get update`    #Update the list of packages in the software center  
 `sudo apt-get install python3-dev python3-opencv python3-wxgtk3.0 libxml2-dev python3-pip python3-matplotlib python3-lxml python-pip python3-pip`  
 `sudo pip3 install future`  
 `sudo pip3 install pymavlink`  
 `sudo pip3 install mavproxy`  
 
-# FTDI wiring.  
+## FTDI wiring.  
 - The FTDI adapter did not work as wired. I had to switch rx and tx wires for this to work with ardupilot. Now the rx pin on the pixhawk is wired to the rx pin on the FT232 and the same with the tx pin.  
 
-# Install the latest QGroundControl on Ubuntu 18.04
+# Experimental and optional below here:
+
+## Install the latest QGroundControl on Ubuntu 18.04
 - Install dependencies:  
 `sudo apt-get install libqt5serialport5 qml-module-qtquick2 qtdeclarative5-qtquick2-plugin gstreamer1.0-plugins-bad gstreamer1.0-libav`  
 - Remove modemmanager:  
@@ -140,33 +150,24 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - Install it with:  
 `sudo dpkg -i apm_planner_2.0.26_xenial64.deb`
 
-# Mavros not working Totally
+## Mavros not working Totally
 - Mavros was publishing diagnostits but no other topics. Running the below command fixed this:  
 `rosservice call /mavros/set_stream_rate 0 10 1`  
 - This is now incorporated in the ardupilot.launch node and appears to work from there.  
 
-# Web server and Ros    
+## Web server and Ros    
 - `sudo apt-get install python-tornado python-bson ros-melodic-rosbridge-suite  ros-melodic-roswww`  
 - `roslaunch rosbridge_server rosbridge_websocket.launch`  
 
-## Experimental below here:
+## Emitter2 error with webserver and websockets:
 - curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 - sudo apt-get install -y nodejs
 - node --version
 - npm --version
 solves problem of eventemitter2 missing on local computer
 
-### Solve the nagging error of: Failed to load module "canberra-gtk-module" 
-- `sudo apt-get install libcanberra-gtk-module`
-
 ### Missing dependencies
-- `sudo apt-get install ros-melodic-libsensors-monitor`
-- `sudo -H pip3 install --upgrade pip`
-- `sudo -H pip3 install matplotlib`
-- `sudo -H pip3 install jupyter`
-- `sudo -H pip3 install pymavlink`
-- `sudo -H pip3 install pandas`
-`
+- All incorporated into above instructions for now
 
 
 
