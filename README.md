@@ -56,9 +56,10 @@ Documentation on how to operate the BHG system can be found in "BHG_OPERATION.md
 	- Address: `169.254.107.22`  
 	- Netmask: `255.255.0.0`  
 
-#5. Install usma_bhg  
-`cd ~/catkin_ws/src/`  
-`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
+#5. Install usma_bhg and dependencies:  
+- `sudo apt-get install ros-melodic-libsensors-monitor ros-melodic-rosbridge-server python-pip python3-pip python-tornado python-bson ros-melodic-rosbridge-suite ros-melodic-roswww nodejs libcanberra-gtk-module python3-dev python3-opencv python3-wxgtk4.0 libxml2-dev python3-pip python3-matplotlib python3-lxml`  
+- `cd ~/catkin_ws/src/`  
+- `git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
 #6. Install Spinnaker SDK and dependancies:  
 - Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457  
@@ -78,6 +79,7 @@ Would you like to set USB-FS memory size to 1000 MB at startup (via /etc/rc.loca
 Would you like to make a difference by participating in the Spinnaker feedback program?  
 [Y/n] $ <b>n</b>  
 </pre>
+- IMPORTANT: You will need to reboot the system for these changes to have full effect.
 
 - If you do not already have a catkin_ws then create one  
 `mkdir -p ~/catkin_ws/src`  
@@ -106,10 +108,6 @@ Would you like to make a difference by participating in the Spinnaker feedback p
     - Set the password: nuc42access
 - On the General Tab
     - Make sure 'Automatically connect ...' is checked
-
-#6. Install usma_bhg  
-`cd ~/catkin_ws/src/`  
-`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
 #7 Edit bashrc:  
    a. `cd /home/user1/.bashrc`  
@@ -163,7 +161,7 @@ solves problem of eventemitter2 missing on local computer
 
 ### Missing dependencies
 - `sudo apt-get install ros-melodic-libsensors-monitor`
-- `sudo -H pip3 install --upgrae pip`
+- `sudo -H pip3 install --upgrade pip`
 - `sudo -H pip3 install matplotlib`
 - `sudo -H pip3 install jupyter`
 - `sudo -H pip3 install pymavlink`
