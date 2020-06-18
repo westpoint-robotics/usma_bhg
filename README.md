@@ -24,6 +24,12 @@ This document will show you how to:
 Documentation on how to operate the BHG system can be found in "BHG_OPERATION.md".
 ------------------------------------------------------
 ## 1. Ubuntu: Image Restore or Installation
+### FIRST update BIOS settings in the NUC:
+- Press 'F2' Button on boot to enter bios
+- Goto the 'Power' tab and select 'Secondary Power Settings', scroll down to 'After Power Failure' change to 'Power On'
+- Goto the 'Boot' tab and select 'Secure Boot', Change 'Secure Boot' to 'Disabled'
+- Goto the 'Cooling' tab and change 'Fan Control Mode' to 'Cool'
+
 ### a. Option 1: Full Sysem Image
 - Use Clonezilla to image the development Companion Computer.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image. 
    
