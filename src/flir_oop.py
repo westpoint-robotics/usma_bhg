@@ -8,6 +8,10 @@ import rospy
 import cv2
 import os
 import datetime
+
+from multiprocessing.pool import ThreadPool
+from collections import deque
+
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image  
 from std_msgs.msg import Bool
@@ -23,6 +27,15 @@ from std_msgs.msg import Float64
 class TriggerType:
     SOFTWARE = 1
     HARDWARE = 2
+
+# Helper function for multi threaded 
+class DummyTask:
+    def __init__(self, data):
+        self.data = data
+    def ready(self):
+        return True
+    def get(self):
+        return self.data
 
 class Bhg_flir:
 
@@ -46,6 +59,11 @@ class Bhg_flir:
         self.imu_data = Imu()
         self.vel_gps = TwistStamped()
         self.temp_imu = Temperature()
+        self.threadn = cv2.getNumberOfCPUs()
+        self.pool = ThreadPool(processes = self.threadn)
+        self.pending = deque()
+        self.threaded_mode = True        
+        
         rospy.Subscriber('/directory', String, self.directory_callback)
         rospy.Subscriber("/record", Bool, self.record_callback)
         rospy.Subscriber("/mavros/altitude", Altitude, self.alt_cb)
@@ -232,17 +250,24 @@ class Bhg_flir:
                         image_converted = image_result.Convert(PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
                         image_data = image_converted.GetNDArray()
                         
-                        if (self.is_recording and os.path.exists(self.csv_filename) ):
-                            #Before taking a picture, grab timestamp to record to filename, and CSV
-                            tNow = rospy.get_time() # current date and time
-                            datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
-                            flirFilename = self.image_folder + "/FLIR" + self.ser_num + "_" + datetimeData[:-3] + ".png"        
-                            # Save your OpenCV2 image as a jpeg 
-                            cv2.imwrite(flirFilename, image_data)                            
-                                                #cv2.imshow("frame",image_data)
+                        #Before taking a picture, grab timestamp to record to filename, and CSV
+                        tNow = rospy.get_time() # current date and time
+                        self.datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
+                        if (self.is_recording and os.path.exists(self.csv_filename) ):                         
+                            self.threaded_save_img(image_data, self.datetimeData) 
+                            with open(self.csv_filename,"a") as f:
+                                f.write(self.make_logentry()+'\n')  
+                        #cv2.imshow("frame",image_data)
                         #cv2.waitKey(1)
                         try:
-                          self.image_pub.publish(bridge.cv2_to_imgmsg(image_data, "bgr8"))
+                            cv2.putText(image_data,self.datetimeData[:-3], 
+                                (30,1280), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 
+                                2,
+                                (251,251,251),
+                                3)
+                            
+                            self.image_pub.publish(bridge.cv2_to_imgmsg(image_data, "bgr8"))
                         except CvBridgeError as e:
                           print(e)
 
@@ -404,7 +429,7 @@ class Bhg_flir:
         vel_str = str(self.vel_gps.twist.linear.x) + "," + str(self.vel_gps.twist.linear.y) + "," + str(self.vel_gps.twist.linear.z) + ","
         vel_str += str(self.vel_gps.twist.angular.x) + "," + str(self.vel_gps.twist.angular.y) + "," + str(self.vel_gps.twist.angular.z)  
         temp_str = str(self.temp_imu.temperature)    
-        output = str(self.datetimeData + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str)
+        output = str(self.image_folder + "," + self.datetimeData + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str)
         return output
 
     def alt_cb(self, msg):
@@ -432,7 +457,7 @@ class Bhg_flir:
     def create_directories(self):
         # missionDirectory = msg.data   # data: "/home/user1/Data/20200615_145002_422/"
         dir_time = self.data_dir.split("/")[4] #   missionName  "20200615_145002_422"
-        self.image_folder = self.data_dir + '/FLIR_SN_' + self.ser_num + '/'
+        self.image_folder = self.data_dir + 'FLIR_SN_' + self.ser_num + '/'
         self.csv_filename = self.data_dir + dir_time + "_flir.csv"
 
         if(not (os.path.isdir(self.image_folder))):
@@ -446,6 +471,24 @@ class Bhg_flir:
 
     def record_callback(self, msg):
         self.is_recording = msg.data
+        
+    def save_img(self, image_data, dtime_data):      
+        self.image_filename = self.image_folder + "/FLIR" + self.ser_num + "_" + dtime_data[:-3] + ".ppm"  
+        # Save your OpenCV2 image as a jpeg 
+        cv2.imwrite(self.image_filename, image_data, [cv2.IMWRITE_PNG_COMPRESSION, 1])
+        
+    # Based on https://github.com/opencv/opencv/blob/master/samples/python/video_threaded.py
+    def threaded_save_img(self, image_data, dtime_data):
+
+        while len(self.pending) > 0 and self.pending[0].ready():
+            #res, t0 = self.pending.popleft().get()  
+            t0 = self.pending.popleft()        
+        if len(self.pending) < self.threadn:
+            if self.threaded_mode:
+                task = self.pool.apply_async(self.save_img, (image_data.copy(), dtime_data))
+            else:
+                task = self.DummyTask(self.save_img(image_data, dtime_data))
+            self.pending.append(task)
 
 if __name__ == "__main__":
         """
