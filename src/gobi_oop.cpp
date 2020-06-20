@@ -33,6 +33,7 @@ class GobiBHG {
         int serial_num;
         image_transport::Publisher image_pub_;
         bool record;
+        int img_hz;
 
         ros::Subscriber record_sub;
         ros::Subscriber dir_sub;
@@ -47,6 +48,7 @@ class GobiBHG {
         std::string image_folder;
         std::string image_filename;
         std::string img_time;
+        std::string crnt_time;
         
         // State updated by callbacks
         sensor_msgs::MagneticField mag_data;
@@ -56,6 +58,7 @@ class GobiBHG {
         geometry_msgs::TwistStamped vel_gps;
         sensor_msgs::Temperature temp_imu;              
         std::string data_dir; 
+        int saved_count;
   
     public:
         GobiBHG(ros::NodeHandle *nh){
@@ -64,11 +67,14 @@ class GobiBHG {
             is_initialized = false;  
             serial_num = 0;
             data_dir = "/tmp/BHG_DATA";
-            image_filename = "default_imgname.png";
+            image_filename = "default_imgname.ppm";
             csvOutfile;
             image_transport::ImageTransport it_(*nh);
             image_pub_ = it_.advertise("gobi_image", 1); // TODO Namespace this to /camera/gobi/ , use the same pattern as FLIR  
             record = false; 
+            img_hz = 5;
+            saved_count = 0;
+            
             
             record_sub  = nh->subscribe("/record", 10, &GobiBHG::recordCallback, this);
             dir_sub     = nh->subscribe("/directory", 1000, &GobiBHG::dirCallback, this);
@@ -84,6 +90,10 @@ class GobiBHG {
         ~GobiBHG(){
             printf("***** GOBI:  Starting GOBI clean up as part of shutdown process\n");
             this->clean_up();
+        }
+        
+        int get_savedcount(){
+            return this->saved_count;
         }
          
         
@@ -126,7 +136,8 @@ class GobiBHG {
             return 0;    
         }
         
-        void initialize_cam(int is_trigMode = 0){ // 0: no triger, 1: input trigger, 2: output trigger
+        void initialize_cam(int is_trigMode = 0, int img_hz = 5){ // 0: no triger, 1: input trigger, 2: output trigger
+            this->img_hz = img_hz;
             ErrCode errCode = I_OK;
             // Open a connection to the first detected camera by using connection string cam://0
             ROS_INFO("***** GOBI:  Opening connection to cam://0");
@@ -156,6 +167,35 @@ class GobiBHG {
             }
         }
         
+        /*
+         *  In SetupShutterControl_F027 we disable the automatic shutter correction.
+         *  When this is set to enabled it is possible that triggers being received 
+         *  during a calibrate cycle are not processed by the camera.
+         *  To make sure the image does not drift and stays corrected the camera has
+         *  to be occasionally calibrated by stopping / starting the acquisition or
+         *  executing the "Calibrate"-property by setting its value to 1.
+         */
+
+        bool SetupShutterControl(XCHANDLE handle) {
+
+            ErrCode errCode = I_OK;
+
+            printf("Configuring camera to disable the automatic shutter control: \n");
+
+            /* 
+             *  AutoCorrectionEnabled = Disabled (0), Enabled (1)
+             * -----------------------------------------------------------------
+             *  Disable the automatic internal calibration. 
+             */
+
+            errCode = XC_SetPropertyValueL(handle, "AutoCorrectionEnabled", 0, "");
+            if (!HandleError(errCode, " * Disable auto correction"))
+                return false;
+            
+            printf("\n");
+            return true;
+        }
+
 
         /*
          *  To make sure the image does not drift and stays corrected between bursts 
@@ -168,7 +208,8 @@ class GobiBHG {
          *  Automatic correction while we are expecting triggers can cause events to 
          *  be missed. Because of this the calibration progress has to be controlled.
          */
-        bool ExecuteCalibration_F027(XCHANDLE handle) {
+
+        bool ExecuteCalibration(XCHANDLE handle) {
 
             ErrCode errCode = I_OK;
             
@@ -191,12 +232,20 @@ class GobiBHG {
          */
         bool Setup_F027(XCHANDLE handle, int trig_mode = 0) {
             ROS_INFO("***** GOBI:  BHG trigger mode is: %d. (0 = No trigger | 1 = External In | 2 = External Out)",trig_mode);
+            ROS_INFO("***** GOBI:  Image HZ is %i", this->img_hz );
             ErrCode errorCode = I_OK;      
-            long wavelength = 50000; 
+            long wavelength = long(1.0/img_hz * 1000000); 
             long duty_cycle = wavelength / 2;  
            
             if (trig_mode == 1){
                 ROS_INFO("***** GOBI:  Configuring camera in external 'TRIGGER IN' mode with rising edge activation");
+                // TriggerInputDelay Defines the time delay (in microseconds) between the trigger and the actual start of integration. 
+                errorCode = XC_SetPropertyValueL(handle, "TriggerInDelay", 23225, "");
+                if (!HandleError(errorCode, " * Set TriggerInDelay"))
+                    return false; 
+                errorCode = XC_SetPropertyValueL(handle, "TriggerInTiming", 1, "");
+                if (!HandleError(errorCode, " * Set trigger input timing"))
+                    return false;                    
                 errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 0, "");
                 if (!HandleError(errorCode, " * Set auto mode"))
                     return false;
@@ -222,7 +271,7 @@ class GobiBHG {
                 if (!HandleError(errorCode, " * Set TriggerOutPolarity")) 
                     return false;
             }
-            else if (trig_mode == 2){
+            else if (trig_mode == 2){             
                 errorCode = XC_SetPropertyValueL(handle, "AutoModeUpdate", 0, "");
                 if (!HandleError(errorCode, " * Set auto mode"))
                     return false;            
@@ -267,6 +316,8 @@ class GobiBHG {
                 if (!HandleError(errorCode, " * Set trigger input mode")) 
                     return false;                            
             }
+            /* configure camera to disable the automatic shutter calibration process */
+            if (!SetupShutterControl(handle)) AbortSession();
             
             // GainControl Values: Automatic (=0), Manual (=1)
             errorCode = XC_SetPropertyValueL(handle, "GainControl", 0, "");
@@ -279,12 +330,16 @@ class GobiBHG {
             // AutoCorrectionEnabled Values: Off(0), On(1)                         
             errorCode = XC_SetPropertyValueL(handle, "AutoCorrectionEnabled", 1, "");
             if (!HandleError(errorCode, " * Set AutoCorrectionEnabled"))
-                return false;  
-                          
+                return false; 
+
+            long triggerInDelay = 0;
+            errorCode = XC_GetPropertyValueL(handle, "TriggerInDelay", &triggerInDelay);
+            ROS_INFO("***** GOBI:  TriggerInDelay '%lu' . "
+                            "Values: delay in microseconds between the trigger and start of integration", triggerInDelay);
             long gaincontrol = 0;
             errorCode = XC_GetPropertyValueL(handle, "GainControl", &gaincontrol);
             ROS_INFO("***** GOBI:  GainControl '%lu' Global gain factor applied to the image is computed automatically. "
-                            "Values: Automatic (=0), Manual (=1)", gaincontrol);
+                            "Values: Automatic (=0), Manual (=1)", gaincontrol);                            
             long offsetControl = 0;
             errorCode = XC_GetPropertyValueL(handle, "OffsetControl", &offsetControl);
             ROS_INFO("***** GOBI:  OffsetControl '%lu' The offset applied to the image is computed automatically. "
@@ -323,7 +378,7 @@ class GobiBHG {
             float hz = 1000000.0 / minimumFrameTime;
             ROS_INFO("***** GOBI:  MinimumFrameTime is '%lu' Values: Time in microseconds or %.1f hz", minimumFrameTime,hz);  
 
-            ExecuteCalibration_F027(handle); 
+            ExecuteCalibration(handle); 
             return true;        
         }
 
@@ -399,8 +454,8 @@ class GobiBHG {
         int retrieve_frame(){
             ErrCode errorCode = 0; 
             //if ((errorCode = XC_GetFrame(this->handle, FT_NATIVE, XGF_Blocking, this->frameBuffer, this->frameSize)) != I_OK)
-            std::string crnt_time = make_datetime_stamp();
             //if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGB, XGF_Blocking, this->frameBuffer, this->frameSize * 3)) != I_OK)
+            //std::string crnt_time = "";
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
@@ -413,12 +468,17 @@ class GobiBHG {
             else {
                 cv::Mat cv_image(cv::Size(640, 480), CV_8UC4, this->frameBuffer); 
                 cv::cvtColor(cv_image , cv_image, CV_RGBA2BGR);
+                this->crnt_time = make_datetime_stamp();
                 if (this->record){
-                    this->image_filename = image_folder + "/GOBI" + to_string(this->serial_num) + "_" + crnt_time + ".png";
+                    this->image_filename = image_folder + "GOBI" + to_string(this->serial_num) + "_" + this->crnt_time + ".png";
                     //errorCode = XC_SaveData(this->handle, "output.png", XSD_SaveThermalInfo | XSD_Force16); 
                     cv::imwrite( this->image_filename, cv_image);
                     this->csvOutfile << make_logentry() << std::endl;
+                    this->saved_count++;
                 }
+
+                cv::putText(cv_image, this->crnt_time, cvPoint(30,400), 
+                    cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cvScalar(1,1,1), 2);
                 cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
                 cv_ptr->encoding = "bgr8";
                 cv_ptr->header.stamp =  ros::Time::now();
@@ -535,7 +595,7 @@ class GobiBHG {
 
         string make_logentry()
         {            
-            string alt_str = image_filename + "," + img_time + "," 
+            string alt_str = image_filename + "," + this->crnt_time + "," 
                       + to_string(rel_alt.monotonic) + "," + to_string(rel_alt.amsl) + "," 
                       + to_string(rel_alt.local) + "," + to_string(rel_alt.relative); 
             string gps_str = to_string(gps_fix.status.status) + "," + to_string(gps_fix.status.service) 
@@ -607,21 +667,28 @@ int main(int argc, char **argv)
 
     // get ros param for trigger mode. 0 - trigger in, 1 - trigger out, 2- no trigger
     int use_trig; 
-    if (nh.hasParam("/camera/xenics/use_trig")){        
+    if (nh.hasParam("/camera/xenics/use_trig")){  
         nh.getParam("/camera/xenics/use_trig", use_trig);
     }
     else{ // Default to no trigger mode
         use_trig = 2;
     }
-    ROS_INFO("Use trigger mode is set to: %i",use_trig); 
+    ROS_INFO("Use trigger mode is set to: %i",use_trig);
+    int capture_hz; 
+    if (nh.hasParam("/camera/xenics/capture_hz")){  
+        nh.getParam("/camera/xenics/capture_hz", capture_hz);
+    }
+    else{ // Default to 5 hz
+        capture_hz = 5;
+    }
+    ROS_INFO("Images will be captured at: %i hz.",capture_hz); 
 
     // Setup camera and start capturing 
     GobiBHG gobi_cam(&nh); 
     gobi_cam.retrieve_info(false); // Not using this as it prints all cameras. 
-    gobi_cam.initialize_cam(use_trig);
+    gobi_cam.initialize_cam(use_trig, capture_hz);
     gobi_cam.start_capture();
  
-
     // Big while loop, continuously publish the images
     uint64_t n=0;
     ros::Rate loop_rate(25); //This should be faster than the camera capture rate.  
@@ -633,7 +700,7 @@ int main(int argc, char **argv)
         if(gobi_cam.retrieve_frame() ==0){        
             n++;
             if (n % 40 == 0){
-                ROS_INFO("***** GOBI:  Received frame %lu", n);
+                ROS_INFO("***** GOBI:  Received frame %lu and saved %d frames", n, gobi_cam.get_savedcount());
             }
         }
         ros::spinOnce();
