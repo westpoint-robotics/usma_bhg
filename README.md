@@ -168,7 +168,7 @@ source /home/user1/catkin_ws/devel/setup.bash
 
 # Experimental and optional below here:
 
-# Install the latest QGroundControl on Ubuntu 18.04
+## Install the latest QGroundControl on Ubuntu 18.04
 - Install dependencies:  
 `sudo apt-get install libqt5serialport5 qml-module-qtquick2 qtdeclarative5-qtquick2-plugin gstreamer1.0-plugins-bad gstreamer1.0-libav`  
 - Remove modemmanager:  
