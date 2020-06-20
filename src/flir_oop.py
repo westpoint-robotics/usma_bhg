@@ -28,14 +28,7 @@ class TriggerType:
     SOFTWARE = 1
     HARDWARE = 2
 
-# Helper function for multi threaded 
-class DummyTask:
-    def __init__(self, data):
-        self.data = data
-    def ready(self):
-        return True
-    def get(self):
-        return self.data
+
 
 class Bhg_flir:
 
@@ -62,7 +55,7 @@ class Bhg_flir:
         self.threadn = cv2.getNumberOfCPUs()
         self.pool = ThreadPool(processes = self.threadn)
         self.pending = deque()
-        self.threaded_mode = True        
+        self.threaded_mode = False        
         
         rospy.Subscriber('/directory', String, self.directory_callback)
         rospy.Subscriber("/record", Bool, self.record_callback)
@@ -85,6 +78,16 @@ class Bhg_flir:
             exit()
 
         self.cam = self.cam_list.GetByIndex(0)    
+
+    # Helper function for multi threaded 
+    class DummyTask:
+        def __init__(self, data):
+            self.data = data
+        def ready(self):
+            return True
+        def get(self):
+            return self.data
+
 
     def configure_trigger(self):
         """
@@ -117,6 +120,8 @@ class Bhg_flir:
                 return False
 
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
+            # To add a delay from trigger to capture. Tested and works.
+            self.cam.TriggerDelay.SetValue(25.0) # in microseconds must be (24.0 < delay < 65520)
 
             print("Trigger mode disabled...")
 
@@ -224,6 +229,7 @@ class Bhg_flir:
             r = rospy.Rate(30) # 5hz
             last_time = rospy.get_time()
             n = 0
+            saved_count = 0
             while not rospy.is_shutdown():        
             
                 try:
@@ -240,11 +246,6 @@ class Bhg_flir:
 
                     else:
                         n += 1
-                        if (n % 40 == 0):
-                            #  Print image information
-                            width = image_result.GetWidth()
-                            height = image_result.GetHeight()
-                            print("Grabbed Image %d, width = %d, height = %d" % (n, width, height))
                         
                         #  Convert image to mono 8
                         image_converted = image_result.Convert(PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
@@ -253,7 +254,8 @@ class Bhg_flir:
                         #Before taking a picture, grab timestamp to record to filename, and CSV
                         tNow = rospy.get_time() # current date and time
                         self.datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
-                        if (self.is_recording and os.path.exists(self.csv_filename) ):                         
+                        if (self.is_recording and os.path.exists(self.csv_filename) ):  
+                            saved_count += 1                      
                             self.threaded_save_img(image_data, self.datetimeData) 
                             with open(self.csv_filename,"a") as f:
                                 f.write(self.make_logentry()+'\n')  
@@ -273,6 +275,11 @@ class Bhg_flir:
 
                         #  Release image
                         image_result.Release()
+                        if (n % 40 == 0):
+                            #  Print image information
+                            width = image_result.GetWidth()
+                            height = image_result.GetHeight()
+                            print("Grabbed Image %d, and saved %d images" % (n, saved_count))
 
                 except PySpin.SpinnakerException as ex:
                     print("Error: %s" % ex)
