@@ -1,19 +1,19 @@
 <launch>
 	<!-- vim: set ft=xml noet : -->
-	<!-- example launch script for ArduPilot based FCU's -->
+	<!-- launch script for ArduPilot based FCU's -->
 
-	<arg name="fcu_url" default="/dev/ttyUSB0:921600" />
+	<!-- <arg name="fcu_url" default="/dev/ttyUSB0:921600" /> -->
+	<arg name="fcu_url" default="/dev/ttyACM0:921600" />
 	<arg name="gcs_url" default="" />
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
 	<arg name="log_output" default="screen" />
 	<arg name="fcu_protocol" default="v2.0" />
 	<arg name="respawn_mavros" default="true" />
-
+	
 	<include file="$(find usma_bhg)/launch/node.launch">
 		<arg name="pluginlists_yaml" value="$(find usma_bhg)/launch/apm_pluginlists.yaml" />
 		<arg name="config_yaml" value="$(find usma_bhg)/launch/apm_config.yaml" />
-
 		<arg name="fcu_url" value="$(arg fcu_url)" />
 		<arg name="gcs_url" value="$(arg gcs_url)" />
 		<arg name="tgt_system" value="$(arg tgt_system)" />
@@ -23,10 +23,24 @@
 		<arg name="respawn_mavros" default="$(arg respawn_mavros)" />
 	</include>
 	
-	<!-- The below solves a problem where mavros starts but does not publish all data. Assumption: It changes a param in Ardupilot. Once it is changed this command is redundant. -->
-	<node pkg="rosservice" type="rosservice" name="mavros_set_stream_service" args="call --wait /mavros/set_stream_rate 0 10 1" />
+	<node pkg="usma_bhg" type="mavlink_trigger.py" name="tigger_setup" output='screen'/>
 
-	
-	
-	
+	<!-- The below did not work well, they kept tryign to run before the service was ready. 
+	<node pkg="rosservice" type="rosservice" name="mavros_set_stream_service" args="call -wait /mavros/set_stream_rate 0 10 1" />
+	<node pkg="rosservice" type="rosservice" name="set_servo_rate" args="call -wait /mavros/param/set SERVO_RATE '[25, 0.0]'" />
+	<node pkg="rosservice" type="rosservice" name="set_servo9_max" args="call -wait /mavros/param/set SERVO9_MAX '[50000, 0.0]'" />
+	<node pkg="mavros" type="mavcmd" name="set_pixhwk_trigger_width" args="-wait long 183 9 25000 0 0 0 0 0"/>
+	-->
 </launch>
+<!--
+CLI versions for making the pixhawk generate a signal to synch cameras.
+
+rosrun mavros mavparam set SERVO_RATE 20
+rosrun mavros mavparam set SERVO9_MAX 30000
+rosrun mavros mavcmd long 183 9 25000 0 0 0 0 0
+
+Altrenatives that are equivalent to the commands used in the launch file
+rosservice call /mavros/param/set SERVO9_MAX '[30000, 0.0]'
+rosservice call /mavros/param/set SERVO_RATE '[35, 0.0]'
+rosservice call /mavros/cmd/command 183 9 25000 0 0 0 0 0
+-->
