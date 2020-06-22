@@ -55,7 +55,7 @@ class Bhg_flir:
         self.threadn = cv2.getNumberOfCPUs()
         self.pool = ThreadPool(processes = self.threadn)
         self.pending = deque()
-        self.threaded_mode = False        
+        self.threaded_mode = True        
         
         rospy.Subscriber('/directory', String, self.directory_callback)
         rospy.Subscriber("/record", Bool, self.record_callback)
@@ -74,7 +74,7 @@ class Bhg_flir:
             # Release system
             self.cam_system.ReleaseInstance()
 
-            print("Not enough cameras!")
+            rospy.loginfo("***** FLIR:  Not enough cameras!")
             exit()
 
         self.cam = self.cam_list.GetByIndex(0)    
@@ -102,12 +102,12 @@ class Bhg_flir:
          :rtype: bool
         """
 
-        print("*** CONFIGURING TRIGGER ***\n")
+        rospy.loginfo("***** FLIR:  CONFIGURING TRIGGER ***\n")
 
         if self.chosen_trigger == TriggerType.SOFTWARE:
-            print("Software trigger chosen...")
+            rospy.loginfo("***** FLIR:  Software trigger chosen...")
         elif self.chosen_trigger == TriggerType.HARDWARE:
-            print("Hardware trigger chosen...")
+            rospy.loginfo("***** FLIR:  Hardware trigger chosen...")
 
         try:
             result = True
@@ -116,20 +116,20 @@ class Bhg_flir:
             # The trigger must be disabled in order to configure whether the source
             # is software or hardware.
             if self.cam.TriggerMode.GetAccessMode() != PySpin.RW:
-                print("Unable to disable trigger mode (node retrieval). Aborting...")
+                rospy.loginfo("***** FLIR:  Unable to disable trigger mode (node retrieval). Aborting...")
                 return False
 
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
             # To add a delay from trigger to capture. Tested and works.
             self.cam.TriggerDelay.SetValue(25.0) # in microseconds must be (24.0 < delay < 65520)
 
-            print("Trigger mode disabled...")
+            rospy.loginfo("***** FLIR:  Trigger mode disabled...")
 
             # Select trigger source
             # The trigger source must be set to hardware or software while trigger
 		    # mode is off.
             if self.cam.TriggerSource.GetAccessMode() != PySpin.RW:
-                print("Unable to get trigger source (node retrieval). Aborting...")
+                rospy.loginfo("***** FLIR:  Unable to get trigger source (node retrieval). Aborting...")
                 return False
 
             if self.chosen_trigger == TriggerType.SOFTWARE:
@@ -141,10 +141,10 @@ class Bhg_flir:
             # Once the appropriate trigger source has been set, turn trigger mode
             # on in order to retrieve images using the trigger.
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
-            print("Trigger mode turned back on...")
+            rospy.loginfo("***** FLIR:  Trigger mode turned back on...")
 
         except PySpin.SpinnakerException as ex:
-            print("Error: %s" % ex)
+            rospy.loginfo("***** FLIR:  Error: %s" % ex)
             return False
 
         return result
@@ -173,7 +173,7 @@ class Bhg_flir:
 
                 # Execute software trigger
                 if self.cam.TriggerSoftware.GetAccessMode() != PySpin.WO:
-                    print("Unable to execute trigger. Aborting...")
+                    rospy.loginfo("***** FLIR:  Unable to execute trigger. Aborting...")
                     return False
 
                 self.cam.TriggerSoftware.Execute()
@@ -181,11 +181,11 @@ class Bhg_flir:
                 # TODO: Blackfly and Flea3 GEV cameras need 2 second delay after software trigger
 
             elif self.chosen_trigger == TriggerType.HARDWARE:
-                # print("Use the hardware to trigger image acquisition.")
+                # rospy.loginfo("Use the hardware to trigger image acquisition.")
                 pass
                 
         except PySpin.SpinnakerException as ex:
-            print("Error: %s" % ex)
+            rospy.loginfo("***** FLIR:  Error: %s" % ex)
             return False
 
         return result     
@@ -201,48 +201,51 @@ class Bhg_flir:
         :rtype: bool
         """
 
-        print("*** IMAGE ACQUISITION ***\n")
+        rospy.loginfo("***** FLIR:  IMAGE ACQUISITION ***\n")
         try:
             result = True
 
             # Set acquisition mode to continuous
             if self.cam.AcquisitionMode.GetAccessMode() != PySpin.RW:
-                print("Unable to set acquisition mode to continuous. Aborting...")
+                rospy.loginfo("***** FLIR:  Unable to set acquisition mode to continuous. Aborting...")
                 return False
 
             self.cam.AcquisitionMode.SetValue(PySpin.AcquisitionMode_Continuous)
-            print("Acquisition mode set to continuous...")
+            rospy.loginfo("***** FLIR:  Acquisition mode set to continuous...")
 
             #  Begin acquiring images
             self.cam.BeginAcquisition()
 
-            print("Acquiring images...")
+            rospy.loginfo("***** FLIR:  Acquiring images...")
 
             # Get device serial number for filename
             if self.cam.TLDevice.DeviceSerialNumber.GetAccessMode() == PySpin.RO:
                 self.ser_num = self.cam.TLDevice.DeviceSerialNumber.GetValue()
 
-                print("Device serial number retrieved as %s..." % self.ser_num)
+                rospy.loginfo("***** FLIR:  Device serial number retrieved as %s..." % self.ser_num)
 
             # Retrieve, convert, and save images
             bridge = CvBridge()
-            r = rospy.Rate(30) # 5hz
             last_time = rospy.get_time()
             n = 0
             saved_count = 0
+            r = rospy.Rate(40) # 40hz
             while not rospy.is_shutdown():        
             
                 try:
+                    #print("Time now1: %f" % (rospy.get_time() - last_time)) # 0.000086
                     #  Retrieve the next image from the trigger
                     #  Does nothing if Hardware trigger except print line.
                     result &= self.grab_next_image_by_trigger()
+                    #print("Time now2: %f" % (rospy.get_time() - last_time)) # 0.000107
                                     
                     #  Retrieve next received image
                     image_result = self.cam.GetNextImage(500) # timeout in milliseconds
+                    #print("Time now3: %f" % (rospy.get_time() - last_time)) # 0.029838
 
                     #  Ensure image completion
                     if image_result.IsIncomplete():
-                        print("Image incomplete with image status %d ..." % image_result.GetImageStatus())
+                        rospy.loginfo("***** FLIR:  Image incomplete with image status %d ..." % image_result.GetImageStatus())
 
                     else:
                         n += 1
@@ -250,6 +253,7 @@ class Bhg_flir:
                         #  Convert image to mono 8
                         image_converted = image_result.Convert(PySpin.PixelFormat_BGR8, PySpin.HQ_LINEAR)
                         image_data = image_converted.GetNDArray()
+                        #print("Time now4: %f" % (rospy.get_time() - last_time)) # 0.045697
                         
                         #Before taking a picture, grab timestamp to record to filename, and CSV
                         tNow = rospy.get_time() # current date and time
@@ -271,18 +275,20 @@ class Bhg_flir:
                             
                             self.image_pub.publish(bridge.cv2_to_imgmsg(image_data, "bgr8"))
                         except CvBridgeError as e:
-                          print(e)
+                          rospy.loginfo("***** FLIR: %s" %e)
+                        #print("Time now5: %f\n--------------------\n" % (rospy.get_time() - last_time)) # 0.049854
+                      
 
                         #  Release image
                         image_result.Release()
                         if (n % 40 == 0):
-                            #  Print image information
+                            #  print image information
                             width = image_result.GetWidth()
                             height = image_result.GetHeight()
-                            print("Grabbed Image %d, and saved %d images" % (n, saved_count))
+                            rospy.loginfo("***** FLIR:  Grabbed Image %d, and saved %d images" % (n, saved_count))
 
                 except PySpin.SpinnakerException as ex:
-                    print("Error: %s" % ex)
+                    rospy.loginfo("***** FLIR:  Error: %s" % ex)
 
                 last_time = rospy.get_time()
                 r.sleep()
@@ -290,7 +296,7 @@ class Bhg_flir:
             self.cam.EndAcquisition()
 
         except PySpin.SpinnakerException as ex:
-            print("Error: %s" % ex)
+            rospy.loginfo("***** FLIR:  Error: %s" % ex)
             return False
 
         return result           
@@ -310,15 +316,15 @@ class Bhg_flir:
             # The trigger must be disabled in order to configure whether the source
             # is software or hardware.
             if self.cam.TriggerMode.GetAccessMode() != PySpin.RW:
-                print("Unable to disable trigger mode (node retrieval). Aborting...")
+                rospy.loginfo("***** FLIR:  Unable to disable trigger mode (node retrieval). Aborting...")
                 return False
 
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
 
-            print("Trigger mode disabled...")
+            rospy.loginfo("***** FLIR:  Trigger mode disabled...")
 
         except PySpin.SpinnakerException as ex:
-            print("Error: %s" % ex)
+            rospy.loginfo("***** FLIR:  Error: %s" % ex)
             result = False
 
         return result  
@@ -335,7 +341,7 @@ class Bhg_flir:
         :rtype: bool
         """
 
-        print("*** DEVICE INFORMATION ***\n")
+        rospy.loginfo("***** FLIR:   DEVICE INFORMATION ***\n")
 
         try:
             result = True
@@ -345,13 +351,13 @@ class Bhg_flir:
                 features = node_device_information.GetFeatures()
                 for feature in features:
                     node_feature = PySpin.CValuePtr(feature)
-                    print("%s: %s" % (node_feature.GetName(),
+                    rospy.loginfo("***** FLIR:  %s: %s" % (node_feature.GetName(),
                                       node_feature.ToString() if PySpin.IsReadable(node_feature) else "Node not readable"))
             else:
-                print("Device control information not available.")
+                rospy.loginfo("***** FLIR:  Device control information not available.")
 
         except PySpin.SpinnakerException as ex:
-            print("Error: %s" % ex)
+            rospy.loginfo("***** FLIR:  Error: %s" % ex)
             return False
 
         return result        
@@ -395,7 +401,7 @@ class Bhg_flir:
             self.cam.DeInit()
 
         except PySpin.SpinnakerException as ex:
-            print("Error: %s" % ex)
+            rospy.loginfo("***** FLIR:  Error: %s" % ex)
             result = False
 
         return result  
@@ -405,7 +411,7 @@ class Bhg_flir:
         # NOTE: Unlike the C++ examples, we cannot rely on pointer objects being automatically
         # cleaned up when going out of scope.
         # The usage of del is preferred to assigning the variable to None.
-        print("Closing camera now.\n")
+        rospy.loginfo("***** FLIR:  Closing camera now.\n")
         del self.cam
 
         # Clear camera list before releasing system
@@ -469,10 +475,10 @@ class Bhg_flir:
 
         if(not (os.path.isdir(self.image_folder))):
             os.mkdir(self.image_folder)
-            rospy.loginfo("***** FLIR *****: Directory Created: " + self.image_folder)
+            rospy.loginfo("***** FLIR:  Directory Created: " + self.image_folder)
 
         if(not (os.path.exists(self.csv_filename))):
-            rospy.loginfo("***** FLIR *****: CSV File Created: " + self.csv_filename)
+            rospy.loginfo("***** FLIR:  CSV File Created: " + self.csv_filename)
             with open(self.csv_filename, 'w') as csvFile:     
                 csvFile.write(self.make_header() + "\n")
 

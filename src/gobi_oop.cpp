@@ -667,16 +667,16 @@ int main(int argc, char **argv)
 
     // get ros param for trigger mode. 0 - trigger in, 1 - trigger out, 2- no trigger
     int use_trig; 
-    if (nh.hasParam("/camera/xenics/use_trig")){  
-        nh.getParam("/camera/xenics/use_trig", use_trig);
+    if (nh.hasParam("/camera/gobi/use_trig")){  
+        nh.getParam("/camera/gobi/use_trig", use_trig);
     }
     else{ // Default to no trigger mode
         use_trig = 2;
     }
     ROS_INFO("Use trigger mode is set to: %i",use_trig);
     int capture_hz; 
-    if (nh.hasParam("/camera/xenics/capture_hz")){  
-        nh.getParam("/camera/xenics/capture_hz", capture_hz);
+    if (nh.hasParam("/camera/gobi/capture_hz")){  
+        nh.getParam("/camera/gobi/capture_hz", capture_hz);
     }
     else{ // Default to 5 hz
         capture_hz = 5;
@@ -691,7 +691,7 @@ int main(int argc, char **argv)
  
     // Big while loop, continuously publish the images
     uint64_t n=0;
-    ros::Rate loop_rate(25); //This should be faster than the camera capture rate.  
+    ros::Rate loop_rate(40); //This should be faster than the camera capture rate.  
     // NOTE: We are limiting the camera to 20HZ frames and this loop uses a blocking call 
     // for get frame. Therefore this loop will not go any faster than the camera. By setting
     // the loop rate to 25hz, we attempt to have the loop wait at the blocking call for the image.

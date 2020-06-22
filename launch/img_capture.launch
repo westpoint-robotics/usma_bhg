@@ -1,15 +1,14 @@
 <launch>
 
+    <!-- NOTE: in the current config the cameras are waiting for a trigger sent by the pixhawk  -->
     <arg name="run_flir"      default="true"/>  
     <arg name="run_gobi"      default="true"/> 
-
-   <include file="$(find usma_bhg)/launch/camera.launch" if='$(eval run_flir)' />
    
-   <node name="image_saver" type="ros_img_save.py" pkg="usma_bhg" output="screen" if='$(eval run_flir)' /> 
+   <node pkg="usma_bhg" name="flir" type="flir_oop.py" output="screen" ns='camera' if='$(eval run_flir)' /> 
 
-   <node pkg="usma_bhg" name="xenics" type="gobi_oop" output="screen" ns='camera' if='$(eval run_gobi)' >
+   <node pkg="usma_bhg" name="gobi" type="gobi_oop" output="screen" ns='camera' if='$(eval run_gobi)' >
         <param name="/use_trig" value='1'/>
-        <param name="/capture_hz" value='10'/>
+        <param name="/capture_hz" value='10'/> <!-- TODO this maybe obsolete now that PH generates signal -->
    </node>
      
 </launch> 
