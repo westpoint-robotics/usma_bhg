@@ -6,6 +6,18 @@ import rospy
 from mavros_msgs.srv import ParamSet
 from mavros_msgs.msg import ParamValue
 from mavros_msgs.srv import CommandLong
+from mavros_msgs.srv import StreamRate
+        
+def set_stream_rate():
+    # sets the pulse frequency in hertz
+    # Minimum work value 16 tested up to 50
+    rospy.wait_for_service('/mavros/set_stream_rate')
+    try:
+        set_rate = rospy.ServiceProxy('/mavros/set_stream_rate', StreamRate)
+        value = StreamRate()
+        resp1 = set_rate(1, 10 ,1)
+    except rospy.ServiceException as e:
+        rospy.logerror("+++++ TRIGGER:  Service call failed: %s"%e)
         
 def set_servo_rate(rate):
     # sets the pulse frequency in hertz
@@ -37,10 +49,6 @@ def set_servo9_pw(rate):
     rospy.wait_for_service('/mavros/cmd/command')
     try:
         send_cmd = rospy.ServiceProxy('/mavros/cmd/command', CommandLong)
-        cmd = CommandLong()
-        cmd.command = 183 #'CMD_DO_SET_SERVO'
-        cmd.param1 = 9
-        cmd.param1 = rate
         # format for below is: ['broadcast', 'command', 'confirmation', 'param1', 'param2', 'param3', 'param4', 'param5', 'param6', 'param7'] 
         # 183 is the command for CMD_DO_SET_SERVO
         resp1 = send_cmd(0, 183, 1, 9, rate, 0, 0, 0, 0, 0)                
