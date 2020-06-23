@@ -32,10 +32,9 @@
 	command is not sufficient to dely the sending of these commands. Last check was 27 seconds from the
 	start of master.launch to params uploaded and the system was ready for these commands to be sent -->
 	<node pkg="usma_bhg" type="mavlink_trigger.py" name="tigger_setup" output='screen'/>
-
+	<node pkg="rosservice" type="rosservice" name="mavros_set_stream_service" args="call -wait /mavros/set_stream_rate 0 10 1" />
 	<!-- 
 	The below did not work well, they kept trying to run before the service was ready. 
-	<node pkg="rosservice" type="rosservice" name="mavros_set_stream_service" args="call -wait /mavros/set_stream_rate 0 10 1" />
 	<node pkg="rosservice" type="rosservice" name="set_servo_rate" args="call -wait /mavros/param/set SERVO_RATE '[25, 0.0]'" />
 	<node pkg="rosservice" type="rosservice" name="set_servo9_max" args="call -wait /mavros/param/set SERVO9_MAX '[50000, 0.0]'" />
 	<node pkg="mavros" type="mavcmd" name="set_pixhwk_trigger_width" args="-wait long 183 9 25000 0 0 0 0 0"/>
