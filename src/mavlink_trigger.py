@@ -17,7 +17,7 @@ def set_stream_rate():
         value = StreamRate()
         resp1 = set_rate(1, 10 ,1)
     except rospy.ServiceException as e:
-        rospy.logerror("+++++ TRIGGER:  Service call failed: %s"%e)
+        rospy.logerr("+++++ TRIGGER:  Service call failed: %s"%e)
         
 def set_servo_rate(rate):
     # sets the pulse frequency in hertz
@@ -29,7 +29,7 @@ def set_servo_rate(rate):
         value.integer = rate
         resp1 = set_rate('SERVO_RATE', value)
     except rospy.ServiceException as e:
-        rospy.logerror("+++++ TRIGGER:  Service call failed: %s"%e)
+        rospy.logerr("+++++ TRIGGER:  Service call failed: %s"%e)
         
 def set_servo9_max(rate):
     # TODO Figure out exceptable range for this
@@ -41,7 +41,7 @@ def set_servo9_max(rate):
         value.integer = rate
         resp1 = set_rate('SERVO9_MAX', value)
     except rospy.ServiceException as e:
-        rospy.logerror("+++++ TRIGGER: Service call failed: %s"%e)        
+        rospy.logerr("+++++ TRIGGER: Service call failed: %s"%e)        
         
 def set_servo9_pw(rate):
     # sets the pulse width in microseconds
@@ -53,7 +53,7 @@ def set_servo9_pw(rate):
         # 183 is the command for CMD_DO_SET_SERVO
         resp1 = send_cmd(0, 183, 1, 9, rate, 0, 0, 0, 0, 0)                
     except rospy.ServiceException as e:
-        rospy.logerror("+++++ TRIGGER:  Service call failed: %s"%e)
+        rospy.logerr("+++++ TRIGGER:  Service call failed: %s"%e)
 
 if __name__ == "__main__":
     rospy.init_node('trigger_setup')     
