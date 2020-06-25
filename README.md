@@ -204,5 +204,19 @@ solves problem of eventemitter2 missing on local computer when using the webserv
 ### Missing dependencies
 - All incorporated into above instructions for now
 
+### Install Arduino IDE
+- `cd ~/Downloads`  
+- `wget https://downloads.arduino.cc/arduino-1.8.13-linux64.tar.xz`  
+- `tar -xf arduino-1.8.13-linux64.tar.xz`  
+- `cd arduino-1.8.13/`  
+- `sudo ./install.sh`  
+- `sudo apt-get install ros-melodic-rosserial-arduino ros-melodic-rosserial`
+- `cd ~/Arduino/libraries/`
+- `rm -rf ros_lib`
+- `rospack profile`
+- `rosrun rosserial_arduino make_libraries.py .`
+
+
+
 
 
