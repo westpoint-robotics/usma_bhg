@@ -459,10 +459,10 @@ class GobiBHG {
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
-                    ROS_INFO("***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
+                    ROS_INFO_THROTTLE(60,"***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
                 }
                 else{
-                    ROS_INFO("***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
+                    ROS_INFO_THROTTLE(60,"***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
                 }
             }
             else {
