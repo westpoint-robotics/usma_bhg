@@ -6,7 +6,7 @@
 	
 	
 	<!-- <arg name="fcu_url" default="/dev/ttyUSB0:921600" /> -->
-	<arg name="fcu_url" default="/dev/ttyUSB0:921600" />
+	<arg name="fcu_url" default="/dev/ttyACM0:921600" />
 	<arg name="gcs_url" default="" />
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
@@ -32,8 +32,9 @@
 	<!-- This sets the parameters and sends the command to set the pwm width. There is a delay of
 	more than 27 seconds before any changes are sent. This appears to be needed as the mavlink wait
 	command is not sufficient to dely the sending of these commands. Last check was 27 seconds from the
-	start of master.launch to params uploaded and the system was ready for these commands to be sent -->
-	<node pkg="usma_bhg" type="mavlink_trigger.py" name="tigger_setup" output='screen'/>
+	start of master.launch to params uploaded and the system was ready for these commands to be sent
+	<node pkg="usma_bhg" type="mavlink_trigger.py" name="tigger_setup" output='screen'/>   -->
+	
 	<!-- 
 	<node pkg="rosservice" type="rosservice" name="mavros_set_stream_service" args="call -wait /mavros/set_stream_rate 0 10 1" />
 	The below did not work well, they kept trying to run before the service was ready. 

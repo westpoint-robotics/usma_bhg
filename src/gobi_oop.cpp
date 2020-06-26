@@ -59,6 +59,7 @@ class GobiBHG {
         sensor_msgs::Temperature temp_imu;              
         std::string data_dir; 
         int saved_count;
+        bool verbose;
   
     public:
         GobiBHG(ros::NodeHandle *nh){
@@ -74,6 +75,7 @@ class GobiBHG {
             record = false; 
             img_hz = 5;
             saved_count = 0;
+            verbose = false;
             
             
             record_sub  = nh->subscribe("/record", 10, &GobiBHG::recordCallback, this);
@@ -232,7 +234,7 @@ class GobiBHG {
          */
         bool Setup_F027(XCHANDLE handle, int trig_mode = 0) {
             ROS_INFO("***** GOBI:  BHG trigger mode is: %d. (0 = No trigger | 1 = External In | 2 = External Out)",trig_mode);
-            ROS_INFO("***** GOBI:  Image HZ is %i", this->img_hz );
+            //ROS_INFO("***** GOBI:  Image HZ is %i", this->img_hz );
             ErrCode errorCode = I_OK;      
             long wavelength = long(1.0/img_hz * 1000000); 
             long duty_cycle = wavelength / 2;  
@@ -331,53 +333,53 @@ class GobiBHG {
             errorCode = XC_SetPropertyValueL(handle, "AutoCorrectionEnabled", 1, "");
             if (!HandleError(errorCode, " * Set AutoCorrectionEnabled"))
                 return false; 
-
-            long triggerInDelay = 0;
-            errorCode = XC_GetPropertyValueL(handle, "TriggerInDelay", &triggerInDelay);
-            ROS_INFO("***** GOBI:  TriggerInDelay '%lu' . "
-                            "Values: delay in microseconds between the trigger and start of integration", triggerInDelay);
-            long gaincontrol = 0;
-            errorCode = XC_GetPropertyValueL(handle, "GainControl", &gaincontrol);
-            ROS_INFO("***** GOBI:  GainControl '%lu' Global gain factor applied to the image is computed automatically. "
-                            "Values: Automatic (=0), Manual (=1)", gaincontrol);                            
-            long offsetControl = 0;
-            errorCode = XC_GetPropertyValueL(handle, "OffsetControl", &offsetControl);
-            ROS_INFO("***** GOBI:  OffsetControl '%lu' The offset applied to the image is computed automatically. "
-                            "Values: Automatic (=0), Manual (=1)", offsetControl);     
-            long autoCorrectionEnabled = 0;
-            errorCode = XC_GetPropertyValueL(handle, "AutoCorrectionEnabled", &autoCorrectionEnabled);
-            ROS_INFO("***** GOBI:  AutoCorrectionEnabled '%lu' Enables the automatic internal calbration. "
-                            "Values: Automatic (=0), Manual (=1)", autoCorrectionEnabled);
-            long automode = 1;
-            errorCode = XC_GetPropertyValueL(handle, "AutoModeUpdate", &automode);
-            ROS_INFO("***** GOBI:  AutoModeUpdate '%lu' Freeze the current values for the offset and the gain. Values: Running (=0), Stopped (=1)", automode);             
-            long trigimode = 0; 
-            errorCode = XC_GetPropertyValueL(handle, "TriggerInMode", &trigimode);
-            ROS_INFO("***** GOBI:  TriggerInMode is '%lu' Sets the current trigger mode. Values:Free running(0), Triggered(1)", trigimode);        
-            long trigienable = 0;
-            errorCode = XC_GetPropertyValueL(handle, "TriggerInEnable", &trigienable);
-            ROS_INFO("***** GOBI:  TriggerInEnable is '%lu' Enables the trigger input. Values: Off(0), On(1)", trigienable);        
-            long trigisens = 0;
-            errorCode = XC_GetPropertyValueL(handle, "TriggerInSensitivity", &trigisens);
-            ROS_INFO("***** GOBI:  TriggerInSensitivity is '%lu' When the camera captures an image. Values: Level(0), Edge(1)", trigisens);
-            long trigipol = 0;
-            errorCode = XC_GetPropertyValueL(handle, "TriggerInPolarity", &trigipol);
-            ROS_INFO("***** GOBI:  TriggerInPolarity is '%lu' Whether images are captured if the signal is high or low. "
-                                    "Values: Level low/Falling edge(0), Level high/Rising edge(1)", trigipol);
-            long trigoenable = 0;
-            errorCode = XC_GetPropertyValueL(handle, "TriggerOutEnable", &trigoenable);
-            ROS_INFO("***** GOBI:  TriggerOutEnable is '%lu' Enables trigger output. Values: Off(0), On(1)", trigoenable);
-            long trigopolarity = 0;
-            errorCode = XC_GetPropertyValueL(handle, "TriggerOutPolarity", &trigopolarity);
-            ROS_INFO("***** GOBI:  TriggerOutPolarity is '%lu' Values: Active low (0), Active high (1)", trigoenable);
-            long trigowdith = 0;
-            errorCode = XC_GetPropertyValueL(handle, "TriggerOutWidth", &trigowdith);
-            ROS_INFO("***** GOBI:  TriggerOutWidth is '%lu' Duration of the active output after a trigger event. Values: Time in microseconds", trigowdith);
-            long minimumFrameTime = 0; 
-            errorCode = XC_GetPropertyValueL(handle, "MinimumFrameTime", &minimumFrameTime);
-            float hz = 1000000.0 / minimumFrameTime;
-            ROS_INFO("***** GOBI:  MinimumFrameTime is '%lu' Values: Time in microseconds or %.1f hz", minimumFrameTime,hz);  
-
+            if (verbose){
+                long triggerInDelay = 0;
+                errorCode = XC_GetPropertyValueL(handle, "TriggerInDelay", &triggerInDelay);
+                ROS_INFO("***** GOBI:  TriggerInDelay '%lu' . "
+                                "Values: delay in microseconds between the trigger and start of integration", triggerInDelay);
+                long gaincontrol = 0;
+                errorCode = XC_GetPropertyValueL(handle, "GainControl", &gaincontrol);
+                ROS_INFO("***** GOBI:  GainControl '%lu' Global gain factor applied to the image is computed automatically. "
+                                "Values: Automatic (=0), Manual (=1)", gaincontrol);                            
+                long offsetControl = 0;
+                errorCode = XC_GetPropertyValueL(handle, "OffsetControl", &offsetControl);
+                ROS_INFO("***** GOBI:  OffsetControl '%lu' The offset applied to the image is computed automatically. "
+                                "Values: Automatic (=0), Manual (=1)", offsetControl);     
+                long autoCorrectionEnabled = 0;
+                errorCode = XC_GetPropertyValueL(handle, "AutoCorrectionEnabled", &autoCorrectionEnabled);
+                ROS_INFO("***** GOBI:  AutoCorrectionEnabled '%lu' Enables the automatic internal calbration. "
+                                "Values: Automatic (=0), Manual (=1)", autoCorrectionEnabled);
+                long automode = 1;
+                errorCode = XC_GetPropertyValueL(handle, "AutoModeUpdate", &automode);
+                ROS_INFO("***** GOBI:  AutoModeUpdate '%lu' Freeze the current values for the offset and the gain. Values: Running (=0), Stopped (=1)", automode);             
+                long trigimode = 0; 
+                errorCode = XC_GetPropertyValueL(handle, "TriggerInMode", &trigimode);
+                ROS_INFO("***** GOBI:  TriggerInMode is '%lu' Sets the current trigger mode. Values:Free running(0), Triggered(1)", trigimode);        
+                long trigienable = 0;
+                errorCode = XC_GetPropertyValueL(handle, "TriggerInEnable", &trigienable);
+                ROS_INFO("***** GOBI:  TriggerInEnable is '%lu' Enables the trigger input. Values: Off(0), On(1)", trigienable);        
+                long trigisens = 0;
+                errorCode = XC_GetPropertyValueL(handle, "TriggerInSensitivity", &trigisens);
+                ROS_INFO("***** GOBI:  TriggerInSensitivity is '%lu' When the camera captures an image. Values: Level(0), Edge(1)", trigisens);
+                long trigipol = 0;
+                errorCode = XC_GetPropertyValueL(handle, "TriggerInPolarity", &trigipol);
+                ROS_INFO("***** GOBI:  TriggerInPolarity is '%lu' Whether images are captured if the signal is high or low. "
+                                        "Values: Level low/Falling edge(0), Level high/Rising edge(1)", trigipol);
+                long trigoenable = 0;
+                errorCode = XC_GetPropertyValueL(handle, "TriggerOutEnable", &trigoenable);
+                ROS_INFO("***** GOBI:  TriggerOutEnable is '%lu' Enables trigger output. Values: Off(0), On(1)", trigoenable);
+                long trigopolarity = 0;
+                errorCode = XC_GetPropertyValueL(handle, "TriggerOutPolarity", &trigopolarity);
+                ROS_INFO("***** GOBI:  TriggerOutPolarity is '%lu' Values: Active low (0), Active high (1)", trigoenable);
+                long trigowdith = 0;
+                errorCode = XC_GetPropertyValueL(handle, "TriggerOutWidth", &trigowdith);
+                ROS_INFO("***** GOBI:  TriggerOutWidth is '%lu' Duration of the active output after a trigger event. Values: Time in microseconds", trigowdith);
+                long minimumFrameTime = 0; 
+                errorCode = XC_GetPropertyValueL(handle, "MinimumFrameTime", &minimumFrameTime);
+                float hz = 1000000.0 / minimumFrameTime;
+                ROS_INFO("***** GOBI:  MinimumFrameTime is '%lu' Values: Time in microseconds or %.1f hz", minimumFrameTime,hz);  
+            }
             ExecuteCalibration(handle); 
             return true;        
         }
@@ -459,10 +461,10 @@ class GobiBHG {
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
-                    ROS_INFO_THROTTLE(60,"***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
+                    ROS_INFO_THROTTLE(30,"***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
                 }
                 else{
-                    ROS_INFO_THROTTLE(60,"***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
+                    ROS_INFO_THROTTLE(30,"***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
                 }
             }
             else {
@@ -525,9 +527,9 @@ class GobiBHG {
             ros::Time ros_timenow = ros::Time::now();
             std::time_t raw_time = static_cast<time_t>(ros_timenow.toSec());    
             struct tm * local_tm = localtime(&raw_time);        
-            int ros_millisec = int((ros_timenow.nsec)/1000000);         
+            int ros_millisec = int((ros_timenow.nsec)/1000);         
             strftime (buffer,80,"%Y%m%d_%H%M%S",local_tm);
-            sprintf(buffer,"%s_%03d", buffer, ros_millisec);
+            sprintf(buffer,"%s_%06d", buffer, ros_millisec);
             std::string datetime_stamp(buffer);
             return datetime_stamp;                    
         }

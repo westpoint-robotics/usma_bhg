@@ -55,7 +55,7 @@ class Bhg_flir:
         self.threadn = cv2.getNumberOfCPUs()
         self.pool = ThreadPool(processes = self.threadn)
         self.pending = deque()
-        self.threaded_mode = True        
+        self.threaded_mode = False        
         
         rospy.Subscriber('/directory', String, self.directory_callback)
         rospy.Subscriber("/record", Bool, self.record_callback)
@@ -486,7 +486,7 @@ class Bhg_flir:
         self.is_recording = msg.data
         
     def save_img(self, image_data, dtime_data):      
-        self.image_filename = self.image_folder + "/FLIR" + self.ser_num + "_" + dtime_data[:-3] + ".ppm"  
+        self.image_filename = self.image_folder + "/FLIR" + self.ser_num + "_" + dtime_data[:-6] + ".ppm"  
         # Save your OpenCV2 image as a jpeg 
         cv2.imwrite(self.image_filename, image_data, [cv2.IMWRITE_PNG_COMPRESSION, 1])
         
