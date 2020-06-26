@@ -485,8 +485,8 @@ class Bhg_flir:
     def record_callback(self, msg):
         self.is_recording = msg.data
         
-    def save_img(self, image_data, dtime_data):      
-        self.image_filename = self.image_folder + "/FLIR" + self.ser_num + "_" + dtime_data[:-6] + ".ppm"  
+    def save_img(self, image_data, dtime_data):   
+        self.image_filename = self.image_folder + "/FLIR" + self.ser_num + "_" + dtime_data + ".ppm"  
         # Save your OpenCV2 image as a jpeg 
         cv2.imwrite(self.image_filename, image_data, [cv2.IMWRITE_PNG_COMPRESSION, 1])
         

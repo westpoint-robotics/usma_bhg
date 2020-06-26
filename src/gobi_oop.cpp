@@ -242,7 +242,7 @@ class GobiBHG {
             if (trig_mode == 1){
                 ROS_INFO("***** GOBI:  Configuring camera in external 'TRIGGER IN' mode with rising edge activation");
                 // TriggerInputDelay Defines the time delay (in microseconds) between the trigger and the actual start of integration. 
-                errorCode = XC_SetPropertyValueL(handle, "TriggerInDelay", 23225, "");
+                errorCode = XC_SetPropertyValueL(handle, "TriggerInDelay", 25188, "");
                 if (!HandleError(errorCode, " * Set TriggerInDelay"))
                     return false; 
                 errorCode = XC_SetPropertyValueL(handle, "TriggerInTiming", 1, "");
