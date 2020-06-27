@@ -133,7 +133,7 @@ class GobiBHG {
                     this->serial_num = dev->serial;                    
                 }
             }
-            ROS_INFO("***** GOBI:  Serial number is: %i", this->serial_num);
+            //ROS_INFO("***** GOBI:  Serial number is: %i", this->serial_num);
             delete [] devices;   
             return 0;    
         }
@@ -142,10 +142,10 @@ class GobiBHG {
             this->img_hz = img_hz;
             ErrCode errCode = I_OK;
             // Open a connection to the first detected camera by using connection string cam://0
-            ROS_INFO("***** GOBI:  Opening connection to cam://0");
+            //ROS_INFO("***** GOBI:  Opening connection to cam://0");
             this->handle = XC_OpenCamera("cam://0"); 
             if(XC_IsInitialised(handle)){             
-                ROS_INFO("***** GOBI:  Is initialized.");
+                //ROS_INFO("***** GOBI:  Is initialized.");
                 this->is_initialized = true;    
                 
                 /* retrieve camera product id (PID)  and serial number*/
@@ -159,7 +159,7 @@ class GobiBHG {
                 ROS_INFO("***** GOBI:  Connected to camera with product id (PID) 0x%ld and serial number %lu", pid, ser);
                 errCode = XC_GetPropertyValueL(this->handle, "_API_GETFRAME_TIMEOUT", &timeout);
                 if (!HandleError(errCode, "Retrieving the camera frame timeout")) AbortSession();        
-                ROS_INFO("***** GOBI:  Frame timeout is: %lu", timeout);
+                //ROS_INFO("***** GOBI:  Frame timeout is: %lu", timeout);
        
                 Setup_F027(this->handle, is_trigMode);
             }
@@ -182,7 +182,7 @@ class GobiBHG {
 
             ErrCode errCode = I_OK;
 
-            printf("Configuring camera to disable the automatic shutter control: \n");
+            //printf("Configuring camera to disable the automatic shutter control: \n");
 
             /* 
              *  AutoCorrectionEnabled = Disabled (0), Enabled (1)
@@ -233,7 +233,7 @@ class GobiBHG {
          *  Mode 2: in external trigger out mode
          */
         bool Setup_F027(XCHANDLE handle, int trig_mode = 0) {
-            ROS_INFO("***** GOBI:  BHG trigger mode is: %d. (0 = No trigger | 1 = External In | 2 = External Out)",trig_mode);
+            //ROS_INFO("***** GOBI:  BHG trigger mode is: %d. (0 = No trigger | 1 = External In | 2 = External Out)",trig_mode);
             //ROS_INFO("***** GOBI:  Image HZ is %i", this->img_hz );
             ErrCode errorCode = I_OK;      
             long wavelength = long(1.0/img_hz * 1000000); 
@@ -554,7 +554,7 @@ class GobiBHG {
                 }
             }    
             else {
-                ROS_INFO("***** GOBI:  Created Data Directory and establishing csv file" );  
+                //ROS_INFO("***** GOBI:  Created Data Directory and establishing csv file" );  
                 ROS_INFO("***** GOBI:  Data directory is: [%s]", this->image_folder.c_str());
                 
                 if (csvOutfile.is_open()){ // Close the old csv file
@@ -675,7 +675,7 @@ int main(int argc, char **argv)
     else{ // Default to no trigger mode
         use_trig = 2;
     }
-    ROS_INFO("Use trigger mode is set to: %i",use_trig);
+    //ROS_INFO("Use trigger mode is set to: %i",use_trig);
     int capture_hz; 
     if (nh.hasParam("/camera/gobi/capture_hz")){  
         nh.getParam("/camera/gobi/capture_hz", capture_hz);
@@ -683,7 +683,7 @@ int main(int argc, char **argv)
     else{ // Default to 5 hz
         capture_hz = 5;
     }
-    ROS_INFO("Images will be captured at: %i hz.",capture_hz); 
+    //ROS_INFO("Images will be captured at: %i hz.",capture_hz); 
 
     // Setup camera and start capturing 
     GobiBHG gobi_cam(&nh); 
@@ -701,9 +701,7 @@ int main(int argc, char **argv)
     {
         if(gobi_cam.retrieve_frame() ==0){        
             n++;
-            if (n % 40 == 0){
-                ROS_INFO("***** GOBI:  Received frame %lu and saved %d frames", n, gobi_cam.get_savedcount());
-            }
+            ROS_INFO_THROTTLE(10,"***** GOBI:  Grabbed Image %lu, and saved %d", n, gobi_cam.get_savedcount());
         }
         ros::spinOnce();
         loop_rate.sleep();

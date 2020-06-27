@@ -1,10 +1,10 @@
 <launch>
 
-    <arg name="run_mavros"             default="true"/> 
+    <arg name="run_mavros"             default="false"/> 
     <arg name="run_cameras"            default="true"/>   
-    <arg name="run_health"             default="true"/> 
+    <arg name="run_health"             default="false"/> 
     <arg name="run_rosbag_record"      default="false"/> 
-    <arg name="record_mux"             default="true"/> 
+    <arg name="record_mux"             default="false"/> 
     <arg name="run_web"                default="false"/>   
     <arg name="run_dir_setup"          default="true"/> 
     

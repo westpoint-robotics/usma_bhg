@@ -27,12 +27,10 @@ from std_msgs.msg import Float64
 class TriggerType:
     SOFTWARE = 1
     HARDWARE = 2
-
-
-
+    
 class Bhg_flir:
 
-    def __init__(self):
+    def __init__(self, _threaded_mode = False):
         self.timestamp = 0
         self.chosen_trigger = TriggerType.HARDWARE
         self.image_pub = rospy.Publisher("image_color",Image, queue_size=10)
@@ -55,7 +53,7 @@ class Bhg_flir:
         self.threadn = cv2.getNumberOfCPUs()
         self.pool = ThreadPool(processes = self.threadn)
         self.pending = deque()
-        self.threaded_mode = False        
+        self.threaded_mode = _threaded_mode        
         
         rospy.Subscriber('/directory', String, self.directory_callback)
         rospy.Subscriber("/record", Bool, self.record_callback)
@@ -102,7 +100,7 @@ class Bhg_flir:
          :rtype: bool
         """
 
-        rospy.loginfo("***** FLIR:  CONFIGURING TRIGGER ***\n")
+        # rospy.loginfo("***** FLIR:  CONFIGURING TRIGGER ***\n")
 
         if self.chosen_trigger == TriggerType.SOFTWARE:
             rospy.loginfo("***** FLIR:  Software trigger chosen...")
@@ -123,7 +121,7 @@ class Bhg_flir:
             # To add a delay from trigger to capture. Tested and works.
             self.cam.TriggerDelay.SetValue(25.0) # in microseconds must be (24.0 < delay < 65520)
 
-            rospy.loginfo("***** FLIR:  Trigger mode disabled...")
+            #rospy.loginfo("***** FLIR:  Trigger mode disabled...")
 
             # Select trigger source
             # The trigger source must be set to hardware or software while trigger
@@ -141,7 +139,7 @@ class Bhg_flir:
             # Once the appropriate trigger source has been set, turn trigger mode
             # on in order to retrieve images using the trigger.
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
-            rospy.loginfo("***** FLIR:  Trigger mode turned back on...")
+            #rospy.loginfo("***** FLIR:  Trigger mode turned back on...")
 
         except PySpin.SpinnakerException as ex:
             rospy.loginfo("***** FLIR:  Error: %s" % ex)
@@ -201,7 +199,7 @@ class Bhg_flir:
         :rtype: bool
         """
 
-        rospy.loginfo("***** FLIR:  IMAGE ACQUISITION ***\n")
+        #rospy.loginfo("***** FLIR:  IMAGE ACQUISITION ***\n")
         try:
             result = True
 
@@ -211,7 +209,7 @@ class Bhg_flir:
                 return False
 
             self.cam.AcquisitionMode.SetValue(PySpin.AcquisitionMode_Continuous)
-            rospy.loginfo("***** FLIR:  Acquisition mode set to continuous...")
+            #rospy.loginfo("***** FLIR:  Acquisition mode set to continuous...")
 
             #  Begin acquiring images
             self.cam.BeginAcquisition()
@@ -222,7 +220,7 @@ class Bhg_flir:
             if self.cam.TLDevice.DeviceSerialNumber.GetAccessMode() == PySpin.RO:
                 self.ser_num = self.cam.TLDevice.DeviceSerialNumber.GetValue()
 
-                rospy.loginfo("***** FLIR:  Device serial number retrieved as %s..." % self.ser_num)
+                #rospy.loginfo("***** FLIR:  Device serial number retrieved as %s..." % self.ser_num)
 
             # Retrieve, convert, and save images
             bridge = CvBridge()
@@ -245,7 +243,7 @@ class Bhg_flir:
 
                     #  Ensure image completion
                     if image_result.IsIncomplete():
-                        rospy.loginfo_throttle(60, "***** FLIR:  Image incomplete with image status %d ..." % image_result.GetImageStatus())
+                        rospy.loginfo_throttle(30, "***** FLIR:  Image incomplete with image status %d ..." % image_result.GetImageStatus())
 
                     else:
                         n += 1
@@ -277,18 +275,13 @@ class Bhg_flir:
                         except CvBridgeError as e:
                           rospy.loginfo("***** FLIR: %s" %e)
                         #print("Time now5: %f\n--------------------\n" % (rospy.get_time() - last_time)) # 0.049854
-                      
 
                         #  Release image
                         image_result.Release()
-                        if (n % 40 == 0):
-                            #  print image information
-                            width = image_result.GetWidth()
-                            height = image_result.GetHeight()
-                            rospy.loginfo("***** FLIR:  Grabbed Image %d, and saved %d images" % (n, saved_count))
+                        rospy.loginfo_throttle(10,"    ***** FLIR:  Grabbed Image %d, and saved %d" % (n, saved_count))
 
                 except PySpin.SpinnakerException as ex:
-                    rospy.loginfo_throttle(60, "***** FLIR:  Error: %s" % ex)
+                    rospy.loginfo_throttle(10, "***** FLIR:  Error: %s" % ex)
 
                 last_time = rospy.get_time()
                 r.sleep()
@@ -379,7 +372,7 @@ class Bhg_flir:
             # Retrieve TL device nodemap and print device information
             nodemap_tldevice = self.cam.GetTLDeviceNodeMap()
 
-            result &= self.print_device_info(nodemap_tldevice)
+            #result &= self.print_device_info(nodemap_tldevice)
 
             # Initialize camera
             self.cam.Init()
@@ -498,6 +491,7 @@ class Bhg_flir:
             t0 = self.pending.popleft()        
         if len(self.pending) < self.threadn:
             if self.threaded_mode:
+                rospy.loginfo("threaded save")
                 task = self.pool.apply_async(self.save_img, (image_data.copy(), dtime_data))
             else:
                 task = self.DummyTask(self.save_img(image_data, dtime_data))
@@ -512,7 +506,8 @@ if __name__ == "__main__":
         :rtype: bool
         """
         rospy.init_node('gobi_trigger')
-        bhg_flir = Bhg_flir()
+        is_threaded = rospy.get_param('/camera/flir/multi_threaded', 'false')        
+        bhg_flir = Bhg_flir(is_threaded)
         bhg_flir.run_camera()
         bhg_flir.close_camera()
         

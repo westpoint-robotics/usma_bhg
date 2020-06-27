@@ -4,7 +4,9 @@
     <arg name="run_flir"      default="true"/>  
     <arg name="run_gobi"      default="true"/> 
    
-   <node pkg="usma_bhg" name="flir" type="flir_oop.py" output="screen" ns='camera' if='$(eval run_flir)' /> 
+   <node pkg="usma_bhg" name="flir" type="flir_oop.py" output="screen" ns='camera' if='$(eval run_flir)' > 
+    <param name="/multi_threaded" value='false'/>
+   </node>
 
    <node pkg="usma_bhg" name="gobi" type="gobi_oop" output="screen" ns='camera' if='$(eval run_gobi)' >
         <param name="/use_trig" value='1'/>
