@@ -20,18 +20,18 @@ class HealthMonitor:
         self.temperature_cores = []
         self.temperature_status = ''
         self.diag = {}
-        
+
     def diagnostic_cb(self, msg):
-        del self.temperature_cores[:]        
+        del self.temperature_cores[:]
         for status in msg.status:
-            if "libsensors_monitor" in status.name:      
+            if "libsensors_monitor" in status.name:
                 if "Package" in status.name:
                     self.temperature_case = int(status.values[0].value)  #get the case temperature
                     #rospy.loginfo(status.values[0].value)  #get the case temperature
-                elif "Core" in status.name: 
-                    self.temperature_cores.append(int(status.values[0].value)) 
-            elif "System" in status.name:  
-                for entry in status.values:     
+                elif "Core" in status.name:
+                    self.temperature_cores.append(int(status.values[0].value))
+            elif "System" in status.name:
+                for entry in status.values:
                     if "CPU Load" in entry.key:
                         rospy.loginfo(entry.value) #['CPU Load (%)'])
 
@@ -41,11 +41,9 @@ class HealthMonitor:
             self.temperature_status = "Amber"
         else:
             self.temperature_status = "Green"
-   
+
     def show_health(self):
         rospy.loginfo(self.diag)
-
-
 
 if __name__ == '__main__':
     rospy.init_node('mav_monitor')
@@ -55,8 +53,6 @@ if __name__ == '__main__':
         #hm.show_health()
         #rospy.loginfo("NUC Temperature status is %s" % hm.temperature_status)
         r.sleep()
-
-
 
 '''
 hardware_id: "/dev/ttyUSB0:921600"

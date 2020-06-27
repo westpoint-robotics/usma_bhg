@@ -15,7 +15,10 @@ class DirCleanup:
         self.data_dir = '/home/user1/Data/'      
 
     def find_dirs_to_delete(self, path):
-        """ Finds the unused directories adds them to a set """
+        """ 
+        Finds the unused directories adds them to a set. Unused directories are
+        defined as those with less than 5 files/direcotries.
+        """
         self.data_dir = path
         for root, dirs, files in os.walk(path):
             for folder in dirs:
@@ -28,6 +31,11 @@ class DirCleanup:
         #print(len(list_subfolders_with_paths))
         
     def repair_symlink(self, latest_dir):
+        """ 
+        Creates a symlink to the latest created folder. This is needed for the cases where
+        the symlink is pointed to a directory that is not used. When that directory is deleted
+        the symlink is broken and is repaired by pointing it to the most current used directory.
+        """   
         os.unlink(latest_dir)
         files = os.listdir(self.data_dir)
         files.sort(reverse=True)
@@ -38,10 +46,9 @@ class DirCleanup:
                 print("++++++ REPAIRING SYMLINK %s +++++++" % logfile_dir)
                 os.symlink(logfile_dir, latest_dir) 
                 break
-        pass
         
     def delete_folders(self):     
-        """ Deletes all unused directories except the symlink 'latest' """   
+        """ Deletes all unused directories except the symlink 'latest' which is repaired."""   
         for folder in self.dirs_to_delete:
             print folder
             if "latest" in folder: # link to the last useful directory
@@ -51,10 +58,10 @@ class DirCleanup:
                 shutil.rmtree(folder)
                   
     def get_dirs_to_delete(self):
-        """ Display all unused directories """   
+        """ Return a list of all unused directories """   
         return self.dirs_to_delete
         
-    def move_bagfile(self, path):
+    def move_bagfile(self, path): #TODO this does not work. Need to fix it.
         """ Moves the latest bagfile to the latest directory """
         # this is not working as expected
         pass

@@ -8,7 +8,7 @@
     <arg name="run_web"                default="false"/>   
     <arg name="run_dir_setup"          default="true"/> 
     
-    <!-- Fails with hz below 16 tested pulse upto 50 hz but cameras likely to be limited to around 30hz -->
+    <!-- currently used only if gobi is generating th signal -->
 	<param name="img_freq" value="20"/><!-- Frequency to take images in HZ -->
 
     <!-- Start the Mavros node to talk with the Pixhawk -->
@@ -33,7 +33,7 @@
     <include file="$(find usma_bhg)/launch/web_gui.launch" if='$(eval run_web)'/>
 
     <!-- Directory setup scripts  -->
-   <node name="dir_setup" type="dir_setup.py" pkg="usma_bhg" output="screen" if='$(eval run_dir_setup)' /> 
+   <node pkg="usma_bhg" type="dir_setup.py" name="dir_setup" output="screen" if='$(eval run_dir_setup)' /> 
 
 </launch>
 

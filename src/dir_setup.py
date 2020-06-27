@@ -4,7 +4,7 @@ This module manages the directories for BHG. It does the following:
     - Creates the data directory and mission directory for saving the images
     - Publishes the mission directory for the cameras to use for saving images
     - Publishes the number of files in the subdirectories
-    - 
+    - Cleans up (deletes) unused directories
     
 It also does 
 
@@ -28,15 +28,18 @@ class DirSetup:
         self.flir_fc_pub = rospy.Publisher("flir_fc", Int32, queue_size=10)
         rospy.Subscriber("/record", Bool, self.record_cb)
         self.last_rec = False
-                
+
+    # Responds to record boolean topic. If transition from not recording to recording
+    # it creates a new directory structure and publishes it.                
     def record_cb(self, msg):
         if self.last_rec == False and msg.data == True:
             self.mission_directory = self.setup_mission_dir()
             self.dir_pub.publish(self.mission_directory)
-            rospy.loginfo("===== A new mission directory was created at: %s =====" % self.mission_directory) 
+            rospy.loginfo("===== DIR_SETUP:  A new mission directory was created at: %s" % self.mission_directory) 
         self.last_rec = msg.data
                 
-    # This function was taken from roslogging.py to create a symlink to the latest directory
+    # Creates a symlink clled 'latestl' that points to the current directory. This function was taken 
+    # from roslogging.py, which is part of the core ROS software.  
     def renew_latest_logdir(self, logfile_dir):
         log_dir = os.path.dirname(logfile_dir)
         latest_dir = os.path.join(log_dir, '..', 'latest')
@@ -46,11 +49,12 @@ class DirSetup:
             os.remove(latest_dir)
         os.symlink(logfile_dir, latest_dir)
         return True
-        
+    
+    # Creates a string representing the base data directory.        
     def setup_data_dir(self):
         home = expanduser("~")
         data_dir = home + "/Data/"  
-        rospy.loginfo("===== The data directory is: %s =====" % data_dir) 
+        rospy.loginfo("===== DIR_SETUP:  The data directory is: %s" % data_dir) 
         return data_dir
 
     def setup_mission_dir(self):        
@@ -66,16 +70,16 @@ class DirSetup:
         mission_name = datetime.datetime.fromtimestamp(tNow.secs).strftime('%Y%m%d_%H%M%S_') 
         mission_name += millisec   
         mission_dir = self.data_dir + mission_name + "/"
-        rospy.loginfo("===== The mission directory is: %s =====" % mission_dir)         
+        rospy.loginfo("===== DIR_SETUP:  The mission directory is: %s  % mission_dir)         
         if not os.path.exists(mission_dir):
             os.makedirs(mission_dir)
-            rospy.loginfo("===== Created Mission Directory =====" )         
+            rospy.loginfo("===== DIR_SETUP:  Created Mission Directory  )         
             try:
                 success = self.renew_latest_logdir(mission_dir)
                 if not success:
-                    sys.stderr.write("INFO: cannot create a symlink to latest data directory\n")
+                    sys.stderr.write("===== DIR_SETUP:  Cannot create a symlink to latest data directory\n")
             except OSError as e:
-                sys.stderr.write("INFO: cannot create a symlink to latest data directory: %s\n" % e)
+                sys.stderr.write("===== DIR_SETUP:  Cannot create a symlink to latest data directory: %s\n" % e)
         return mission_dir
 
     def count_files(self):
@@ -98,7 +102,8 @@ class DirSetup:
         disk_cleaner = dc.DirCleanup() 
         disk_cleaner.move_bagfile(self.data_dir)   
         disk_cleaner.find_dirs_to_delete(self.data_dir)
-        print("The following directories were unused and thus deleted:\n",disk_cleaner.get_dirs_to_delete())
+        # Next line must use print as ROSCORE is shutdown at this point.
+        print("===== DIR_SETUP:  The following directories were unused and thus deleted:\n",disk_cleaner.get_dirs_to_delete())
         disk_cleaner.delete_folders()       
 
 if __name__ == '__main__':
@@ -109,6 +114,6 @@ if __name__ == '__main__':
         ds.pub_mission_dir()
         ds.count_files()
         r.sleep()
-    print("DATA DIR IS",ds.data_dir,ds.mission_directory)
+    print("===== DIR_SETUP:  DATA DIR IS",ds.data_dir,ds.mission_directory)
     ds.dir_cleanup()
 
