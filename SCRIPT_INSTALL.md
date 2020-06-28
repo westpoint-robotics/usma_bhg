@@ -72,7 +72,12 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 ex. `python Examples/Python3/DeviceEvents.py`  
 
 ## 7. Setup Arduino to work with the Trinket
-1. Open the Arduino IDE
+1. Open the Arduino IDE and if prompted choose to Trust it.
+2. Enable ROS libraries:
+	- cd ~/Arduino/libraries/
+	- rm -rf ros_lib
+	- rospack profile
+	- rosrun rosserial_arduino make_libraries.py .
 2. Add the trinket to the Boards Manager:  
     - Go to: File | Preferences  
     - In the field labeled: 'Additional Boards Manager URLs:' paste the following:  
