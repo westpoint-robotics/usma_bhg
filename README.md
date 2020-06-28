@@ -71,7 +71,7 @@ This document will show you how to:
     4. Press Unlock in the top right corner and type in your password when prompted.  
     5. Switch the Automatic Login switch to on.  
     
-- Add aliases to the .bashrc with this command:
+#### Add aliases to the .bashrc with this command:  
 `echo "source ~/catkin_ws/src/usma_bhg/resources/.bhg_aliases.sh" >> ~/.bashrc`
 
 - `sudo apt-get install ros-melodic-libsensors-monitor ros-melodic-rosbridge-server python-pip python3-pip python-tornado python-bson ros-melodic-rosbridge-suite ros-melodic-roswww nodejs libcanberra-gtk-module python3-dev python3-opencv python3-wxgtk4.0 libxml2-dev python3-pip python3-matplotlib python3-lxml`  
