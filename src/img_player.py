@@ -40,6 +40,7 @@ def set_datadir():
     return data_dir    
 
 path = set_datadir()
+#path = '/home/user1/Data/latest'
 dirs_to_search = []
 
 # Delete empty files
@@ -53,27 +54,33 @@ for root, dirs, files in os.walk(path):
         except Exception as e: 
             print(f'ERROR deleting the empty file: {fullname}')
 
+
 subdirs = os.listdir(path)
 subdirs = sorted(subdirs)
+print(f'subdirs {subdirs}')
 #subdirs=['/home/user1/Data/20200526_160335_275707',
 #        '/home/user1/Data/20200526_163326_594616',
 #        '/home/user1/Data/20200526_171041_850227',
 #        '/home/user1/Data/20200526_180233_286440']
 
+# comment the below line to run for directories in data directory.
+subdirs=['/home/user1/Data/latest']
 for item in subdirs:
     if not os.path.isfile(os.path.join(path, item)):
         dir2proc = os.path.join(path, item)
-        img0_dir = f'{dir2proc}/FLIR18284612/*.ppm'
-        img1_dir = f'{dir2proc}/GOBI000088/*.png'
-        print(f'{img0_dir}')
-        print(f'{img1_dir}')
-
+        img0_dir = f'{dir2proc}/FLIR_SN_18285440/*.ppm'
+        img1_dir = f'{dir2proc}/GOBI_SN_5003/*.png'
+        print(f'img0_dir: {img0_dir}')
+        print(f'img0_dir: {img1_dir}')
+        
 # For each directory make a video
         img_array = []
 #        img0_dir = '/home/user1/Data/20200527_180928_748671/FLIR18284612/*.ppm'
 #        img1_dir = '/home/user1/Data/20200527_180928_748671/GOBI000088/*.png'
         imgs0 = sorted(glob.glob(img0_dir))
         imgs1 = sorted(glob.glob(img1_dir))
+
+        print(imgs1)
 
         if (len(imgs0) > len(imgs1)):
             filecount = len(imgs0)
@@ -85,6 +92,11 @@ for item in subdirs:
         print(f'len(imgs0) {len(imgs0)} -- len(imgs1) {len(imgs1)}')  
         print('HERE NOW2')
         flir_etime = gobi_etime = 0
+        height, width, layers = combine_pictures(imgs0[f],imgs1[g]).shape
+        size = (width,height)
+        outdir = set_datadir()
+        outfile = f'{outdir}{img0_dir.split("/")[4]}.mp4'
+        out = cv2.VideoWriter(outfile,cv2.VideoWriter_fourcc(*'AVC1'), 15, size)         
         doCont = True
         while doCont:
             #print(f'f {f} of {len(imgs0)} g {g} of {len(imgs1)}')
@@ -93,12 +105,14 @@ for item in subdirs:
             gobi_etime = get_etime(imgs1[g])
             #print(f'0gobi_time {gobi_etime} flir_etime {flir_etime} -- {f} + {g} = {f+g} and totalfiles = {totalfiles}')
             # If Flir is behind Gobi iterate flir
+           
             while flir_etime <= gobi_etime and doCont:
                 f+=1
                 if f > len(imgs1):
                     doCont = False
                 else:                
-                    img_array.append(combine_pictures(imgs0[f],imgs1[g]))
+                    # img_array.append(combine_pictures(imgs0[f],imgs1[g]))
+                    out.write(combine_pictures(imgs0[f],imgs1[g]))
                     flir_etime = get_etime(imgs0[f])
                     gobi_etime = get_etime(imgs1[g])
                     print(f'flir:  1gobi_time {gobi_etime} flir_etime {flir_etime} -- {f} + {g} = {f+g} and totalfiles = {totalfiles}')
@@ -107,7 +121,8 @@ for item in subdirs:
                 if g > len(imgs1):
                     doCont = False
                 else:
-                    img_array.append(combine_pictures(imgs0[f],imgs1[g]))
+                    #img_array.append(combine_pictures(imgs0[f],imgs1[g]))
+                    out.write(combine_pictures(imgs0[f],imgs1[g]))
                     flir_etime = get_etime(imgs0[f])
                     gobi_etime = get_etime(imgs1[g])
                     print(f'gobi:  2gobi_time {gobi_etime} flir_etime {flir_etime} -- {f} + {g} = {f+g} and totalfiles = {totalfiles}')
@@ -116,21 +131,20 @@ for item in subdirs:
                 if f > len(imgs1):
                     doCont = False
                 else:                
-                    img_array.append(combine_pictures(imgs0[f],imgs1[g]))
+                    #img_array.append(combine_pictures(imgs0[f],imgs1[g]))
+                    out.write(combine_pictures(imgs0[f],imgs1[g]))
                     flir_etime = get_etime(imgs0[f])
                     gobi_etime = get_etime(imgs1[g])
-                    print(f'equal:  1gobi_time {gobi_etime} flir_etime {flir_etime} -- {f} + {g} = {f+g} and totalfiles = {totalfiles}')                
+                    print(f'equal:  1gobi_time {gobi_etime} flir_etime {flir_etime} -- {f} + {g} = {f+g} and totalfiles = {totalfiles}')     
+            if flir_etime > 1593277845.404884:
+                break           
 
         print(f'Done parsing and stitching {totalfiles} files. Now starting to create the video.')
-        height, width, layers = img_array[0].shape
-        size = (width,height)
-        outdir = set_datadir()
-        outfile = f'{outdir}{img0_dir.split("/")[4]}.mp4'
-        out = cv2.VideoWriter(outfile,cv2.VideoWriter_fourcc(*'AVC1'), 15, size)
+
 
         print(f'Writing video to file: {outfile}, {len(img_array)}') 
-        for i in range(len(img_array)):
-            out.write(img_array[i])
+#        for i in range(len(img_array)):
+#            out.write(img_array[i])
         out.release()
 
 

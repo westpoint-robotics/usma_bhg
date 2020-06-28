@@ -58,8 +58,8 @@ include_directories(include
 
 
 #add_executable(bool_pub src/bool_pub.cpp)
-add_executable(gobi_subscriber src/gobi_subscriber.cpp)
-target_link_libraries(gobi_subscriber ${catkin_LIBRARIES} -lxeneth -lstdc++ -lusb-1.0  ${OpenCV_LIBS})
+#add_executable(gobi_subscriber src/gobi_subscriber.cpp)
+#target_link_libraries(gobi_subscriber ${catkin_LIBRARIES} -lxeneth -lstdc++ -lusb-1.0  ${OpenCV_LIBS})
 
 add_executable(gobi_oop src/gobi_oop.cpp)
 target_link_libraries(gobi_oop ${catkin_LIBRARIES} -lxeneth -lstdc++ -lusb-1.0  ${OpenCV_LIBS})

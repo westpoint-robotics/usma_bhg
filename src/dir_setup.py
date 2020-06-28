@@ -60,7 +60,6 @@ class DirSetup:
     def setup_mission_dir(self):        
         tNow = rospy.get_rostime() # current date and time
         millisec = int(round(tNow.nsecs/1000000.0))
-        rospy.loginfo("millis is: %d",millisec)
         if millisec < 10:
             millisec = '00' + str(millisec)
         elif millisec < 100:
@@ -70,10 +69,10 @@ class DirSetup:
         mission_name = datetime.datetime.fromtimestamp(tNow.secs).strftime('%Y%m%d_%H%M%S_') 
         mission_name += millisec   
         mission_dir = self.data_dir + mission_name + "/"
-        rospy.loginfo("===== DIR_SETUP:  The mission directory is: %s  % mission_dir)         
+        rospy.loginfo("===== DIR_SETUP:  The mission directory is: %s  % mission_dir")         
         if not os.path.exists(mission_dir):
             os.makedirs(mission_dir)
-            rospy.loginfo("===== DIR_SETUP:  Created Mission Directory  )         
+            rospy.loginfo("===== DIR_SETUP:  Created Mission Directory")         
             try:
                 success = self.renew_latest_logdir(mission_dir)
                 if not success:

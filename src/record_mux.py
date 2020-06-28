@@ -1,5 +1,12 @@
 #! /usr/bin/python
 
+'''
+This program does;
+1. Triggers recording based on a channel from the flight cotnroller.
+2. Triggers recording based on flight modes. It automaticlly starts recording
+when the system is in auto mode and automatically stops when it leaves auto mode.
+'''
+
 import os
 import rospy
 from mavros_msgs.msg import RCIn

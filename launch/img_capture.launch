@@ -11,6 +11,8 @@
    <node pkg="usma_bhg" name="gobi" type="gobi_oop" output="screen" ns='camera' if='$(eval run_gobi)' >
         <param name="/use_trig" value='1'/>
         <param name="/capture_hz" value='10'/> <!-- TODO this maybe obsolete now that PH generates signal -->
+        <param name="/delay" value='21716'/> <!-- 20723=993,  -->
+        
    </node>
      
 </launch> 

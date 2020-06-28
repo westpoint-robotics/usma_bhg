@@ -20,9 +20,7 @@
 #include "geometry_msgs/TwistStamped.h"
 #include "std_msgs/Bool.h"
 
-
 using namespace std;
-
 
 class GobiBHG {
     private:
@@ -60,6 +58,7 @@ class GobiBHG {
         std::string data_dir; 
         int saved_count;
         bool verbose;
+        int img_delay;
   
     public:
         GobiBHG(ros::NodeHandle *nh){
@@ -138,8 +137,10 @@ class GobiBHG {
             return 0;    
         }
         
-        void initialize_cam(int is_trigMode = 0, int img_hz = 5){ // 0: no triger, 1: input trigger, 2: output trigger
+        void initialize_cam(int is_trigMode = 0, int _img_hz = 5, int _img_delay = 20000){ // 0: no triger, 1: input trigger, 2: output trigger
             this->img_hz = img_hz;
+            this->img_delay = _img_delay;
+            ROS_INFO("***** GOBI:  Img Delay is: %d and img_hz is: %d",this->img_delay,this->img_hz );
             ErrCode errCode = I_OK;
             // Open a connection to the first detected camera by using connection string cam://0
             //ROS_INFO("***** GOBI:  Opening connection to cam://0");
@@ -164,7 +165,7 @@ class GobiBHG {
                 Setup_F027(this->handle, is_trigMode);
             }
             else{
-                ROS_INFO("***** GOBI:  Initialization failed");
+                ROS_ERROR("***** GOBI:  Initialization failed");
                 this->is_initialized = false;    
             }
         }
@@ -242,7 +243,7 @@ class GobiBHG {
             if (trig_mode == 1){
                 ROS_INFO("***** GOBI:  Configuring camera in external 'TRIGGER IN' mode with rising edge activation");
                 // TriggerInputDelay Defines the time delay (in microseconds) between the trigger and the actual start of integration. 
-                errorCode = XC_SetPropertyValueL(handle, "TriggerInDelay", 25188, "");
+                errorCode = XC_SetPropertyValueL(handle, "TriggerInDelay", this->img_delay, "");
                 if (!HandleError(errorCode, " * Set TriggerInDelay"))
                     return false; 
                 errorCode = XC_SetPropertyValueL(handle, "TriggerInTiming", 1, "");
@@ -393,13 +394,13 @@ class GobiBHG {
 
             XC_ErrorToString(errCode, err_msg, sz);
             if (errCode != 0){
-                ROS_INFO("***** GOBI:  %s: %s (%lu)", msg, err_msg, errCode);
+                ROS_ERROR("***** GOBI:  %s: %s (%lu)", msg, err_msg, errCode);
             }
             return I_OK == errCode;
         }        
         
         void AbortSession() {
-            ROS_INFO("***** GOBI:  Aborting session.");
+            ROS_ERROR("***** GOBI:  Aborting session.");
             CleanupSession();
             exit(-1);
         }
@@ -420,7 +421,7 @@ class GobiBHG {
             ErrCode errorCode = 0; // Used to store returned errorCodes from the SDK functions.
             if ((errorCode = XC_StartCapture(this->handle)) != I_OK)
             {
-                ROS_INFO("***** GOBI:  Could not start capturing, errorCode: %lu", errorCode);
+                ROS_ERROR("***** GOBI:  Could not start capturing, errorCode: %lu", errorCode);
             }
             else if (XC_IsCapturing(this->handle)) // When the camera is capturing ...
             {    
@@ -428,7 +429,7 @@ class GobiBHG {
                 // Load the color profile delivered with this sample.
                 if (errorCode = XC_LoadColourProfile(handle, "/home/user1/catkin_ws/src/usma_bhg/resources/ThermalBlue.png") != I_OK)
                 {
-                    ROS_INFO("***** GOBI:  Problem while loading the desired colorprofile, errorCode: %lu", errorCode);
+                    ROS_ERROR("***** GOBI:  Problem while loading the desired colorprofile, errorCode: %lu", errorCode);
                 }
                 else
                 {
@@ -461,10 +462,10 @@ class GobiBHG {
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
-                    ROS_INFO_THROTTLE(30,"***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
+                    ROS_INFO_THROTTLE(10,"***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
                 }
                 else{
-                    ROS_INFO_THROTTLE(30,"***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
+                    ROS_ERROR_THROTTLE(10,"***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
                 }
             }
             else {
@@ -487,7 +488,7 @@ class GobiBHG {
                 cv_ptr->header.frame_id = "gobi";
                 cv_ptr->image = cv_image;
                 this->image_pub_.publish(cv_ptr->toImageMsg());  
-            }   
+            }
             return int(errorCode);
         }
         
@@ -563,9 +564,9 @@ class GobiBHG {
                 }                        
                 csvOutfile.open(csv_filename, std::ios_base::app); // open new csv file
                 if (!csvOutfile){
-                    ROS_INFO("***** GOBI:  ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csv_filename.c_str()); 
+                    ROS_ERROR("***** GOBI:  ERROR   FAILED TO OPEN GOBI CSV File: %s,  [%s]", strerror(errno), csv_filename.c_str()); 
                     csvOutfile.open(csv_filename, std::ios_base::app); // DML is unrealable in creating the initial file           
-                    ROS_INFO("***** GOBI:  ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csv_filename.c_str());           
+                    ROS_ERROR("***** GOBI:  ERROR   BLINDLY TRYIED TO OPEN csv AGAIN: %s,  [%s]", strerror(errno), csv_filename.c_str());           
                 } 
                 ROS_INFO("***** GOBI:  CSV file is: [%s]", csv_filename.c_str()); 
                 csvOutfile << make_header() << endl;            
@@ -657,7 +658,7 @@ class GobiBHG {
         void recordCallback(const std_msgs::Bool msg)
         {
             this->record = msg.data; 
-            ROS_INFO("***** GOBI:  recordCallback: [%d]", this->record);
+            ROS_INFO("***** GOBI:  RECORD CALLBACK FIRED WITH A VALUE OF: [%d]", this->record);
         }
 };
   
@@ -683,12 +684,19 @@ int main(int argc, char **argv)
     else{ // Default to 5 hz
         capture_hz = 5;
     }
+    int delay; 
+    if (nh.hasParam("/camera/gobi/delay")){  
+        nh.getParam("/camera/gobi/delay", delay);
+    }
+    else{ // Default to 5 hz
+        delay = 20723;
+    }
     //ROS_INFO("Images will be captured at: %i hz.",capture_hz); 
 
     // Setup camera and start capturing 
     GobiBHG gobi_cam(&nh); 
     gobi_cam.retrieve_info(false); // Not using this as it prints all cameras. 
-    gobi_cam.initialize_cam(use_trig, capture_hz);
+    gobi_cam.initialize_cam(use_trig, capture_hz, delay);
     gobi_cam.start_capture();
  
     // Big while loop, continuously publish the images
