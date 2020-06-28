@@ -82,10 +82,7 @@ tar -xf arduino-1.8.13-linux64.tar.xz
 cd arduino-1.8.13/  
 sudo ./install.sh  
 sudo apt-get -y install ros-melodic-rosserial-arduino ros-melodic-rosserial
-cd ~/Arduino/libraries/
-rm -rf ros_lib
-rospack profile
-rosrun rosserial_arduino make_libraries.py .
+
 chmod +x ~/Desktop/arduino-arduinoide.desktop 
 gio set ~/Desktop/arduino-arduinoide.desktop "metadata::trusted" yes
 
