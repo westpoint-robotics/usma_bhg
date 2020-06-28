@@ -9,6 +9,7 @@ echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' | sud
 sudo apt-get update
 sudo apt-get -y upgrade
 sudo apt-get -y dist-upgrade
+sudo timedatectl set-timezone America/New_York
 
 # Install google chrome
 sudo apt-get -y install google-chrome-stable
@@ -31,6 +32,7 @@ git config --global push.default simple
 
 cd
 mkdir -p catkin_ws/src
+source ~/.bashrc
 cd catkin_ws
 catkin_make
 echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
@@ -61,7 +63,8 @@ sudo cp ~/catkin_ws/src/usma_bhg/resources/Gobi /etc/NetworkManager/system-conne
 sudo chown root:root /etc/NetworkManager/system-connections/Gobi
 
 echo "===== Installing Mavproxy dependencies ====="
-sudo apt-get -y install python3-dev python3-opencv python3-wxgtk3.0 libxml2-dev python3-pip python3-matplotlib python3-lxml python-pip python3-pip
+sudo apt-get -y autoremove
+sudo apt-get -y install python3-dev python3-opencv python3-wxgtk4.0 libxml2-dev python3-pip python3-matplotlib python3-lxml python-pip python3-pip
 sudo pip3 install future
 sudo pip3 install pymavlink
 sudo pip3 install mavproxy
@@ -70,7 +73,6 @@ echo "===== Installing Spinnaker Delendencies ====="
 sudo apt-get -y install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev
 sudo apt-get -y install ros-melodic-camera-info-manager ros-melodic-dynamic-reconfigure
 sudo apt-get -y install python-pip python3-pip
-
 
 echo "After pressing enter:"
 echo "1. Firefox will open to a website."
@@ -84,13 +86,12 @@ firefox https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74729115388
 echo "If the download completed successfully and it is now in your Downloads directory, then press enter now"
 read -n 1 -p Continue?
 
-
-
 echo '========================================================================='
 echo '========================================================================='
 echo '========================================================================='
 echo '-'
 echo 'From os-setup/ubuntu18_bhg.md, do the following steps manually 4, 5, 6, 7, 8, 10'
+echo 'A reboot is required to replace the running dbus-daemon.'
 echo '-'
 echo '========================================================================='
 echo '========================================================================='
