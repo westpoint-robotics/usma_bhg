@@ -21,7 +21,7 @@ sudo apt-get update
 sudo apt-get -y install ros-melodic-desktop-full
 echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 source ~/.bashrc
-sudo apt-get -y install python-rosinstall python-rosinstall-generator python-wstool build-essential meld minicom ant git gitk openssh-server terminator gparted git-core python-argparse python-wstool python-vcstools build-essential gedit-plugins dkms python-rosdep gedit-plugins
+sudo apt-get -y install python-rosinstall python-rosinstall-generator python-wstool build-essential meld minicom ant git gitk openssh-server terminator gparted git-core python-argparse python-wstool python-vcstools build-essential gedit-plugins dkms python-rosdep gedit-plugins libcanberra-gtk-module
 sudo rosdep init
 rosdep update
 
@@ -46,7 +46,7 @@ echo "source ~/catkin_ws/src/usma_bhg/resources/.bhg_aliases.sh" >> ~/.bashrc
 sudo apt-get -y install ros-melodic-mavros
 sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
 
-# Xenics install step 4.
+# Xenics install 
 cd ~/Downloads
 sudo apt-get -y install libusb-0.1-4
 
@@ -73,18 +73,24 @@ echo "===== Installing Spinnaker Delendencies ====="
 sudo apt-get -y install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev
 sudo apt-get -y install ros-melodic-camera-info-manager ros-melodic-dynamic-reconfigure
 sudo apt-get -y install python-pip python3-pip
+sudo apt-get install python-pip python3-pip  
+sudo python -m pip install --upgrade numpy matplotlib  
+python2 -m pip install enum34  
 
-echo "After pressing enter:"
-echo "1. Firefox will open to a website."
-echo "2. Use the mouse to highlight the file called 'spinnaker-2.0.0.146-amd64-pkg.tar.gz'"
-echo "3. Use the three dots on the right side to choose to download it"
-echo "4. Close this instance of Firefox."
-read -n 1 -p Continue?
-echo ""
+## 12. Install Arduino IDE
+cd ~/Downloads  
+wget https://downloads.arduino.cc/arduino-1.8.13-linux64.tar.xz
+tar -xf arduino-1.8.13-linux64.tar.xz  
+cd arduino-1.8.13/  
+sudo ./install.sh  
+sudo apt-get -y install ros-melodic-rosserial-arduino ros-melodic-rosserial
+cd ~/Arduino/libraries/
+rm -rf ros_lib
+rospack profile
+rosrun rosserial_arduino make_libraries.py .
+chmod +x ~/Desktop/arduino-arduinoide.desktop 
+gio set ~/Desktop/arduino-arduinoide.desktop "metadata::trusted" yes
 
-firefox https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74729115388
-echo "If the download completed successfully and it is now in your Downloads directory, then press enter now"
-read -n 1 -p Continue?
 
 echo '========================================================================='
 echo '========================================================================='
@@ -96,3 +102,4 @@ echo '-'
 echo '========================================================================='
 echo '========================================================================='
 echo '========================================================================='
+echo "!! Successfully Ran to completion !!"
