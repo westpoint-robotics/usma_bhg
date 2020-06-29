@@ -4,17 +4,37 @@
 3. Start and stop recording from FLIR and Xeneth Gobi cameras.
 4. Mount the FLIR camera (Gobi follows suit).
 ------------------------------------------------------
-## 1. Ground Station to Companion Computer Network Connection
-   
-- The companion computer will by default boot and log into the OS.
+## Definitions
+- Ground Station: Any station on the ground that communicates with UAS.
+- Ground Control Station (GCS): The one station that recieves telemetry data from the UAS flight controller and is capable of sending missions and commands to the flight controller.
+- Companion Computer: The computer that is part of the UAS. It is physically mounted on the UAS and is capable of communicating with the Flight Controller
+- Pilot-in-Charge (PIC): According to FFA definition. TODO put definition here.
+
+## 1. Ground Station to Companion Computer communication
+
+### Ground Station Computers
+- The preferred method is to use two computers and two operators for the ground stations. 
+     - One computer runs the Ground Control Station software and is primarily used to monitor the flight mission and conditions. This station is considered critical to safe operations.
+     - Another computer is used to establish an ssh shell to the companion computer. This shell is used to start, stop, and monitor the BHG software running on the companion computer. This is critical to successful completion of mission related tasks. 
+     - The priority for monitoring ground station computers should remain on the Ground Control Station. Ideally one person is fully commited to operating the Ground Control Station while a second person operates the other ground station with the shell.
+     - We can always refly the mission task as long as we fly safe, whereas an un-safe flight is likely to ground us for a prolonged period of time. 
+     - It is not a requirement to maintain continous ability to control the UAS from the GCS but the PIC needs to be made aware when this ability is lost.
+
+### Ground Control Station connection to UAS Flight Control Unit
+- This is done with a telemetery radio mounted on the UAS and a matching telemetry radio connected by USB to the Ground Control Station.
+- When properly configured, the telemetry radios automatically connect to each other upon powering up.
+- QGround Control or Mission Planner software is used on the Ground Control Station  
+
+### Other Ground Station computers to the UAS Companion Computer.    
+- The companion computer will by default boot and log into the OS when power is applied.
 - After the OS loads, it will automatically create a wireless access point with an SSID of 'nuc##' where ## is the NUC number.
-- Once the access point becomes visible, connect to it, and provide the password. 
+- Once the access point becomes visible on the graound station, connect to it, and provide the password. 
 - The IP address for the companion will always be 10.42.0.1.
 - To find the IP address of the ground station, use the below command:  
     `ip a`  
 - To open a remote shell on the companion computer use SSH:  
     `ssh user1@10.42.0.1`
-  
+
 ------------------------------------------------------   
 ## 2. Launching bhg software
 
