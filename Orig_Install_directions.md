@@ -41,17 +41,22 @@ This document will show you how to:
 ### c. Option 3: From a computer with ROS already installed
 - Use Clonezilla to burn an image with Ubuntu 18.04.  You will be taking the steps to [Restore](https://clonezilla.org/clonezilla-live-doc.php) an image, but it will be device-device, rather than device-image.  
 
-## 2. ROS Install 
+
+## 2. Install usma_bhg package  
+`cd ~/catkin_ws/src/`  
+`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
+
+## 3. ROS Install 
 - For Ubuntu 16.04, follow [these steps](http://wiki.ros.org/kinetic/Installation/Ubuntu).
 - For Ubuntu 18.04, follow [these steps](http://wiki.ros.org/melodic/Installation/Ubuntu).
 
-## 3. Install MavROS  
+## 4. Install MavROS  
 - Install the ROS package:  
 `sudo apt-get install ros-melodic-mavros`  
 - Use this script to download Geoid Model datasets for Mavros:  
 `sudo /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh`  
 
-## 4. Xenics SDK Install
+## 5. Xenics SDK Install
 - Install [Xenics SDK](http://support.xenics.com/Support/Linux_SDK_27.zip) and dependencies.  Follow directions for Ubuntu 18.04 for AMD 64 architecture.  
 - Extract the files and cd into the created directory and run the below commands.  
 - `sudo apt-get install libusb-0.1-4`  
@@ -63,7 +68,7 @@ This document will show you how to:
 	- Address: `169.254.107.22`  
 	- Netmask: `255.255.0.0`  
 
-## 5. Install usma_bhg and dependencies: 
+## 6. Install usma_bhg and dependencies: 
 - Enable auto login:   
     1. Go to System | Users menu.   
     2. Click Users to open the panel.  
@@ -79,7 +84,7 @@ This document will show you how to:
 - `cd ~/catkin_ws/src/`  
 - `git clone https://github.com/westpoint-robotics/usma_bhg.git`  
 
-## 6. Install Spinnaker SDK and dependancies:  
+## 7. Install Spinnaker SDK and dependancies:  
 - Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457  
 - Uncompress the folders to get the folder spinnaker-2.0.0.109-Ubuntu18.04-amd64-pkg/spinnaker-2.0.0.109-amd64  
 `sudo apt-get install libavcodec57 libavformat57 libswscale4 libswresample2 libavutil55 libusb-1.0-0 libgtkmm-2.4-dev`  
@@ -126,13 +131,7 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 - The examples are located in the Examples folder of the extracted tarball. Run with:  
 ex. `python Examples/Python3/DeviceEvents.py`  
 
-
-
-#6. Install usma_bhg package  
-`cd ~/catkin_ws/src/`  
-`git clone https://github.com/westpoint-robotics/usma_bhg.git`  
-
-## 7. Create a hotspot access piont
+## 8. Create a hotspot access piont
 - Open the network manager connection editor:  
 `nm-connection-editor`  
 - Choose the plus sign to add a connections  
@@ -147,7 +146,7 @@ ex. `python Examples/Python3/DeviceEvents.py`
 - On the General Tab
     - Make sure 'Automatically connect ...' is checked
 
-## 8 Edit bashrc: (DML: DO NOT DO THIS if already done. The above the instructions already do this.)  
+## 9. Edit bashrc: (DML: DO NOT DO THIS if already done. The above the instructions already do this.)  
 - `cd /home/user1/.bashrc`  
 - `gedit .bashrc`  
 - At the bottom of the .bashrc file, insert the lines (if not already added):  
