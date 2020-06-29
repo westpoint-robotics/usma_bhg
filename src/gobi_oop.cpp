@@ -462,10 +462,10 @@ class GobiBHG {
             if ((errorCode = XC_GetFrame(this->handle, FT_32_BPP_RGBA, XGF_Blocking, this->frameBuffer, this->frameSize * 4)) != I_OK)
             {
                 if (errorCode == 10008){
-                    ROS_INFO_THROTTLE(10,"***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
+                    ROS_INFO_THROTTLE(5,"***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code %lu", errorCode);                
                 }
                 else{
-                    ROS_ERROR_THROTTLE(10,"***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
+                    ROS_ERROR_THROTTLE(5,"***** GOBI:  Problem while fetching frame, errorCode %lu", errorCode);
                 }
             }
             else {
@@ -709,7 +709,7 @@ int main(int argc, char **argv)
     {
         if(gobi_cam.retrieve_frame() ==0){        
             n++;
-            ROS_INFO_THROTTLE(10,"***** GOBI:  Grabbed Image %lu, and saved %d", n, gobi_cam.get_savedcount());
+            ROS_INFO_THROTTLE(5,"***** GOBI:  Grabbed Image %lu, and saved %d", n, gobi_cam.get_savedcount());
         }
         ros::spinOnce();
         loop_rate.sleep();

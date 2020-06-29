@@ -135,9 +135,7 @@ for item in subdirs:
                     out.write(combine_pictures(imgs0[f],imgs1[g]))
                     flir_etime = get_etime(imgs0[f])
                     gobi_etime = get_etime(imgs1[g])
-                    print(f'equal:  1gobi_time {gobi_etime} flir_etime {flir_etime} -- {f} + {g} = {f+g} and totalfiles = {totalfiles}')     
-            if flir_etime > 1593277845.404884:
-                break           
+                    print(f'equal:  1gobi_time {gobi_etime} flir_etime {flir_etime} -- {f} + {g} = {f+g} and totalfiles = {totalfiles}')               
 
         print(f'Done parsing and stitching {totalfiles} files. Now starting to create the video.')
 

@@ -243,7 +243,7 @@ class Bhg_flir:
 
                     #  Ensure image completion
                     if image_result.IsIncomplete():
-                        rospy.loginfo_throttle(30, "***** FLIR:  Image incomplete with image status %d ..." % image_result.GetImageStatus())
+                        rospy.loginfo_throttle(5, "***** FLIR:  Image incomplete with image status %d ..." % image_result.GetImageStatus())
 
                     else:
                         n += 1
@@ -278,10 +278,10 @@ class Bhg_flir:
 
                         #  Release image
                         image_result.Release()
-                        rospy.loginfo_throttle(10,"    ***** FLIR:  Grabbed Image %d, and saved %d" % (n, saved_count))
+                        rospy.loginfo_throttle(5,"    ***** FLIR:  Grabbed Image %d, and saved %d" % (n, saved_count))
 
                 except PySpin.SpinnakerException as ex:
-                    rospy.loginfo_throttle(10, "***** FLIR:  Error: %s" % ex)
+                    rospy.loginfo_throttle(5, "***** FLIR:  Error: %s" % ex)
 
                 last_time = rospy.get_time()
                 r.sleep()
@@ -394,7 +394,7 @@ class Bhg_flir:
             self.cam.DeInit()
 
         except PySpin.SpinnakerException as ex:
-            rospy.loginfo_throttle(60, "***** FLIR:  Error: %s" % ex)
+            rospy.loginfo_throttle(5, "***** FLIR:  Error: %s" % ex)
             result = False
 
         return result  
