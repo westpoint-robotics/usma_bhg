@@ -59,11 +59,34 @@
 [INFO] [1593401061.708994]:     ***** FLIR:  Grabbed Image 602, and saved 0
 </pre>
 - Typically the FLIR camera starts operating before the GOBI and will have a higher image count.
+
 ### Trigger Signal
 - Both cameras receive an external trigger signal to synchronize the pictures. Tests have shown that aproximately 70% of the images are taken within 1ms of each other and greater than 90% of the images are taken within 2ms of each other.
 - The trigger signal is sent at 20hz with a 50% duty cycle using an Arduino Trinket. 
 - The frequency can be changed by modifying the 'hz' variable in the Arduino source code. 
 - The Arduino source code can be found in this repo in the 'resources' sub-directory. 
+
+### Failure indicators, cause, and fixes
+1. The FLIR takes pictures at a much slower rate (1-3 hz as oppossed to 20 hz) and the pictures are solid grey.  
+    - INDICATOR: The rate of change in the number of pictures taken as shown in the terminal is very low for the FLIR
+    - CAUSE: Unkown
+    - FIX: This requires disconnecting the USB3 cable from the camera to the Companion Computer and replugging it in, to reboot the camera.
+    - FREQUENCY: This is one of the more frequent failures that occurs. When this happens the pictures tend to be just gray images. 
+2. The GOBI fails to take images  
+    - INDICATOR: The terminal window will only show that the FLIR grabbed images. No messages appear for the GOBI.
+    - CAUSE: Unkown, likely caused by the GOBI not closing cleanly from the previous run. 
+    - FIX: Sometimes restarting the software solves this, other times it requires power cycling the GOBI.
+    - FREQUENCY: This is one of the more frequent failures that occurs. 
+3. Either camera starts but does not take pictures  
+    - INDICATOR: In the terminal window you see repeatedly the messages below:
+<pre>
+[INFO] [1593440380.007396]: ***** FLIR:  Error: Spinnaker: Failed waiting for EventData on NEW_BUFFER_DATA event. [-1011]
+[ INFO] [1593440341.820839985]: ***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code 10008
+</pre>
+    - CAUSE: Cameras not receiving the trigger signal.
+    - FIX: Check the wiring to and from the Arduino. If only one camera shows this error and the cables appear to be ok, then power cycle the camera and restart the software.
+    - FREQUENCY: Usually a hardware problem and once fixed this error does not appear again.
+
 ------------------------------------------------------
 ## 3. Starting and Stopping Image Recording
 
