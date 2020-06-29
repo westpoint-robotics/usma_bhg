@@ -1,60 +1,70 @@
-This document will show you how to:
-1. Connect your ground station computer to your UAV companion computer.
+# This document will show you how to:
+1. Connect your ground station computer to your UAV companion computer network.
 2. Launch image capturing ROS nodes.
 3. Start and stop recording from FLIR and Xeneth Gobi cameras.
 4. Mount the FLIR camera (Gobi follows suit).
 ------------------------------------------------------
-# 1. Ground Station to Companion Computer Connection
+## 1. Ground Station to Companion Computer Network Connection
    
-a. Ascertaining the Companion IP Address
-   
-   If you will be operating with access to a WREN connection on post at West Point, the Companion IP Address will be
-   10.212.149.243. 
-   Otherwise, if you are operating for the first time at a new location do the following.
-   - Connect a USB hub to a free USB port on the Companion.
-   - Connect a USB keyboard and mouse to this hub.
-   - Connect one of the trailer monitors with an HDMI cable.
-   - Unplug the power cable running from the Companion to the power distribution board on the UAV, and plug in the Companion adapter
-     instead (plug the other end into a wall outlet).
-   - Turn on the Companion using the power button on the underside of the computer at the aft, port corner with respect to the
-     front of the UAV (blue motors).  Log in using standard RRC credentials.
-   - Open a terminal and use the command:  
-   
-      `ip a`  
-   
-     You should see a line similar to, "link/ether 00:c0:ca:97:df:c1 brd
-     ff:ff:ff:ff:ff:ff".  Below that, should read "inet" and then a number, for example starting with 10, or 198, or 
-     similar.  This is the start of the IP address you want.  Record this in a project/mission notebook.
-   
-b. Connecting from the Ground Station
-   
-   - Your ground station computer should be a laptop or desktop running Ubuntu 16.04, or 18.04.  Turn on and log into this machine, and open a terminal.  Enter:  
-   
-     `ssh [UAV IP]`  
-   
-     where [UAV IP] will be the address from 1a.  You will be prompted for a password, which will be the RRC standard.  Once 
-    logged in, your terminal prompt should read, "user1@brix012", or similar (whatever the name of your companion computer is 
-    to the right of the "@".
-------------------------------------------------------   
-# 2. Launching image capture nodes
-   - On your ground station computer, in the terminal from 1b., run the command:  
-                            
-     `roslaunch usma_bhg master.launch`   
-     
-     you should be able to tab complete the package and launch file.  If successful, you should see output about the names of 
-     the nodes you lauched, and ROS_INFO messages about "Starting Publisher", and then "Number of cameras detected: 1" (if 
-     you see 0 instead of 1 here, you may have to restart the launch).  You will then see streaming by, "recordData: 0", 
-     which is a message from the subscriber indicating that the topic, "record" has the value "0" right now.  This means no 
-     images are being recorded.
+- The companion computer will by default boot and log into the OS.
+- After the OS loads it will automatically create a wireless access point with an SSID of 'nuc##' where ## is the NUC number.
+- Once the access point becomes visible connect to it and provide the password. 
+- The IP address for the companion will always be 10.42.0.1.
+- To find the IP address of the ground station use the below command:  
+    `ip a`  
+- To open a remote shell on the companion computer use SSH:  
+    `ssh user1@10.42.0.1`
   
-## NOTE: before recording images, or flying, you will want to ensure removal of the FLIR lens cap!
-------------------------------------------------------
-# 3. Starting and Stopping Image Recording
-   - To start recording images, bring up a new terminal.  Here you will use ROS to publish a message, which will tell any subscribing camera scripts to start acquiring and saving images.  Enter: `rostopic pub /record /std_msgs/Bool True`  Use Ctrl-C to get a new prompt; this will not stop the publishing of the "record" topic.
-   - To stop recording, Enter: `rostopic pub /record /std_msgs/Bool False`.  You can toggle back and 
-     forth using these two buttons as much as you want.
 ------------------------------------------------------   
-# 4. Mounting the FLIR
+## 2. Launching bhg software
+
+- On your ground station computer open a remote shell on the companion computer:  
+    `ssh user1@10.42.0.1`   
+- In the remote shell start the software:  
+     `roslaunch usma_bhg master.launch`   
+    or use the alias:  
+    `bhg_launch`  
+- If successful, you should see output about the names of the nodes you lauched, and ROS_INFO messages about "Starting Publisher"
+- Whatch for any red error text to stream by. If it does investigate it. 
+- If everything works as expected there should be no red text, however is common for the Pixhawk to generate red text if it is failing PreArm checks. This is not a failure of nodes to start and no action in the terminal is required. This message look like this:
+<pre>
+[ERROR] [1593401054.831960641]: FCU: PreArm: fence requires position
+[ERROR] [1593401054.832934034]: FCU: PreArm: Throttle below Failsafe
+[ERROR] [1593401054.832957058]: FCU: PreArm: Waiting for 3D fix
+</pre>
+### Check if both cameras started completed
+- If both cameras started completly you will see a message for the Gobi and a message for the FLIR appear about every 30 seconds stating the number of pictures taken and the number saved. They look this:
+<pre>
+[ INFO] [1593401045.704584516]: ***** GOBI:  Grabbed Image 183, and saved 0
+[INFO] [1593401061.708994]:     ***** FLIR:  Grabbed Image 602, and saved 0
+</pre>
+- Typically the FLIR camera starts operating before the GOBI and will have a higher image count.
+### Trigger Signal
+- Both cameras recieve an external trigger signal to synchronize the pictures. Tests have shown that aproximately 70% of the images are taken within 1ms of each other and greater than 90% of the images are taken within 2ms of each other.
+- The trigger signal is sent at 20hz with a 50% duty cycle using an Arduino Trinket. 
+- The frequency can be changed by modifying the 'hz' variable in the Arduino source code. 
+- The Arduino source code can be found in this repo in the 'resoruces' sub-directory. 
+------------------------------------------------------
+## 3. Starting and Stopping Image Recording
+
+- All commands in this section are ran in a remote shell to the companion computer.
+- Both cameras take pictures upon the start of the software and publish them as rostopics in the camera namespace.
+    - FLIR Topic is: `/camera/image_color`
+    - GOBI Topic is: `/camera/gobi_image`
+- The images are saved only after the recieving a `/record` topic set to true and stopped when the topic is published with a value of false.
+- The `/record` topic is published as true automatically when the pixhawk enters 'AUTO' mode. It stops when the pixhawk leaves 'AUTO' mode.
+- The `/record` topic is published as true when the switch on channel 9 is toggled back toward the user and false when toggled away from the user.
+- The `/record` topic can also be published by command line using the alias or typing out the command.
+    - Alias:
+        - `bhg_start`
+        - `bhg_stop`
+    - Command:
+        - `rostopic pub -1 /record std_msgs/Bool True`
+        - `rostopic pub -1 /record std_msgs/Bool False` 
+        
+## NOTE: Before recording images, or flying: REMOVE THE LENS CAPS!
+------------------------------------------------------   
+## 4. Mounting the FLIR
    - Locate the mounting bracket, screws, and washers for mounting.
      
      <img src="pictures/Bracket_to_Battery-Cage.jpg"
@@ -91,7 +101,7 @@ b. Connecting from the Ground Station
      width="600px"/>
      
 ------------------------------------------------------   
-# 4. New Additions May2020
+# BELOW HERE NEEDS UPDATING
 - Cameras are now fully operational with running "master.launch". Previously Gobi would not take pictures until record was 'true'. Now both Gobi and Flir publish pictures upon starting master.luanch. They both listen for the topic "/record" to be true to start saving images or false to stop saving images.
 - master.launch and img_capture.launch have a set of bool args at the top of the file. These allow disabling or enabling the running of different components fo the system. This eliminates the copy and paste of comments to achieve this.
 - A new node call record.mux is created. This node listens for any change in th "F" switch on the DX9. If the switch changes and into any position but position "0" it publishes record = true, if it is changed to the "0" position it publishes record = false. This node only publishes once upon a switch change.

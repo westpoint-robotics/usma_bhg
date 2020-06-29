@@ -6,7 +6,7 @@
 	
 	
 	<!-- <arg name="fcu_url" default="/dev/ttyUSB0:921600" /> -->
-	<arg name="fcu_url" default="/dev/ttyACM0:921600" />
+	<arg name="fcu_url" default="/dev/ttyUSB0:921600" />
 	<arg name="gcs_url" default="" />
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
@@ -29,6 +29,7 @@
 		<rosparam command="load" file="$(arg config_yaml)" />
 	</node>
 	
+	<node pkg="rosservice" type="rosservice" name="mavros_set_stream_service" args="call --wait /mavros/set_stream_rate 0 10 1" />
 	<!-- This sets the parameters and sends the command to set the pwm width. There is a delay of
 	more than 27 seconds before any changes are sent. This appears to be needed as the mavlink wait
 	command is not sufficient to dely the sending of these commands. Last check was 27 seconds from the
