@@ -88,6 +88,11 @@ chmod +x ~/Desktop/arduino-arduinoide.desktop
 gio set ~/Desktop/arduino-arduinoide.desktop "metadata::trusted" yes
 
 
+
+# Last catkin make
+cd ~/catkin_ws
+catkin_make
+
 echo '========================================================================='
 echo '========================================================================='
 echo '========================================================================='
