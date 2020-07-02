@@ -22,7 +22,7 @@ sudo apt-get update
 sudo apt-get -y install ros-melodic-desktop-full
 echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 source /opt/ros/melodic/setup.bash
-sudo apt-get -y install python-rosinstall python-rosinstall-generator python-wstool build-essential meld minicom ant git gitk openssh-server terminator gparted git-core python-argparse python-wstool python-vcstools build-essential gedit-plugins dkms python-rosdep gedit-plugins libcanberra-gtk-module libusb-0.1-4 ros-melodic-camera-info-manager ros-melodic-dynamic-reconfigure
+sudo apt-get -y install python-rosinstall python-rosinstall-generator python-wstool build-essential meld minicom ant git gitk openssh-server terminator gparted git-core python-argparse python-wstool python-vcstools build-essential gedit-plugins dkms python-rosdep gedit-plugins libcanberra-gtk-module libusb-0.1-4 ros-melodic-camera-info-manager ros-melodic-dynamic-reconfigure ros-melodic-libsensors-monitor
 sudo rosdep init
 rosdep update
 sudo adduser user1 dialout
