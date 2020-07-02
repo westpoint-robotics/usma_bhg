@@ -49,6 +49,9 @@
 
 ## 6. Install Spinnaker SDK and dependencies:  
 1. Download the SDK from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457  
+    - Extract the downloaded file
+    - run the install script:
+        `./install_spinnaker.sh`
 2. During the install process, add a new member to `flirimaging`
 <pre>
 Would you like to add a udev entry to allow access to USB hardware? If a udev entry is not added, your cameras may only be accessible by running Spinnaker as sudo.  
@@ -67,7 +70,7 @@ Would you like to make a difference by participating in the Spinnaker feedback p
 5. The file name is: spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.tar.gz
 6. Download the package (spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.tar.gz) that corresponds to the python version (2.7) and Spinnaker version (spinnaker-2.0.0.146) from https://flir.app.boxcn.net/v/SpinnakerSDK/folder/74728781416
 7. Uncompress the folders and move to the location in which the 'whl' file is located, and run  
-`sudo python -m pip install spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.whl`  
+`python -m pip install spinnaker_python-2.0.0.146-cp27-cp27mu-linux_x86_64.whl`  
 8. The examples are located in the Examples folder of the extracted tarball. Run with:  
 ex. `python Examples/Python3/DeviceEvents.py`  
 
