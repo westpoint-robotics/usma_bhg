@@ -23,6 +23,7 @@ class RecordMux:
         self.last_mode=""
         self.crnt_mode=""
         
+    # Listen for Remote Controller switch to flip and update the state variable
     def rcin_cb(self, msg):
         try:
             self.crnt_switch_val = int(msg.channels[8])
@@ -36,6 +37,7 @@ class RecordMux:
             self.rec_pub.publish(True)
         elif self.last_mode == "AUTO" and msg.mode != "AUTO":
             self.rec_pub.publish(False)
+        self.last_mode = msg.mode
 
 if __name__ == '__main__':
     rospy.init_node('record_mux')
