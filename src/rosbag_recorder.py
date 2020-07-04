@@ -70,6 +70,6 @@ while not rospy.is_shutdown():
 
     last_state = is_recording
     r.sleep()
-    
+kill_child_processes(rosbag_proc.pid)    
     
     #rosbag_main.record_cmd(['-O testrt.bag','-a'])

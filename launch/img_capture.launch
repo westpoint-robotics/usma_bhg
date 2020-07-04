@@ -2,7 +2,7 @@
 
     <!-- NOTE: in the current config the cameras are waiting for a trigger sent by the pixhawk  -->
     <arg name="run_flir"      default="true"/>  
-    <arg name="run_gobi"      default="true"/> 
+    <arg name="run_gobi"      default="false"/> 
    
    <node pkg="usma_bhg" name="flir" type="flir_oop.py" output="screen" ns='camera' if='$(eval run_flir)' > 
     <param name="/multi_threaded" value='false'/>
