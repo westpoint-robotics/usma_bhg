@@ -23,8 +23,11 @@
         <node pkg="usma_bhg" type="health_monitor.py" name="health_monitor" respawn="True" output="screen"/>
     </group>
 
+    <!-- OLD WAY OF DOING THIS  Record all topics except images
+    <node pkg="rosbag" type="record" name="rosbag_record" args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/bhg" if='$(eval run_rosbag_record)' />   -->
+    
     <!-- Record all topics except images -->
-    <node pkg="rosbag" type="record" name="rosbag_record" args="record -a -x '(.*)camera(.*)' -o /home/user1/Data/bhg" if='$(eval run_rosbag_record)' />
+    <node pkg="usma_bhg" type="rosbag_recorder.py" name="rosbagger" if='$(eval run_rosbag_record)' />    
 
     <!-- Record Mux start -->
     <node pkg="usma_bhg" type="record_mux.py" name="record_mux" if='$(eval record_mux)' />
