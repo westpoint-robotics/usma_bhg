@@ -119,7 +119,7 @@ class Bhg_flir:
 
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
             # To add a delay from trigger to capture. Tested and works.
-            self.cam.TriggerDelay.SetValue(25.0) # in microseconds must be (24.0 < delay < 65520)
+            self.cam.TriggerDelay.SetValue(28.0) # in microseconds must be (24.0 < delay < 65520)
 
             #rospy.loginfo("***** FLIR:  Trigger mode disabled...")
 
