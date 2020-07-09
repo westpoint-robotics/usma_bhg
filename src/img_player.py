@@ -3,7 +3,7 @@
 This module allows replaying videos side by side.
 
 """
-
+import sys
 import os
 import time
 import shutil
@@ -64,12 +64,19 @@ print(f'subdirs {subdirs}')
 #        '/home/user1/Data/20200526_180233_286440']
 
 # comment the below line to run for directories in data directory.
-subdirs=['/home/user1/Data/latest']
+arguments = len(sys.argv) - 1
+if (arguments > 0):
+    subidrs=sys.argv[1]
+else:
+    subdirs=['/home/user1/Data/latest']
+
 for item in subdirs:
     if not os.path.isfile(os.path.join(path, item)):
         dir2proc = os.path.join(path, item)
         img0_dir = f'{dir2proc}/FLIR_SN_18285440/*.ppm'
-        img1_dir = f'{dir2proc}/GOBI_SN_5003/*.png'
+        #img1_dir = f'{dir2proc}/GOBI_SN_5003/*.png'
+        img0_dir = f'{dir2proc}/FLIR_SN_18284612/*.ppm'
+        img1_dir = f'{dir2proc}/GOBI_SN_5270/*.png'
         print(f'img0_dir: {img0_dir}')
         print(f'img0_dir: {img1_dir}')
         
