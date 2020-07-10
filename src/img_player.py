@@ -69,6 +69,7 @@ if (arguments > 0):
     subidrs=sys.argv[1]
 else:
     subdirs=['/home/user1/Data/latest']
+subdirs=['/home/user1/Data/Migrate/20200709_155619_960']
 
 for item in subdirs:
     if not os.path.isfile(os.path.join(path, item)):
