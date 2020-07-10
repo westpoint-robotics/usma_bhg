@@ -7,7 +7,7 @@
  */
 
 unsigned int count = 0;
-int hz = 20;
+int hz = 10;
 int pulse_width = 1.0/hz/2*1000; // Pulse width in milli seconds
 
 // the setup function runs once when you press reset or power the board
