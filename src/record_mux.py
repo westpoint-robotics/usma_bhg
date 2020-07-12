@@ -18,7 +18,7 @@ class RecordMux:
         self.rec_pub = rospy.Publisher("/record", Bool, queue_size=10)
         rospy.Subscriber("/mavros/rc/in", RCIn, self.rcin_cb)
         rospy.Subscriber("/mavros/state", State, self.mav_mode_cb)
-        self.crnt_switch_val = 0
+        self.crnt_switch_val = 99999999
         self.last_switch_val = 0
         self.last_mode=""
         self.crnt_mode=""
@@ -45,7 +45,8 @@ if __name__ == '__main__':
 
     r = rospy.Rate(10) 
     while not rospy.is_shutdown():
-        if rm.crnt_switch_val != rm.last_switch_val:
+        #if rm.crnt_switch_val != rm.last_switch_val:
+        if False: # Temporarily disable remote switch control of recording.
             rospy.loginfo(rm.crnt_switch_val)
             rm.last_switch_val = rm.crnt_switch_val
             if rm.crnt_switch_val > 1800:
