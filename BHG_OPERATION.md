@@ -142,7 +142,11 @@
      alt="fully installed"
      class = "center"
      width="600px"/>
-     
+
+## 5. Reliably move files to external disk:
+- Use rsynch command:  
+    - Command is rsync  -av --info=progress2 SOURCE DESTINATION  
+    `rsync -av --info=progress2 Data/* /media/user1/BHG_USMA01/BHG_DATA/`     
 ------------------------------------------------------   
 # BELOW HERE NEEDS UPDATING
 - Cameras are now fully operational with running "master.launch". Previously Gobi would not take pictures until record was 'true'. Now both Gobi and Flir publish pictures upon starting master.luanch. They both listen for the topic "/record" to be true to start saving images or false to stop saving images.

@@ -76,7 +76,6 @@ class GobiBHG {
             saved_count = 0;
             verbose = false;
             
-            
             record_sub  = nh->subscribe("/record", 10, &GobiBHG::recordCallback, this);
             dir_sub     = nh->subscribe("/directory", 1000, &GobiBHG::dirCallback, this);
             alt_sub     = nh->subscribe("/mavros/altitude", 1000, &GobiBHG::alt_cb, this);
@@ -91,6 +90,10 @@ class GobiBHG {
         ~GobiBHG(){
             printf("***** GOBI:  Starting GOBI clean up as part of shutdown process\n");
             this->clean_up();
+        }
+        
+        void set_record(bool is_recording){
+            this->record = is_recording;
         }
         
         int get_savedcount(){
@@ -702,9 +705,10 @@ int main(int argc, char **argv)
     // Big while loop, continuously publish the images
     uint64_t n=0;
     ros::Rate loop_rate(40); //This should be faster than the camera capture rate.  
-    // NOTE: We are limiting the camera to 20HZ frames and this loop uses a blocking call 
-    // for get frame. Therefore this loop will not go any faster than the camera. By setting
-    // the loop rate to 25hz, we attempt to have the loop wait at the blocking call for the image.
+    // NOTE: This code uses a blocking call to retrieve the latest frame, hence the code blocks 
+    // until the camera recieves a trigger signal. This loop will not go any faster than the camera.
+    // The rate of the trigger is determined by the Arduino code.
+    gobi_cam.set_record(false); // For some reason the Gobi starts recording upon startup. This line was added to deter that behavior.
     while (ros::ok())
     {
         if(gobi_cam.retrieve_frame() ==0){        
