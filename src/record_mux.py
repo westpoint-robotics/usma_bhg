@@ -45,14 +45,14 @@ if __name__ == '__main__':
 
     r = rospy.Rate(10) 
     while not rospy.is_shutdown():
-        #if rm.crnt_switch_val != rm.last_switch_val:
-        if False: # Temporarily disable remote switch control of recording.
-            rospy.loginfo(rm.crnt_switch_val)
-            rm.last_switch_val = rm.crnt_switch_val
-            if rm.crnt_switch_val > 1800:
-                rm.rec_pub.publish(False)
-            elif rm.crnt_switch_val < 1800:
-                rm.rec_pub.publish(True)
+        if rm.crnt_switch_val != 99999999:
+            if rm.crnt_switch_val != rm.last_switch_val:
+                rospy.loginfo(rm.crnt_switch_val)
+                if rm.crnt_switch_val > 1800:
+                    rm.rec_pub.publish(False)
+                elif rm.crnt_switch_val < 1800:
+                    rm.rec_pub.publish(True)
+        rm.last_switch_val = rm.crnt_switch_val                
 
         r.sleep()
 
