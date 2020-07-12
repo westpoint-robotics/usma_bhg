@@ -12,6 +12,7 @@ from datetime import datetime
 import cv2
 import numpy as np
 import glob
+import shutil
 
 def get_etime(name):
     '''
@@ -39,48 +40,54 @@ def set_datadir():
     print("===== The data directory is: %s =====" % data_dir) 
     return data_dir    
 
-path = set_datadir()
+data_dir = set_datadir()
+print('path',data_dir)
 #path = '/home/user1/Data/latest'
 dirs_to_search = []
 
-# Delete empty files
-for root, dirs, files in os.walk(path):
+
+# Delete empty directories also
+# Delete empty files to avoid errors later
+for root, dirs, files in os.walk(data_dir):
+    for dirc in dirs:
+        #print(',\n'+ dirc)
+        fullpath = os.path.join(root, dirc)        
+        num_files = sum([len(files) for r, d, files in os.walk(fullpath)])
+        if (num_files < 5): 
+            shutil.rmtree(fullpath)
     for file in files:
-        fullname = os.path.join(root, file)
+        fullpath = os.path.join(root, file)
         try:
-            if os.path.getsize(fullname) == 0:
-                os.remove(fullname)
-                print(f'Deleting {fullname} it is empty')
+            if os.path.getsize(fullpath) == 0:
+                os.remove(fullpath)
+                print(f'Deleting {fullpath} it is empty')
         except Exception as e: 
-            print(f'ERROR deleting the empty file: {fullname}')
+            print(f'ERROR deleting the empty file: {fullpath}')
 
-
-subdirs = os.listdir(path)
+# Next 3 lines currently not used. Use when doing entire data dir.
+subdirs = os.listdir(data_dir)
 subdirs = sorted(subdirs)
-print(f'subdirs {subdirs}')
-#subdirs=['/home/user1/Data/20200526_160335_275707',
-#        '/home/user1/Data/20200526_163326_594616',
-#        '/home/user1/Data/20200526_171041_850227',
-#        '/home/user1/Data/20200526_180233_286440']
+#print(f'subdirs {subdirs}')
 
 # comment the below line to run for directories in data directory.
 arguments = len(sys.argv) - 1
 if (arguments > 0):
-    subidrs=sys.argv[1]
+    subdirs=[data_dir + sys.argv[1]]
 else:
     subdirs=['/home/user1/Data/latest']
-subdirs=['/home/user1/Data/Migrate/20200709_155619_960']
+    
+print("Creating video for the dirs in this list: ",subdirs)
 
 for item in subdirs:
-    if not os.path.isfile(os.path.join(path, item)):
-        dir2proc = os.path.join(path, item)
-        img0_dir = f'{dir2proc}/FLIR_SN_18285440/*.ppm'
+    if not os.path.isfile(os.path.join(data_dir, item)):
+        dir2proc = os.path.join(data_dir, item)
+        #img0_dir = f'{dir2proc}/FLIR_SN_18285440/*.ppm'
         #img1_dir = f'{dir2proc}/GOBI_SN_5003/*.png'
         img0_dir = f'{dir2proc}/FLIR_SN_18284612/*.ppm'
         img1_dir = f'{dir2proc}/GOBI_SN_5270/*.png'
         print(f'img0_dir: {img0_dir}')
         print(f'img0_dir: {img1_dir}')
-        
+
 # For each directory make a video
         img_array = []
 #        img0_dir = '/home/user1/Data/20200527_180928_748671/FLIR18284612/*.ppm'
@@ -88,17 +95,14 @@ for item in subdirs:
         imgs0 = sorted(glob.glob(img0_dir))
         imgs1 = sorted(glob.glob(img1_dir))
 
-        print(imgs1)
-
         if (len(imgs0) > len(imgs1)):
             filecount = len(imgs0)
         else:
             filecount = len(imgs1)
         totalfiles =  len(imgs0) + len(imgs1)  
-        f = g = 0 # counter for flir and gobi file indexes   
-        print('HERE NOW0')
+        f = g = 0 # counter for flir and gobi file indexes  
         print(f'len(imgs0) {len(imgs0)} -- len(imgs1) {len(imgs1)}')  
-        print('HERE NOW2')
+
         flir_etime = gobi_etime = 0
         height, width, layers = combine_pictures(imgs0[f],imgs1[g]).shape
         size = (width,height)
