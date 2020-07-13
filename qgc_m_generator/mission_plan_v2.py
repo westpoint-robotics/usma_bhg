@@ -66,8 +66,8 @@ def make_plan(mission_input, speed):
                     outstring += make_item1(115,i+1,0,-mission_input[i][1],5,-1,mission_input[i][2])
                 else:
                     outstring += make_item1(115,i+1,0,mission_input[i][1],5,1,mission_input[i][2])
-	    elif mission_input[i][0] == 20:    #  20 is MAV_CMD_RTL
-		outstring += rtl_item(20,i+1,2)
+            elif mission_input[i][0] == 20:    #  20 is MAV_CMD_RTL
+                outstring += rtl_item(20,i+1,2)
             elif mission_input[i][0] == 178:   #  178 is MAV_CMD_DO_CHANGE_SPEED
                 outstring += make_item1(178,i+1,2,1,mission_input[i][1],-1,0)
         else:
