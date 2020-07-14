@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     r = rospy.Rate(10) 
     while not rospy.is_shutdown():
-        if rm.crnt_switch_val != 99999999:
+        if False:
             if rm.crnt_switch_val != rm.last_switch_val:
                 rospy.loginfo(rm.crnt_switch_val)
                 if rm.crnt_switch_val > 1800:
