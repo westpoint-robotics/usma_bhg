@@ -112,9 +112,14 @@ ex. `python Examples/Python3/DeviceEvents.py`
 3. Set "Turn screen off when inactive for: 1 hour"
 4. Set "Bluetooth" to off
 
-## 11. Edit Terminal's Default Profile
+## 11a. Edit Terminal's Default Profile (default terminal app)
 1. Open Terminal. Click on Edit -> Profile Preferences -> Scrolling
 2. On the Scrolling tab, uncheck the box "Limit scrollback to:"
+
+## 11b. Edit Terminator's Default Profile (alternate terminal app)
+1. Open Terminal. Right Click in the Terminal Window, and select Preferences.
+2. Click on the Profiles tab.
+3. On the Scrolling tab, check the box "Infinite Scrollback"
 
 ## 12. GEDIT Preferences.
 1. Open a text file using Gedit or type `gedit` in a terminal window and hit enter. This brings up the text editor.
