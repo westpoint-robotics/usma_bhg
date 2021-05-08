@@ -246,7 +246,7 @@ class Bhg_flir:
             last_time = rospy.get_time()
             n = 0
             saved_count = 0
-            r = rospy.Rate(40) # 40hz
+            r = rospy.Rate(30) # 30hz
             while not rospy.is_shutdown():        
             
                 try:
@@ -333,7 +333,7 @@ class Bhg_flir:
 
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
 
-            rospy.loginfo("***** FLIR:  Trigger mode disabled...")
+            rospy.loginfo("***** FLIR:  Trigger m ode disabled...")
 
         except PySpin.SpinnakerException as ex:
             rospy.loginfo("***** FLIR:  Error: %s" % ex)

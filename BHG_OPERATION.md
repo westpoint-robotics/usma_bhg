@@ -146,7 +146,39 @@
 ## 5. Reliably move files to external disk:
 - Use rsynch command:  
     - Command is rsync  -av --info=progress2 SOURCE DESTINATION  
-    `rsync -av --info=progress2 ~/Data/* /media/user1/BHG_USMA01/BHG_DATA/`     
+    `rsync -av --info=progress2 ~/Data/* /media/user1/BHG_USMA01/BHG_DATA/`  
+
+# Nodes
+### dir_setup node
+- Directory Setup Node
+#### Params   
+- None  
+#### Published Topics  
+- `directory` (std_msgs::String): This is the name of the parent directory to save all files in. This is called the mission directory in the code. By default it starts with the data directory ("/home/user1/Data/") plus a date time stamp. An example: /home/user1/Data/20210508_170124_036/.
+- `gobi_fc` (std_msgs::Int32): This is the number of files in the gobi or boson directory.
+- `flir_fc` (std_msgs::Int32): This is the number of files in the balckfly directory.
+#### Subscribed Topics
+- `/record` (std_msgs::Bool): If this is true it signals the camera nodes to start saving pictures. If false it signals the camera nodes to stop saving pictures to file.
+
+### flir_oop.py node
+- FLIR Blackfly camera control code. This code gets the images from the camera and controls the cameras behaviors. If recording the node save to file its images into the mission directory and records meta data of the image into a csv file also located in the mission directory.
+- PROBLEM, FX: If no trigger there is about a 1 - 2 second lag in the time stamp on the image and the actual time the image was taken.
+#### Params
+- `camera/flir/multi_threaded` true or false. Better performance with false
+- `camera/flir/trigger_mode` hardware, software or none. Tested with hardware and none only.
+#### Published Topics 
+- `image_color` (sensor_msgs::Image) the colored image captured from the camera as bgr8.
+#### Subscribed Topics
+- `/directory` (std_msgs::String): This is the mission directory to save files into.
+- `/record` (std_msgs::Bool): If true the node saves files to disk otherwise it does not.
+- `/mavros/altitude` (mavros_msgs::Altitude): Altitude used to record to csv file.
+- `/mavros/global_position/raw/fix` (sensor_msgs::NavSatFix): Altitude used to record to csv file.
+- `/mavros/imu/mag` (sensor_msgs::MagneticField): Magnetic heading used to record to csv file.
+- `/mavros/imu/data` (sensor_msgs::Imu): IMU readings used to record to csv file.
+- `/mavros/global_position/raw/gps_vel` (geometry_msgs::TwistStamped): Velocity used to record to csv file.
+- `/mavros/imu/temperature_imu` (sensor_msgs::Temperature): Temperature used to record to csv file.
+
+
 ------------------------------------------------------   
 # BELOW HERE NEEDS UPDATING
 - Cameras are now fully operational with running "master.launch". Previously Gobi would not take pictures until record was 'true'. Now both Gobi and Flir publish pictures upon starting master.luanch. They both listen for the topic "/record" to be true to start saving images or false to stop saving images.

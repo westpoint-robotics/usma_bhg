@@ -4,11 +4,11 @@
     <arg name="run_flir"      default="true"/>  
     <arg name="run_gobi"      default="false"/> 
     <arg name="run_boson"     default="true"/> 
+    <arg name="run_dir_setup"     default="true"/> 
    
    <node pkg="usma_bhg" name="flir" type="flir_oop.py" output="screen" ns='camera' if='$(eval run_flir)' > 
     <param name="/multi_threaded" value='false'/> 
     <param name="/trigger_mode" value='none'/>
-
    </node>
 
    <node pkg="usma_bhg" name="gobi" type="gobi_oop_gs" output="screen" ns='camera' if='$(eval run_gobi)' >
@@ -17,10 +17,10 @@
         <param name="/delay" value='21716'/>   
    </node>
 
-   
    <node pkg="boson_usma" name="boson_usma_node" type="boson_usma_node" output="screen" ns='camera' if='$(eval run_boson)' > 
    </node>
 
+   <node pkg="usma_bhg" type="dir_setup.py" name="dir_setup" output="screen" if='$(eval run_dir_setup)' /> 
 
-     
+
 </launch> 

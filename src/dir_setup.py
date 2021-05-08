@@ -69,7 +69,7 @@ class DirSetup:
         mission_name = datetime.datetime.fromtimestamp(tNow.secs).strftime('%Y%m%d_%H%M%S_') 
         mission_name += millisec   
         mission_dir = self.data_dir + mission_name + "/"
-        rospy.loginfo("===== DIR_SETUP:  The mission directory is: %s  % mission_dir")         
+        rospy.loginfo("===== DIR_SETUP:  The mission directory is: %s"  %mission_dir)         
         if not os.path.exists(mission_dir):
             os.makedirs(mission_dir)
             rospy.loginfo("===== DIR_SETUP:  Created Mission Directory")         
@@ -87,7 +87,7 @@ class DirSetup:
             for dir2 in dirs:
                 #print(os.path.join(root, dir2), len(os.listdir(os.path.join(root, dir2))))
                 file_count = len(os.listdir(os.path.join(root, dir2)))  
-                if dir2.startswith("GOBI"):
+                if dir2.startswith("GOBI" or "BOSON"):
                     self.gobi_fc_pub.publish(file_count)
                 elif dir2.startswith("FLIR"):
                     self.flir_fc_pub.publish(file_count)
