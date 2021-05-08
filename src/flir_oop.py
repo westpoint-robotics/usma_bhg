@@ -27,12 +27,14 @@ from std_msgs.msg import Float64
 class TriggerType:
     SOFTWARE = 1
     HARDWARE = 2
+    NONE = 0
     
 class Bhg_flir:
 
     def __init__(self, _threaded_mode = False):
         self.timestamp = 0
-        self.chosen_trigger = TriggerType.HARDWARE
+        self.chosen_trigger = TriggerType.NONE
+#        self.chosen_trigger = TriggerType.HARDWARE
         self.image_pub = rospy.Publisher("image_color",Image, queue_size=10)
         self.cam_system = PySpin.System.GetInstance()
         self.cam_list = self.cam_system.GetCameras()
@@ -74,8 +76,17 @@ class Bhg_flir:
 
             rospy.loginfo("***** FLIR:  Not enough cameras!")
             exit()
-
         self.cam = self.cam_list.GetByIndex(0)    
+        self.set_trigger_mode()
+
+    def set_trigger_mode(self):
+        trigger_mode = rospy.get_param('/camera/flir/trigger_mode', 'none') 
+        if trigger_mode == 'hardware':
+            self.chosen_trigger = TriggerType.HARDWARE
+        elif trigger_mode == 'software':
+            self.chosen_trigger = TriggerType.SOFTWARE
+        else:
+            self.chosen_trigger = TriggerType.NONE
 
     # Helper function for multi threaded 
     class DummyTask:
@@ -106,6 +117,10 @@ class Bhg_flir:
             rospy.loginfo("***** FLIR:  Software trigger chosen...")
         elif self.chosen_trigger == TriggerType.HARDWARE:
             rospy.loginfo("***** FLIR:  Hardware trigger chosen...")
+        elif self.chosen_trigger == TriggerType.NONE:
+            rospy.loginfo("***** FLIR:  Camera Trigger turned off")
+        else:
+            rospy.loginfo("***** FLIR:  INVALID TRIGGER CHOSEN")
 
         try:
             result = True
@@ -132,13 +147,17 @@ class Bhg_flir:
 
             if self.chosen_trigger == TriggerType.SOFTWARE:
                 self.cam.TriggerSource.SetValue(PySpin.TriggerSource_Software)
+                self.cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
             elif self.chosen_trigger == TriggerType.HARDWARE:
                 self.cam.TriggerSource.SetValue(PySpin.TriggerSource_Line3)
+                self.cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
+            else:
+                self.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
 
             # Turn trigger mode on
             # Once the appropriate trigger source has been set, turn trigger mode
             # on in order to retrieve images using the trigger.
-            self.cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
+            # self.cam.TriggerMode.SetValue(PySpin.TriggerMode_On)
             #rospy.loginfo("***** FLIR:  Trigger mode turned back on...")
 
         except PySpin.SpinnakerException as ex:
