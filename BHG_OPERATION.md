@@ -8,7 +8,7 @@
 - Ground Station: Any station on the ground that communicates with UAS.
 - Ground Control Station (GCS): The one station that recieves telemetry data from the UAS flight controller and is capable of sending missions and commands to the flight controller.
 - Companion Computer: The computer that is part of the UAS. It is physically mounted on the UAS and is capable of communicating with the Flight Controller
-- Pilot-in-Charge (PIC): According to FFA definition. TODO put definition here.
+- Pilot-in-Command (PIC): The PIC has the final authority and responsibility for the operation and safety of the flight. He/She is also the person who can operate (manipulate controls) the UAS if need be.
 
 ## 1. Ground Station to Companion Computer communication
 
@@ -66,7 +66,7 @@
 - The frequency can be changed by modifying the 'hz' variable in the Arduino source code. 
 - The Arduino source code can be found in this repo in the 'resources' sub-directory. 
 
-### Failure indicators, cause, and fixes
+### Some common failures - indicators, causes, and fixes:
 1. The FLIR takes pictures at a much slower rate (1-3 hz as oppossed to 20 hz) and the pictures are solid grey.  
     - INDICATOR: The rate of change in the number of pictures taken as shown in the terminal is very low for the FLIR
     - CAUSE: Unkown
@@ -79,13 +79,13 @@
     - FREQUENCY: This is one of the more frequent failures that occurs. 
 3. Either camera starts but does not take pictures  
     - INDICATOR: In the terminal window you see repeatedly the messages below:
-<pre>
-[INFO] [1593440380.007396]: ***** FLIR:  Error: Spinnaker: Failed waiting for EventData on NEW_BUFFER_DATA event. [-1011]
-[ INFO] [1593440341.820839985]: ***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code 10008
-</pre>
-    - CAUSE: Cameras not receiving the trigger signal.
-    - FIX: Check the wiring to and from the Arduino. If only one camera shows this error and the cables appear to be ok, then power cycle the camera and restart the software.
-    - FREQUENCY: Usually a hardware problem and once fixed this error does not appear again.
+     <pre>
+     [INFO] [1593440380.007396]: ***** FLIR:  Error: Spinnaker: Failed waiting for EventData on NEW_BUFFER_DATA event. [-1011]
+     [ INFO] [1593440341.820839985]: ***** GOBI:  Retrieve frame timed out waiting for frame (possibly not triggered), Code 10008.
+     </pre>
+     - CAUSE: Cameras not receiving the trigger signal.
+     - FIX: Check the wiring to and from the Arduino. If only one camera shows this error and the cables appear to be ok, then power cycle the camera and restart the software.
+     - FREQUENCY: Usually a hardware problem and once fixed this error does not appear again.
 
 ------------------------------------------------------
 ## 3. Starting and Stopping Image Recording
