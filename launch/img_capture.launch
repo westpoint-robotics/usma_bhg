@@ -1,7 +1,7 @@
 <launch>
 
     <!-- NOTE: in the current config the cameras are waiting for a trigger sent by the pixhawk  -->
-    <arg name="run_flir"      default="false"/>  
+    <arg name="run_flir"      default="true"/>  
     <arg name="run_gobi"      default="false"/> 
     <arg name="run_boson"     default="true"/> 
     <arg name="run_dir_setup"     default="false"/> 
@@ -9,7 +9,7 @@
    
    <node pkg="usma_bhg" name="flir" type="flir_oop.py" output="screen" ns='camera' if='$(eval run_flir)' > 
     <param name="/multi_threaded" value='false'/> 
-    <param name="/trigger_mode" value='none'/>
+    <param name="/trigger_mode" value='hardware'/>
    </node>
 
    <node pkg="usma_bhg" name="gobi" type="gobi_oop_gs" output="screen" ns='camera' if='$(eval run_gobi)' >
@@ -19,7 +19,7 @@
    </node>
 
    <node pkg="boson_usma" name="boson_usma_node" type="boson_usma_node" output="screen" ns='camera' if='$(eval run_boson)' >  
-    <param name="video_id" value="/dev/video2" />    
+    <param name="video_id" value="/dev/video0" />    
    </node>
 
    <node pkg="cv_camera" name="boson_cv_camera" type="cv_camera_node" output="screen" if='$(eval run_boson_usb)' > 
