@@ -277,7 +277,7 @@ class Bhg_flir:
                         self.datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
                         if (self.is_recording and os.path.exists(self.csv_filename) ):  
                             saved_count += 1                      
-                            self.threaded_save_img(image_data, self.datetimeData) 
+                            self.save_img(image_data, self.datetimeData) 
                             with open(self.csv_filename,"a") as f:
                                 f.write(self.make_logentry()+'\n')  
                         #cv2.imshow("frame",image_data)
@@ -501,7 +501,8 @@ class Bhg_flir:
     def save_img(self, image_data, dtime_data):   
         self.image_filename = self.image_folder + "/FLIR" + self.ser_num + "_" + dtime_data + ".ppm"  
         # Save your OpenCV2 image as a jpeg 
-        cv2.imwrite(self.image_filename, image_data, [cv2.IMWRITE_PNG_COMPRESSION, 1])
+        #cv2.imwrite(self.image_filename, image_data, [cv2.IMWRITE_PNG_COMPRESSION, 1])
+        cv2.imwrite(self.image_filename, image_data)
         
     # Based on https://github.com/opencv/opencv/blob/master/samples/python/video_threaded.py
     def threaded_save_img(self, image_data, dtime_data):

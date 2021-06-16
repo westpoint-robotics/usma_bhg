@@ -4,7 +4,7 @@
     <arg name="run_flir"      default="true"/>  
     <arg name="run_gobi"      default="false"/> 
     <arg name="run_boson"     default="true"/> 
-    <arg name="run_dir_setup"     default="false"/> 
+    <arg name="run_dir_setup"     default="true"/> 
     <arg name="run_boson_usb"     default="false"/> 
    
    <node pkg="usma_bhg" name="flir" type="flir_oop.py" output="screen" ns='camera' if='$(eval run_flir)' > 
