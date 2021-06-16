@@ -12,6 +12,32 @@ plugin_blacklist:
 - vibration
 - vision_speed_estimate
 - wheel_odometry
+# extras that were running but not needed
+- landing_target
+- fake_gps
+- esc_status
+- distance_sensor
+- odom
+- mount_control
+- log_transfer
+- vision_pose_estimate
+- obstacle_distance
+- adsb
+- trajectory
+#- gps_rtk
+- companion_process_status
+- mocap_pose_estimate
+- play_tune
+- onboard_computer_status
+- cam_imu_sync
+- gps_status
+- rangefinder
 
-plugin_whitelist: []
+
+
+
+
+plugin_whitelist: 
 #- 'sys_*'
+- DGPS
+- play_tune

@@ -433,28 +433,29 @@ class Bhg_flir:
         self.cam_system.ReleaseInstance()
 
     def make_header(self):
-        header = "filename,rostime,rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
+        header = "filename,rostime," #rel_alt.monotonic,rel_alt.amsl,rel_alt.local,rel_alt.relative,"
         header += "gps_fix.status.status,gps_fix.status.service,gps_fix.latitude,gps_fix.longitude,gps_fix.altitude,"
         header += "imu_data.magnetic_field.x,imu_data.magnetic_field.y,imu_data.magnetic_field.z,"
         header += "imu_mag.orientation.x,imu_mag.orientation.y,imu_mag.orientation.z,imu_mag.orientation.w,"
         header += "imu_mag.angular_velocity.x,imu_mag.angular_velocity.y,imu_mag.angular_velocity.z,"
         header += "imu_mag.linear_acceleration:.x,imu_mag.linear_acceleration:.y,imu_mag.linear_acceleration:.z,"
         header += "vel_gps.twist.linear.x,vel_gps.twist.linear.y,vel_gps.twist.linear.z,"
-        header += "vel_gps.twist.angular.x,vel_gps.twist.angular.y,vel_gps.twist.angular.z,"
-        header += "temp_imu.temperature"
+        #header += "vel_gps.twist.angular.x,vel_gps.twist.angular.y,vel_gps.twist.angular.z,"
+        #header += "temp_imu.temperature"
         return header
 
     def make_logentry(self):
-        alt_str = str(self.rel_alt.monotonic) + "," + str(self.rel_alt.amsl) + "," + str(self.rel_alt.local) + "," + str(self.rel_alt.relative) 
+        #alt_str = str(self.rel_alt.monotonic) + "," + str(self.rel_alt.amsl) + "," + str(self.rel_alt.local) + "," + str(self.rel_alt.relative) 
         gps_str = str(self.gps_fix.status.status) + "," + str(self.gps_fix.status.service) + "," + str(self.gps_fix.latitude) + "," + str(self.gps_fix.longitude) + "," + str(self.gps_fix.altitude) 
         mag_str = str(self.imu_mag.magnetic_field.x) + "," + str(self.imu_mag.magnetic_field.y) + "," + str(self.imu_mag.magnetic_field.z)
         imu_str = str(self.imu_data.orientation.x) + "," + str(self.imu_data.orientation.y) + "," + str(self.imu_data.orientation.z) + "," + str(self.imu_data.orientation.w) + ","
         imu_str += str(self.imu_data.angular_velocity.x) + "," + str(self.imu_data.angular_velocity.y) + "," + str(self.imu_data.angular_velocity.z) + ","
         imu_str += str(self.imu_data.linear_acceleration.x) + "," + str(self.imu_data.linear_acceleration.y) + "," + str(self.imu_data.linear_acceleration.z)    
         vel_str = str(self.vel_gps.twist.linear.x) + "," + str(self.vel_gps.twist.linear.y) + "," + str(self.vel_gps.twist.linear.z) + ","
-        vel_str += str(self.vel_gps.twist.angular.x) + "," + str(self.vel_gps.twist.angular.y) + "," + str(self.vel_gps.twist.angular.z)  
-        temp_str = str(self.temp_imu.temperature)    
-        output = str(self.image_folder + "," + self.datetimeData + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str)
+        #vel_str += str(self.vel_gps.twist.angular.x) + "," + str(self.vel_gps.twist.angular.y) + "," + str(self.vel_gps.twist.angular.z)  
+        #temp_str = str(self.temp_imu.temperature)    
+        #output = str(self.image_folder + "," + self.datetimeData + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str)
+        output = str(self.image_filename + "," + self.datetimeData + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str)
         return output
 
     def alt_cb(self, msg):
@@ -517,13 +518,7 @@ class Bhg_flir:
             self.pending.append(task)
 
 if __name__ == "__main__":
-        """
-        Example entry point; please see Enumeration example for more in-depth
-        comments on preparing and cleaning up the system.
-
-        :return: True if successful, False otherwise.
-        :rtype: bool
-        """
+ 
         rospy.init_node('gobi_trigger')
         is_threaded = rospy.get_param('/camera/flir/multi_threaded', 'false')        
         bhg_flir = Bhg_flir(is_threaded)

@@ -6,7 +6,7 @@
 	
 	
 	<!-- <arg name="fcu_url" default="/dev/ttyUSB0:921600" /> -->
-	<arg name="fcu_url" default="/dev/ttyUSB0:921600" />
+	<arg name="fcu_url" default="/dev/ttyACM0:921600" />
 	<arg name="gcs_url" default="" />
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
@@ -28,6 +28,9 @@
 		<rosparam command="load" file="$(arg pluginlists_yaml)" />
 		<rosparam command="load" file="$(arg config_yaml)" />
 	</node>
+	
+	<!-- DGPS Plugin running info:
+	It is assumed that the DGPS data comes from the network address 127.0.0.1:13320. The DGPS data can be in the SBP/RTCP/UBC protocols -->
 	
 	<node pkg="rosservice" type="rosservice" name="mavros_set_stream_service" args="call --wait /mavros/set_stream_rate 0 10 1" />
 	<!-- This sets the parameters and sends the command to set the pwm width. There is a delay of
