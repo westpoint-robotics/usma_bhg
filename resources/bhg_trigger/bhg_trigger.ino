@@ -6,22 +6,31 @@
  * Based on blink example code.
  */
 
-unsigned int count = 0;
-int hz = 10;
-int pulse_width = 1.0/hz/2*1000; // Pulse width in milli seconds
+unsigned long count = 0;
+float hz = 59.50;
+float pulse_width = 1.0/hz/2.0*1000.0; // Pulse width in milli seconds
+int pin60hz = 3;
+int pin10hz = 4;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
   // initialize digital pin LED_BUILTIN as an output.
-  pinMode(3, OUTPUT);
+  pinMode(pin60hz, OUTPUT);
+  pinMode(pin10hz, OUTPUT);
 }
 
 void loop() {  // 201 hz max speed
   if (count % 2 == 0){
-    digitalWrite(3, HIGH);   // turn the LED on (HIGH is the voltage level)
+    digitalWrite(pin60hz, HIGH);   // turn the LED on (HIGH is the voltage level)
+    if (count % 6 == 0){
+      digitalWrite(pin10hz, HIGH);   // turn the LED on (HIGH is the voltage level)
+    }
   }
   else{
-    digitalWrite(3, LOW);   // turn the LED on (HIGH is the voltage level)    
+    digitalWrite(pin60hz, LOW);   // turn the LED on (HIGH is the voltage level)
+    if (count % 6 == 0){
+      digitalWrite(pin10hz, LOW);   // turn the LED on (HIGH is the voltage level)
+    }    
   }
   count = count + 1;
   delay(pulse_width);

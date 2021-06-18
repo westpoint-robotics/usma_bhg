@@ -56,6 +56,7 @@ class Bhg_flir:
         self.pool = ThreadPool(processes = self.threadn)
         self.pending = deque()
         self.threaded_mode = _threaded_mode        
+        self.tNow = ""
         
         rospy.Subscriber('/directory', String, self.directory_callback)
         rospy.Subscriber("/record", Bool, self.record_callback)
@@ -134,7 +135,7 @@ class Bhg_flir:
 
             self.cam.TriggerMode.SetValue(PySpin.TriggerMode_Off)
             # To add a delay from trigger to capture. Tested and works.
-            self.cam.TriggerDelay.SetValue(28.0) # in microseconds must be (24.0 < delay < 65520)
+            #self.cam.TriggerDelay.SetValue(28.0) # in microseconds must be (24.0 < delay < 65520)
 
             #rospy.loginfo("***** FLIR:  Trigger mode disabled...")
 
@@ -246,7 +247,7 @@ class Bhg_flir:
             last_time = rospy.get_time()
             n = 0
             saved_count = 0
-            r = rospy.Rate(30) # 30hz
+            r = rospy.Rate(50) # 30hz
             while not rospy.is_shutdown():        
             
                 try:
@@ -273,8 +274,8 @@ class Bhg_flir:
                         #print("Time now4: %f" % (rospy.get_time() - last_time)) # 0.045697
                         
                         #Before taking a picture, grab timestamp to record to filename, and CSV
-                        tNow = rospy.get_time() # current date and time
-                        self.datetimeData = datetime.datetime.fromtimestamp(tNow).strftime('%Y%m%d_%H%M%S_%f')
+                        self.tNow = rospy.get_time() # current date and time
+                        self.datetimeData = datetime.datetime.fromtimestamp(self.tNow).strftime('%Y%m%d_%H%M%S_%f')
                         if (self.is_recording and os.path.exists(self.csv_filename) ):  
                             saved_count += 1                      
                             self.save_img(image_data, self.datetimeData) 
@@ -455,7 +456,8 @@ class Bhg_flir:
         #vel_str += str(self.vel_gps.twist.angular.x) + "," + str(self.vel_gps.twist.angular.y) + "," + str(self.vel_gps.twist.angular.z)  
         #temp_str = str(self.temp_imu.temperature)    
         #output = str(self.image_folder + "," + self.datetimeData + "," + alt_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str + "," + temp_str)
-        output = str(self.image_filename + "," + self.datetimeData + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str)
+        time_str = "%.6f" % self.tNow
+        output = str(self.image_filename + "," + time_str + "," + gps_str + "," + mag_str + "," + imu_str + "," + vel_str)
         return output
 
     def alt_cb(self, msg):
