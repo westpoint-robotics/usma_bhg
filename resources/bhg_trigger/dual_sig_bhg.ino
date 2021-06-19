@@ -1,15 +1,19 @@
+
+int rgb_pin = 4;
+int lwir_pin = 3;
+
 void setup()
 { 
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
+  pinMode(rgb_pin, OUTPUT);
+  pinMode(lwir_pin, OUTPUT);
 } // Set digital pins 12 and 13 to outputs
 int offset = 32000;
 int halfP = 49700 - offset;
 
 void loop()
 {
-  digitalWrite(4, !digitalRead(4));  
+  digitalWrite(rgb_pin, !digitalRead(rgb_pin));  
   delayMicroseconds(offset);  //30 microsecond delay  
-  digitalWrite(3, !digitalRead(3));  
+  digitalWrite(lwir_pin, !digitalRead(lwir_pin));  
   delayMicroseconds(halfP);  //30 microsecond delay   
 }
