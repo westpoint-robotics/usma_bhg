@@ -1,14 +1,19 @@
 
 int rgb_pin = 4;
 int lwir_pin = 3;
+// You must use the matching offset for each frequency
+int offset = 32000; // 10 hz & 5hz
+//int halfP = 99400 - offset; // 5hz
+int halfP = 49700 - offset; // 10 hz
+//int offset = 24400; // 15 hz & 20 hz
+//int halfP = 33000 - offset; // 15 hz
+//int halfP = 24850 - offset; // 20 hz
 
 void setup()
 { 
   pinMode(rgb_pin, OUTPUT);
   pinMode(lwir_pin, OUTPUT);
 } // Set digital pins 12 and 13 to outputs
-int offset = 32000;
-int halfP = 49700 - offset;
 
 void loop()
 {
