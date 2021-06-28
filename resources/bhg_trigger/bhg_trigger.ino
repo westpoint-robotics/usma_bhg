@@ -17,6 +17,8 @@ void setup() {
   // initialize digital pin LED_BUILTIN as an output.
   pinMode(pin60hz, OUTPUT);
   pinMode(pin10hz, OUTPUT);
+  Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
+
 }
 
 void loop() {  // 201 hz max speed
