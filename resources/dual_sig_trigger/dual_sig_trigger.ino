@@ -8,9 +8,9 @@ int rgb_on = 0;
 int rgb_pin = 4; // red wire
 int lwir_pin = 3; // orange wire
 // You must use the matching offset for each frequency
-//int offset = 32000; // 10 hz & 5hz
+int offset = 32000; // 10 hz & 5hz
 //int halfP = 99400 - offset; // 5hz
-int offset = 20800; // 25 hz & 20 hz
+//int offset = 20800; // 25 hz & 20 hz
 int halfP = 49700 - offset; // 10 hz
 //int offset = 24400; // 15 hz & 20 hz
 //int halfP = 33000 - offset; // 15 hz
